@@ -1,0 +1,10 @@
+improve condition handling -- testing if a condition changed should be case insensitive
+  -- currently it is case sensitive, so we end up having conditions like this one:
+
+Developmental Delay and additional significant developmental and morphological phenotypes referred for genetic testing
+ [RCV000052486]|Developmental delay and additional significant developmental and morphological phenotypes referred for
+ genetic testing [RCV000052486]|See cases [RCV000052486]
+
+loader: XML parsing takes 90+ % of total time
+  1) store in local sqlite database XML of every record, and its data in parsed format
+  2) if no data changed, just reuse the parsed data

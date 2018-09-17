@@ -1,0 +1,236 @@
+ClinVar v.1.1.35, Sep 17, 2018
+  moved code from subversion to github
+
+ClinVar v.1.1.34, Aug 7, 2018
+  loader: fix in DAO wrapper to prevent ORA-00001: unique constraint (CURPROD.PK_RGD_ID) violated
+
+ClinVar v.1.1.33, Jan 16, 2018 -- per RGDD-1455
+  annotation loader: evidence codes conversion: 'IEA'->'IAGP', 'ISS->'ISO'
+
+ClinVar v.1.1.32, Jan 16, 2018
+  fix in parallel processing of maps data
+
+ClinVar v.1.1.31, Dec 12, 2017
+  fix in parallel processing of aliases
+
+ClinVar v.1.1.30, Nov 20, 2017
+  upgraded from ANT to GRADLE
+  completely discontinued use of UMLS enrichment:
+    1) it had not been used for years
+    2) UMLS database had not been updated for years, and we don't have plans to update it in the future
+  optimized loading process by splitting the input file into chunks and processing a number of chunks in parallel
+
+ClinVar v.1.1.29, Oct 10, 2017
+  parser: added handling of SO term 'tandem duplication'
+
+ClinVar v.1.1.28, Oct 3, 2017
+  added cmdline script qcTermDuplicates.sh
+
+ClinVar v.1.1.27, Jun 2, 2017
+  annotator: implemented threshold limit of 5% for deleting stale annotations
+
+ClinVar v.1.1.26, May 8, 2017
+  variant symbols no longer are numbers: they are now prefixed with 'CV'
+    example: previously '247759', now 'CV247759'
+    reason: to make searches on RGD website more meaningful
+
+ClinVar v.1.1.25, Apr 11, 2017
+===
+improved handling of clinical significance: it properly handles '/' and ',' present in incoming data
+
+
+ClinVar v.1.1.24, Aug 1, 2016
+===
+improved handling of variant SO acc ids pointing to obsolete SO terms -- per RGDD-1248
+  code is looking for substitute SO terms:
+  1) code is looking for 'replaced_by' field of the obsolete SO term
+  2) code is looking for any term which lists obsolete SO acc id as 'alt_id'
+
+
+ClinVar v.1.1.23, Jun 16, 2016
+===
+unmatchable conditions file - filtering out drug response conditions -- per RGDD-1232
+  also to reduce duplicate conditions that differ only by case, we convert all unmatchable conditions to upper case
+
+
+ClinVar v.1.1.22, Jun 7, 2016
+===
+fixed loading of variant condition in rare cases when preferred trait name is not available in incoming data
+
+
+ClinVar v.1.1.21, May 13, 2016
+===
+annotator: new annotation CREATED_DATE is always set to SYSDATE -- per RGDD-1194
+
+
+ClinVar v.1.1.20, May 12, 2016
+===
+annotator: annotation notes field set to 'ClinVar Annotator: match by xxx';
+  previously it was: 'match by xxx' -- per RGDD-1211
+
+
+ClinVar v.1.1.19, Apr 20, 2016
+===
+annotator: added property settings to turn off/on UMLS matching code (OMIM to MESH mappings taken from UMLS database)
+   fixed bug in parser that prevented to load all OMIM and PMID ids
+
+
+ClinVar v.1.1.18, Mar 9, 2016
+===
+parser: added parsing of 'complex' variants
+
+
+ClinVar v.1.1.17, Feb 9, 2016
+===
+parser: added parsing of 'translocation' variants
+
+
+ClinVar Annotator v.1.2.13, Jan 19, 2016
+===
+annotator: improved handling of conflicting synonyms (same synonym is associated with multiple terms):
+   if there is a duplicate where one term has a broad synonym, and the other term has
+   a non-broad synonym, the term with non-broad synonym will be used
+
+
+ClinVar Annotator v.1.2.12, Jan 5, 2016
+===
+fixed NullPointerException, when a matching term does not have a name (which is still unexpected)
+
+
+ClinVar Annotator v.1.2.11, Dec 16, 2015
+===
+fixed bug in showing duplicate synonyms: original code was emitting duplicate lines
+
+
+ClinVar v.1.1.16, June 18, 2015
+ClinVar Annotator v.1.2.10, June 18, 2015
+===
+annotator: improved handling of conflicting synonyms (same synonym is associated with multiple terms):
+  if synonyms are on separate ontology branches, annotations are made to both terms (new logic)
+  otherwise, annotations are made only to the more popular term (with more annotations or having more child terms)
+
+
+ClinVar v.1.1.15, June 9, 2015
+ClinVar Annotator v.1.2.9, June 9, 2015
+===
+implemented truncation of variant notes longer than 4000; updated nu.xom, jaxen jars
+annotator: added ‘Unclassifed’, ‘Not provided’, ‘repeat number of microsatellite’, ‘Variant of unknown significance’
+  to the list of condition names excluded from processing
+
+
+ClinVar v.1.1.14, May 12, 2015
+===
+added handling of NCBI36 positions
+
+
+ClinVar Loader v.1.2.8, Feb 11, 2015
+ClinVar Annotator v.1.2.8, Feb 11, 2015
+===
+improved exception reporting
+parser: fixed handling of var positions where stop position on an assembly is missing
+     (these positions are now skipped and they no longer cause NumberFormatException)
+
+
+ClinVar Annotator v.1.2.7, Jan 27, 2015
+===
+improves matching for duplicate synonyms, when synonym type is narrow
+
+
+ClinVar Annotator v.1.2.6, Jan 23, 2015
+===
+fixed bug in rgdcore OntologyXDAO.getTermsBySynonym() (it could return duplicate results)
+
+
+ClinVar Annotator v.1.2.5, Jan 21, 2015
+===
+-shell script emails unmatchable_conditions.txt file to Stan and Marek
+-better ordering of duplicates on duplicate lists
+-concept-to-omim file is downloaded compressed, to conserve disk space
+
+
+ClinVar Annotator v.1.2.4, Nov 14, 2014
+===
+variants of 'uncertain significance' from 'Leeds Institute of Molecular Medicine (LIMM)'
+  are skipped from processing; improved reporting of duplicated terms and synonyms
+
+
+ClinVar Annotator v.1.2.3, Nov 13, 2014
+===
+variants with 'not provided' clinical significance are skipped from processing
+
+
+ClinVar v.1.1.12, Nov 13, 2014
+  added loading of submitters into new field VARIANTS.SUBMITTER
+
+ClinVar Annotator v.1.2.2, Oct 24, 2014
+  improved synonym matching
+
+ClinVar Annotator v.1.2.1, Oct 7, 2014
+  added matching by condition synonyms and matching against disease term synonyms
+
+ver 1.1.11, Oct 6, 2014
+  annotator: relaxed carpe-compliance requirements: no longer need position on GRCh37
+    in addition to matching MedGen concept id to OMIM id, we do exact match by disease term name
+
+ver 1.1.10, Aug 12, 2014
+  parser: added handling of GRCh37.p13 positions; updated jars
+
+ver 1.1.9, Jul 15, 2014
+  parser: fixed parsing for correct SO ACC ID
+
+ver 1.1.8, Jul 3, 2014
+  annotator: don't report lines with zeros in summaries
+
+ver 1.1.7, Jun 19, 2014
+  annotator: limit orhologs processing to rat/mouse/human (fe chinchilla excluded)
+
+ver 1.1.6, Jun 10, 2014
+  fixed parsing problems (missing trait name in source data was throwing NullPointerExceptions)
+
+ver 1.1.6, Jun 10, 2014
+  fixed parsing problems (missing trait name in source data was throwing NullPointerExceptions)
+
+ver 1.1.5, Jun 2, 2014
+  loading of strand information for variant positions
+
+ver 1.1.3, May 14, 2014
+  -aliases: 'not provided' aliases are not loaded
+   also aliases identical with trait name are not loaded
+
+ - entrez gene ids: link text is set to gene symbol
+
+ -annotator v.1.1.1: carpe-novo compliant annotator
+
+ClinVar pipeline has been updated to be carpenovo-compliant. Per Brandon, they are loading only variants
+ of specific 4 types having positions on GRChm37 assembly map. After running the ClinVar pipeline:
+
+100,340 – ClinVar variants loaded, out of which:
+  95,419 – variants of types: ‘single nucleotide variant’,’insertion’,’deletion’,’duplication’
+ 88,922 – variants with carpenovo compliant type having positions on GRChm37 assembly
+
+We have generated annotations for those 88,922 variants. We used variant MedGen id, and ClinVar file with mapping of MedGen id to OMIM phenotype id.
+
+28,046 variant annotations were generated
+  23,171 unique variants were annotated
+  2,307 unique RDO terms were annotated to variants
+50,323 related gene annotations to rat,mouse,human were made
+
+
+ver 1.1.2, Apr 30, 2014
+  -parser -- ClinVar entries having condition 'not provided' or clinical status 'not provided' are skipped by pipeline
+   started work on alternate matching of condition-name to disease-term
+
+ver 1.1.1, Apr 29, 2014
+  -parser -- improved parsing of OmMIm Allele ids used in making annotations
+  (previous code was creating a lot of false positives)
+
+ver 1.1.0, Apr 23, 2014
+  -qc -- added matching of omim id to mesh ids through umls database;
+   that substantially increased the number of annotations
+
+ver 1.0.2, Apr 4, 2014
+  -fully working pipeline; fixed the parsing logic for extraction of variant names;
+   added parsing and loading of 'SNOMED CT' ids
+
+ver 1.0, Feb 11, 2014
+  -first working pipeline code: downloads the file, parses it, counts nr of lines, compares against database

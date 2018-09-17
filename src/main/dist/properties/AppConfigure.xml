@@ -1,0 +1,75 @@
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans>
+	<bean id="manager" class="edu.mcw.rgd.dataload.clinvar.Manager">
+        <property name="version" value="ClinVar Pipeline v. 1.1.35   (Sep 17, 2018)" />
+        <property name="dao" ref="dao" />
+        <property name="qc" ref="qc" />
+        <property name="loader" ref="loader" />
+        <property name="downloader" ref="downloader" />
+        <property name="parser" ref="parseGroup" />
+	</bean>
+
+    <bean id="dao" class="edu.mcw.rgd.dataload.clinvar.Dao" />
+
+    <bean id="qc" class="edu.mcw.rgd.dataload.clinvar.QC" />
+
+    <bean id="loader" class="edu.mcw.rgd.dataload.clinvar.Loader" />
+
+    <bean id="downloader" class="edu.mcw.rgd.dataload.clinvar.Downloader" >
+        <property name="variantDataFile" value="ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarFullRelease_00-latest.xml.gz" />
+    </bean>
+
+    <bean id="parseGroup" class="edu.mcw.rgd.dataload.clinvar.ParseGroup" >
+        <property name="version" value="--ClinVar Parser v. 1.0.0   (Nov 20, 2017)" />
+        <property name="chunkDir" value="/tmp/"/>
+        <property name="chunkSize" value="200000000"/>
+        <property name="recordEnd" value="&lt;/ClinVarSet>"/>
+        <property name="chunkHeader" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;yes&quot;?>&#10;&lt;ReleaseSet>&#10;"/>
+        <property name="chunkTrailer" value="&lt;/ReleaseSet>"/>
+    </bean>
+
+    <bean id="annotator" class="edu.mcw.rgd.dataload.clinvar.VariantAnnotator">
+        <property name="version" value="ClinVar Annotator v. 1.2.20   (Jan 26, 2018)" />
+        <property name="createdBy" value="68" /><!-- ClinVar Annotation pipeline -->
+        <property name="evidence" value="IAGP" />
+        <property name="dataSrc" value="ClinVar" />
+        <property name="refRgdId" value="8554872" />
+        <property name="conceptToOmimFile" value="ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/gene_condition_source_id" />
+        <property name="skipDrugResponseUnmatchableConditions" value="true" />
+        <property name="staleAnnotDeleteThreshold" value="5%" />
+
+        <!-- variants with these condition names will be excluded from annotations -->
+        <property name="excludedConditionNames">
+            <set>
+                <value>AllHighlyPenetrant</value>
+                <value>none provided</value>
+                <value>not provided</value>
+                <value>Not provided</value>
+                <value>not specified</value>
+                <value>repeat number of microsatellite</value>
+                <value>See cases</value>
+                <value>Unclassifed</value>
+                <value>Variant of unknown significance</value>
+            </set>
+        </property>
+
+        <!-- variants with this clinical significance will be excluded from annotations -->
+        <property name="excludedClinicalSignificance">
+            <set>
+                <value>not provided</value>
+            </set>
+        </property>
+
+        <!-- types of variants that will be annotated -->
+        <property name="processedVariantTypes">
+            <set>
+                <value>single nucleotide variant</value>
+                <value>deletion</value>
+                <value>duplication</value>
+                <value>insertion</value>
+            </set>
+        </property>
+    </bean>
+
+</beans>

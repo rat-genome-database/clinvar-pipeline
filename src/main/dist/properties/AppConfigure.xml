@@ -2,7 +2,7 @@
 
 <beans>
 	<bean id="manager" class="edu.mcw.rgd.dataload.clinvar.Manager">
-        <property name="version" value="ClinVar Pipeline v. 1.1.35   (Sep 17, 2018)" />
+        <property name="version" value="ClinVar Pipeline v. 1.1.36   (Oct 3, 2018)" />
         <property name="dao" ref="dao" />
         <property name="qc" ref="qc" />
         <property name="loader" ref="loader" />
@@ -21,7 +21,6 @@
     </bean>
 
     <bean id="parseGroup" class="edu.mcw.rgd.dataload.clinvar.ParseGroup" >
-        <property name="version" value="--ClinVar Parser v. 1.0.0   (Nov 20, 2017)" />
         <property name="chunkDir" value="/tmp/"/>
         <property name="chunkSize" value="200000000"/>
         <property name="recordEnd" value="&lt;/ClinVarSet>"/>
@@ -30,7 +29,7 @@
     </bean>
 
     <bean id="annotator" class="edu.mcw.rgd.dataload.clinvar.VariantAnnotator">
-        <property name="version" value="ClinVar Annotator v. 1.2.20   (Jan 26, 2018)" />
+        <property name="version" value="ClinVar Annotator v. 1.2.21   (Oct 3, 2018)" />
         <property name="createdBy" value="68" /><!-- ClinVar Annotation pipeline -->
         <property name="evidence" value="IAGP" />
         <property name="dataSrc" value="ClinVar" />

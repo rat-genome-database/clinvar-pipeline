@@ -82,7 +82,6 @@ public class Manager {
 
         String variantFileName = downloadVariantFile();
 
-        System.out.println(parser.getVersion());
         parser.qc = qc;
         parser.loader = loader;
         parser.parse(variantFileName);

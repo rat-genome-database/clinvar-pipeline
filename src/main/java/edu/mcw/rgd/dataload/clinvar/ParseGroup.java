@@ -22,7 +22,6 @@ public class ParseGroup {
     public QC qc;
     public Loader loader;
 
-    private String version;
     private int chunkSize;
     private String recordEnd;
     private String chunkHeader;
@@ -110,14 +109,6 @@ public class ParseGroup {
         BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(chunkName))));
         chunks.add(chunkName);
         return out;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
-    }
-
-    public String getVersion() {
-        return version;
     }
 
     public void setChunkSize(int chunkSize) {

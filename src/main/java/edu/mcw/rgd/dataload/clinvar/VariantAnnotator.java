@@ -389,7 +389,9 @@ public class VariantAnnotator {
     String getPubMedIds(int rgdId) throws Exception {
         List<String> pubMedIds = new ArrayList<>();
         for( XdbId id: dao.getXdbIds(rgdId, XdbId.XDB_KEY_PUBMED) ) {
-            pubMedIds.add("PMID:"+id.getAccId());
+            // additional QC for PMID accessions: remove all non digit characters
+            // (in the past, due to some malformed PMID ids, some of our web pages were broken)
+            pubMedIds.add("PMID:"+id.getAccId().replaceAll("\\D", ""));
         }
         Collections.sort(pubMedIds);
         return Utils.concatenate(pubMedIds, "|");

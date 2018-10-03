@@ -1,3 +1,6 @@
+ClinVar v.1.1.36, Oct 3, 2018
+  annotator: implemented validation of PMIDs inserted into XREF_SOURCE field of the annotation
+
 ClinVar v.1.1.35, Sep 17, 2018
   moved code from subversion to github
 
@@ -35,129 +38,88 @@ ClinVar v.1.1.26, May 8, 2017
     reason: to make searches on RGD website more meaningful
 
 ClinVar v.1.1.25, Apr 11, 2017
-===
-improved handling of clinical significance: it properly handles '/' and ',' present in incoming data
-
+  improved handling of clinical significance: it properly handles '/' and ',' present in incoming data
 
 ClinVar v.1.1.24, Aug 1, 2016
-===
-improved handling of variant SO acc ids pointing to obsolete SO terms -- per RGDD-1248
-  code is looking for substitute SO terms:
-  1) code is looking for 'replaced_by' field of the obsolete SO term
-  2) code is looking for any term which lists obsolete SO acc id as 'alt_id'
-
+  improved handling of variant SO acc ids pointing to obsolete SO terms -- per RGDD-1248
+    code is looking for substitute SO terms:
+    1) code is looking for 'replaced_by' field of the obsolete SO term
+    2) code is looking for any term which lists obsolete SO acc id as 'alt_id'
 
 ClinVar v.1.1.23, Jun 16, 2016
-===
-unmatchable conditions file - filtering out drug response conditions -- per RGDD-1232
-  also to reduce duplicate conditions that differ only by case, we convert all unmatchable conditions to upper case
-
+  unmatchable conditions file - filtering out drug response conditions -- per RGDD-1232
+    also to reduce duplicate conditions that differ only by case, we convert all unmatchable conditions to upper case
 
 ClinVar v.1.1.22, Jun 7, 2016
-===
-fixed loading of variant condition in rare cases when preferred trait name is not available in incoming data
-
+  fixed loading of variant condition in rare cases when preferred trait name is not available in incoming data
 
 ClinVar v.1.1.21, May 13, 2016
-===
-annotator: new annotation CREATED_DATE is always set to SYSDATE -- per RGDD-1194
-
+  annotator: new annotation CREATED_DATE is always set to SYSDATE -- per RGDD-1194
 
 ClinVar v.1.1.20, May 12, 2016
-===
-annotator: annotation notes field set to 'ClinVar Annotator: match by xxx';
-  previously it was: 'match by xxx' -- per RGDD-1211
+  annotator: annotation notes field set to 'ClinVar Annotator: match by xxx';
+    previously it was: 'match by xxx' -- per RGDD-1211
 
 
 ClinVar v.1.1.19, Apr 20, 2016
-===
-annotator: added property settings to turn off/on UMLS matching code (OMIM to MESH mappings taken from UMLS database)
-   fixed bug in parser that prevented to load all OMIM and PMID ids
-
+  annotator: added property settings to turn off/on UMLS matching code (OMIM to MESH mappings taken from UMLS database)
+     fixed bug in parser that prevented to load all OMIM and PMID ids
 
 ClinVar v.1.1.18, Mar 9, 2016
-===
-parser: added parsing of 'complex' variants
-
+  parser: added parsing of 'complex' variants
 
 ClinVar v.1.1.17, Feb 9, 2016
-===
-parser: added parsing of 'translocation' variants
-
+  parser: added parsing of 'translocation' variants
 
 ClinVar Annotator v.1.2.13, Jan 19, 2016
-===
-annotator: improved handling of conflicting synonyms (same synonym is associated with multiple terms):
-   if there is a duplicate where one term has a broad synonym, and the other term has
-   a non-broad synonym, the term with non-broad synonym will be used
-
+  improved handling of conflicting synonyms (same synonym is associated with multiple terms):
+     if there is a duplicate where one term has a broad synonym, and the other term has
+     a non-broad synonym, the term with non-broad synonym will be used
 
 ClinVar Annotator v.1.2.12, Jan 5, 2016
-===
-fixed NullPointerException, when a matching term does not have a name (which is still unexpected)
-
+  fixed NullPointerException, when a matching term does not have a name (which is still unexpected)
 
 ClinVar Annotator v.1.2.11, Dec 16, 2015
-===
-fixed bug in showing duplicate synonyms: original code was emitting duplicate lines
-
+  fixed bug in showing duplicate synonyms: original code was emitting duplicate lines
 
 ClinVar v.1.1.16, June 18, 2015
 ClinVar Annotator v.1.2.10, June 18, 2015
-===
-annotator: improved handling of conflicting synonyms (same synonym is associated with multiple terms):
-  if synonyms are on separate ontology branches, annotations are made to both terms (new logic)
-  otherwise, annotations are made only to the more popular term (with more annotations or having more child terms)
-
+  annotator: improved handling of conflicting synonyms (same synonym is associated with multiple terms):
+    if synonyms are on separate ontology branches, annotations are made to both terms (new logic)
+    otherwise, annotations are made only to the more popular term (with more annotations or having more child terms)
 
 ClinVar v.1.1.15, June 9, 2015
 ClinVar Annotator v.1.2.9, June 9, 2015
-===
-implemented truncation of variant notes longer than 4000; updated nu.xom, jaxen jars
-annotator: added ‘Unclassifed’, ‘Not provided’, ‘repeat number of microsatellite’, ‘Variant of unknown significance’
-  to the list of condition names excluded from processing
-
+  implemented truncation of variant notes longer than 4000; updated nu.xom, jaxen jars
+  annotator: added ‘Unclassifed’, ‘Not provided’, ‘repeat number of microsatellite’, ‘Variant of unknown significance’
+    to the list of condition names excluded from processing
 
 ClinVar v.1.1.14, May 12, 2015
-===
-added handling of NCBI36 positions
-
+  added handling of NCBI36 positions
 
 ClinVar Loader v.1.2.8, Feb 11, 2015
 ClinVar Annotator v.1.2.8, Feb 11, 2015
-===
-improved exception reporting
-parser: fixed handling of var positions where stop position on an assembly is missing
+  improved exception reporting
+  parser: fixed handling of var positions where stop position on an assembly is missing
      (these positions are now skipped and they no longer cause NumberFormatException)
 
-
 ClinVar Annotator v.1.2.7, Jan 27, 2015
-===
-improves matching for duplicate synonyms, when synonym type is narrow
-
+  improves matching for duplicate synonyms, when synonym type is narrow
 
 ClinVar Annotator v.1.2.6, Jan 23, 2015
-===
-fixed bug in rgdcore OntologyXDAO.getTermsBySynonym() (it could return duplicate results)
-
+  fixed bug in rgdcore OntologyXDAO.getTermsBySynonym() (it could return duplicate results)
 
 ClinVar Annotator v.1.2.5, Jan 21, 2015
-===
--shell script emails unmatchable_conditions.txt file to Stan and Marek
--better ordering of duplicates on duplicate lists
--concept-to-omim file is downloaded compressed, to conserve disk space
-
+  -shell script emails unmatchable_conditions.txt file to Stan and Marek
+  -better ordering of duplicates on duplicate lists
+  -concept-to-omim file is downloaded compressed, to conserve disk space
 
 ClinVar Annotator v.1.2.4, Nov 14, 2014
-===
-variants of 'uncertain significance' from 'Leeds Institute of Molecular Medicine (LIMM)'
-  are skipped from processing; improved reporting of duplicated terms and synonyms
-
+  variants of 'uncertain significance' from 'Leeds Institute of Molecular Medicine (LIMM)'
+    are skipped from processing; improved reporting of duplicated terms and synonyms
 
 ClinVar Annotator v.1.2.3, Nov 13, 2014
-===
-variants with 'not provided' clinical significance are skipped from processing
-
+  variants with 'not provided' clinical significance are skipped from processing
 
 ClinVar v.1.1.12, Nov 13, 2014
   added loading of submitters into new field VARIANTS.SUBMITTER

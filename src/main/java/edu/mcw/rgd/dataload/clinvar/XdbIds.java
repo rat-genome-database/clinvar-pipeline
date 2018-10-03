@@ -7,9 +7,7 @@ import edu.mcw.rgd.process.Utils;
 import java.util.*;
 
 /**
- * represents external database identifiers connected with given variant
- * <p>
- * Note: currently only NCBIGene and OMIM ids are supported
+ * represents external database identifiers associated with given variant
  */
 public class XdbIds {
 
@@ -24,6 +22,12 @@ public class XdbIds {
 
         if( Utils.isStringEmpty(accId) )
             return false;
+
+        // fixup for acc ids
+        if( xdbKey==XdbId.XDB_KEY_PUBMED ) {
+            // validate PMID accession id: strip non-digit characters
+            accId = accId.replaceAll("\\D", "");
+        }
 
         for( XdbId xdbId: this.incomingXdbIds ) {
             if( xdbId.getXdbKey()==xdbKey && xdbId.getAccId().equals(accId) )

@@ -1,4 +1,5 @@
 ClinVar v.1.1.36, Oct 3, 2018
+  loader: implemented validation of PMIDs inserted as xdb ids for variants
   annotator: implemented validation of PMIDs inserted into XREF_SOURCE field of the annotation
 
 ClinVar v.1.1.35, Sep 17, 2018

@@ -1,3 +1,7 @@
+ClinVar v.1.1.37, Dec 5, 2018
+  loader: variant notes are truncated to 4000 bytes (internally they are stored as UTF-8, so for some notes
+  less than 4000 characters is possible)
+
 ClinVar v.1.1.36, Oct 3, 2018
   loader: implemented validation of PMIDs inserted as xdb ids for variants
   annotator: implemented validation of PMIDs inserted into XREF_SOURCE field of the annotation

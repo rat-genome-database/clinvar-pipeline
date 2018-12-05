@@ -3,6 +3,7 @@ package edu.mcw.rgd.dataload.clinvar;
 import edu.mcw.rgd.datamodel.VariantInfo;
 import edu.mcw.rgd.process.Utils;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.TreeSet;
@@ -91,8 +92,21 @@ public class Record {
             // ensure that the notes are no longer than 4000 characters
             notes = getVarIncoming().getNotes();
             if( notes.length()>4000 ) {
-                System.out.println("combined notes too long! RGD_ID="+getVarIncoming().getRgdId());
-                getVarIncoming().setNotes(notes.substring(0, 3996) + " ...");
+                // take into account UTF8 encoding
+                try {
+                    String notes2;
+                    int len = 3996;
+                    do {
+                        notes2 = notes.substring(0, len);
+                        len--;
+                    } while (notes2.getBytes("UTF-8").length > 3996);
+                    System.out.println("  combined notes too long for "+getVarIncoming().getSymbol()+"! UTF8 str len:"+(len+5));
+
+                    getVarIncoming().setNotes(notes2 + " ...");
+                }catch( UnsupportedEncodingException e ) {
+                    // totally unexpected
+                    throw new RuntimeException(e);
+                }
             }
         }
     }

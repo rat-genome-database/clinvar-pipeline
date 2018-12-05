@@ -25,6 +25,9 @@ LOGIC NOTES
    and is constructing the final clinical significance value by merging it with the value in the database, f.e.
      'pathogenic|likely pathogenic|likely benign|benign'
 
+3. variant notes
+
+    since variant notes are stored in VARCHAR2(4000) column in the database, they are truncated to 4000 characters
 
 ANNOTATIONS
 

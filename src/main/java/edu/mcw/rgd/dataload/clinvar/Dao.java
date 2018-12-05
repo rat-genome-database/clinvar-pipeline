@@ -98,7 +98,15 @@ public class Dao {
 
         logUpdatedVariants.info("OLD: "+varOld.dump("|"));
         logUpdatedVariants.info("NEW: "+varNew.dump("|"));
-        return variantInfoDAO.updateVariant(varNew);
+        int r;
+        try {
+            r = variantInfoDAO.updateVariant(varNew);
+        } catch( Exception e ) {
+            e.printStackTrace();
+            System.exit(-5);
+            throw new RuntimeException(e);
+        }
+        return r;
     }
 
     /**

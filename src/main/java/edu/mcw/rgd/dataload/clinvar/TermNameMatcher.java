@@ -4,6 +4,7 @@ import edu.mcw.rgd.datamodel.ontologyx.Term;
 import edu.mcw.rgd.datamodel.ontologyx.TermSynonym;
 import edu.mcw.rgd.datamodel.ontologyx.TermWithStats;
 import edu.mcw.rgd.process.Utils;
+import org.apache.log4j.Logger;
 
 import java.util.*;
 
@@ -12,6 +13,8 @@ import java.util.*;
  * @since 10/16/14
  */
 public class TermNameMatcher {
+
+    Logger log = Logger.getLogger("duplicates");
 
     Map<String, Set<String>> map = new HashMap<>();
 
@@ -24,12 +27,12 @@ public class TermNameMatcher {
 
         Map<String,String> duplicates = new HashMap<>();
 
-        System.out.println("DUPLICATES {count of annotations}");
+        log.info("DUPLICATES {count of annotations}");
 
         for( Term t: dao.getActiveTerms("RDO") ) {
             // sanity check
             if( t.getTerm() == null ) {
-                System.out.println("ERROR: No term name for "+t.getAccId());
+                log.warn("ERROR: No term name for "+t.getAccId());
             }
 
             String normalizedName = normalizeTerm(t.getTerm());
@@ -57,7 +60,7 @@ public class TermNameMatcher {
 
         // dump duplicate terms
         dumpDuplicates(" DUPLICATE TERMS: ", duplicates);
-        System.out.println();
+        log.info("");
     }
 
     public void indexSynonyms(Dao dao) throws Exception {
@@ -109,7 +112,7 @@ public class TermNameMatcher {
 
         // dump duplicate synonyms
         dumpDuplicates(" DUPLICATE SYNONYMS: ", duplicates);
-        System.out.println();
+        log.info("");
     }
 
     boolean termsOnSeparateOntBranches(String acc1, String acc2, Dao dao) throws Exception {
@@ -145,16 +148,16 @@ public class TermNameMatcher {
     }
 
     void dumpDuplicates(String title, Map<String,String> duplicates) throws Exception {
-        System.out.println(duplicates.size()+title);
+        log.info(duplicates.size()+title);
 
         // display additional info what g1/g2 means
         if( duplicates.size()>10 ) {
-            System.out.println("  g1 - conflicting terms on same ontology branch, one better annotated/more general term will be annotated");
-            System.out.println("  g2 - conflicting terms on separate ontology branches, both terms will be annotated");
+            log.info("  g1 - conflicting terms on same ontology branch, one better annotated/more general term will be annotated");
+            log.info("  g2 - conflicting terms on separate ontology branches, both terms will be annotated");
         }
 
         for( Map.Entry<String, String> entry: duplicates.entrySet() ) {
-            System.out.println("  ["+entry.getKey()+"]: "+entry.getValue());
+            log.info("  ["+entry.getKey()+"]: "+entry.getValue());
         }
         duplicates.clear();
     }

@@ -24,8 +24,7 @@ public class MapPositions {
     public void addPos(String assembly, String chr, String accession, String start, String stop, String strand) throws Exception {
 
         if( chr==null ) {
-            System.out.println("null chromosome");
-            return;
+            throw new Exception("null chromosome");
         }
         int startPos = Integer.parseInt(start);
         int stopPos = Integer.parseInt(stop);

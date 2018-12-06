@@ -32,7 +32,7 @@ public class GlobalCounters {
     }
 
     public String dump() {
-        StringBuilder buf = new StringBuilder("COUNTERS:\n========");
+        StringBuilder buf = new StringBuilder("COUNTERS:\n========\n");
         for( Map.Entry<String, Integer> entry: counters.entrySet() ) {
             buf.append(entry.getKey())
                     .append(" : ")

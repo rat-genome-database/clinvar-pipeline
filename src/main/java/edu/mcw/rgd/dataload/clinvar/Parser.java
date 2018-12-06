@@ -4,8 +4,7 @@ import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.process.Utils;
 import edu.mcw.rgd.xml.XomAnalyzer;
 import nu.xom.*;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
 import org.jaxen.JaxenException;
 import org.jaxen.XPath;
 import org.jaxen.xom.XOMXPath;
@@ -25,8 +24,8 @@ public class Parser extends XomAnalyzer {
     static final SimpleDateFormat SDT_YYYYMMDD = new SimpleDateFormat("yyyy-MM-dd");
     static AtomicInteger recno = new AtomicInteger(0);
 
-    Log log = LogFactory.getLog("error");
-    Log logDebug = LogFactory.getLog("dbg");
+    Logger log = Logger.getLogger("loader");
+    Logger logDebug = Logger.getLogger("dbg");
 
     public QC qc;
     public Loader loader;
@@ -413,7 +412,7 @@ public class Parser extends XomAnalyzer {
                             logDebug.info("SO ACC ID problem - no molecular consequence - assuming 'sequence alteration'");
                         }
                     } else {
-                        System.out.println("unknown variation");
+                        log.warn("unknown variation");
                     }
                     break;
                 case "protein only":
@@ -423,7 +422,7 @@ public class Parser extends XomAnalyzer {
                     break;
                 default:
                     logDebug.info("handleSoAccId - unsupported object type [" + varType + "]");
-                    System.out.println("handleSoAccId - unsupported object type [" + varType + "]");
+                    log.warn("handleSoAccId - unsupported object type [" + varType + "]");
                     break;
             }
         }
@@ -468,7 +467,7 @@ public class Parser extends XomAnalyzer {
             xpPrevalence = new XOMXPath("TraitSet/Trait/AttributeSet/Attribute[@Type='prevalence']");
         }
         catch(Exception e) {
-            Utils.printStackTrace(e, LogFactory.getLog("error"));
+            Utils.printStackTrace(e, Logger.getLogger("loader"));
             e.printStackTrace();
         }
     }

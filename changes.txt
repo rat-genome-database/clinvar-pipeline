@@ -1,3 +1,6 @@
+ClinVar v.1.1.38, Dec 6, 2018
+  refactored logging
+
 ClinVar v.1.1.37, Dec 5, 2018
   loader: variant notes are truncated to 4000 bytes (internally they are stored as UTF-8, so for some notes
   less than 4000 characters is possible)

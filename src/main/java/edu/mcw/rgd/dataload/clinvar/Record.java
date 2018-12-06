@@ -2,6 +2,7 @@ package edu.mcw.rgd.dataload.clinvar;
 
 import edu.mcw.rgd.datamodel.VariantInfo;
 import edu.mcw.rgd.process.Utils;
+import org.apache.log4j.Logger;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
@@ -100,7 +101,9 @@ public class Record {
                         notes2 = notes.substring(0, len);
                         len--;
                     } while (notes2.getBytes("UTF-8").length > 3996);
-                    System.out.println("  combined notes too long for "+getVarIncoming().getSymbol()+"! UTF8 str len:"+(len+5));
+
+                    Logger log = Logger.getLogger("loader");
+                    log.info("  combined notes too long for "+getVarIncoming().getSymbol()+"! UTF8 str len:"+(len+5));
 
                     getVarIncoming().setNotes(notes2 + " ...");
                 }catch( UnsupportedEncodingException e ) {

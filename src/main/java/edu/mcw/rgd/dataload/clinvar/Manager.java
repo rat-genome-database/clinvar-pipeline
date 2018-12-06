@@ -1,8 +1,7 @@
 package edu.mcw.rgd.dataload.clinvar;
 
 import edu.mcw.rgd.process.Utils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.FileSystemResource;
@@ -15,7 +14,7 @@ public class Manager {
 
     public static final String SOURCE = "CLINVAR";
 
-    Log log = LogFactory.getLog("error");
+    Logger log = Logger.getLogger("loader");
 
     private String version;
     private Dao dao;
@@ -62,7 +61,6 @@ public class Manager {
 
             if( runAnnotator ) {
                 VariantAnnotator annotator = (VariantAnnotator) (bf.getBean("annotator"));
-                System.out.println(annotator.getVersion());
                 annotator.run();
             }
         }catch (Exception e) {
@@ -75,7 +73,8 @@ public class Manager {
 
         long time0 = System.currentTimeMillis();
 
-        System.out.println(getVersion());
+        log.info(getVersion());
+        log.info(getDao().getConnectionInfo());
 
         qc.setDao(getDao());
         loader.setDao(getDao());

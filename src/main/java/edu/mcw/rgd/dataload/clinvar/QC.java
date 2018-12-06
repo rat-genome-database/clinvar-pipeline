@@ -2,6 +2,7 @@ package edu.mcw.rgd.dataload.clinvar;
 
 import edu.mcw.rgd.datamodel.VariantInfo;
 import edu.mcw.rgd.process.Utils;
+import org.apache.log4j.Logger;
 
 import java.util.*;
 
@@ -11,6 +12,8 @@ import java.util.*;
  * qc data against database
  */
 public class QC {
+
+    Logger log = Logger.getLogger("loader");
 
     private Dao dao;
 
@@ -38,11 +41,10 @@ public class QC {
                 !Utils.stringsAreEqual(var.getNucleotideChange(), var2.getNucleotideChange()) ) {
 
                 rec.setUpdateRecordFlag(true);
-                //System.out.println("    update");
             }
 
             if( Utils.isStringEmpty(var2.getName()) ) {
-                System.out.println(" warning: empty name");
+                log.warn(" warning: empty name");
             }
 
             // age-of-onset could be combined from multiple RCV entries
@@ -173,7 +175,7 @@ public class QC {
                         case "other": return 110;
                         case "not provided": return 2000;
                         default:
-                            System.out.println("unhandled clinical significance: "+clinicalSignificance);
+                            log.warn("unhandled clinical significance: "+clinicalSignificance);
                             return 999;
                     }
                 }

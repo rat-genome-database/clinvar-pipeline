@@ -7,8 +7,7 @@ import edu.mcw.rgd.datamodel.ontologyx.Term;
 import edu.mcw.rgd.datamodel.ontologyx.TermSynonym;
 import edu.mcw.rgd.datamodel.ontologyx.TermWithStats;
 import edu.mcw.rgd.process.Utils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
 
 import java.util.*;
 import java.util.Map;
@@ -22,14 +21,15 @@ public class Dao {
 
     public static final String ASSOC_TYPE = "variant_to_gene";
 
-    Log logInsertedVariants = LogFactory.getLog("insertedVariants");
-    Log logUpdatedVariants = LogFactory.getLog("updatedVariants");
-    Log logGeneAssociations = LogFactory.getLog("geneAssociations");
-    Log logMapPos = LogFactory.getLog("mapPos");
-    Log logXdbIds = LogFactory.getLog("xdbIds");
-    Log logHgvsNames = LogFactory.getLog("hgvsNames");
-    Log logAliases = LogFactory.getLog("aliases");
-    Log logAnnotations = LogFactory.getLog("annotations");
+    Logger logInsertedVariants = Logger.getLogger("insertedVariants");
+    Logger logUpdatedVariants = Logger.getLogger("updatedVariants");
+    Logger logGeneAssociations = Logger.getLogger("geneAssociations");
+    Logger logMapPos = Logger.getLogger("mapPos");
+    Logger logXdbIds = Logger.getLogger("xdbIds");
+    Logger logHgvsNames = Logger.getLogger("hgvsNames");
+    Logger logAliases = Logger.getLogger("aliases");
+    Logger logAnnotations = Logger.getLogger("annotations");
+    Logger logAnnotator = Logger.getLogger("annotator");
 
     private AliasDAO aliasDAO = new AliasDAO();
     private AnnotationDAO annotationDAO = new AnnotationDAO();
@@ -42,8 +42,8 @@ public class Dao {
     private XdbIdDAO xdbIdDAO = new XdbIdDAO();
 
 
-    public Dao() {
-        System.out.println(geneDAO.getConnectionInfo());
+    public String getConnectionInfo() {
+        return geneDAO.getConnectionInfo();
     }
 
     /**
@@ -98,15 +98,7 @@ public class Dao {
 
         logUpdatedVariants.info("OLD: "+varOld.dump("|"));
         logUpdatedVariants.info("NEW: "+varNew.dump("|"));
-        int r;
-        try {
-            r = variantInfoDAO.updateVariant(varNew);
-        } catch( Exception e ) {
-            e.printStackTrace();
-            System.exit(-5);
-            throw new RuntimeException(e);
-        }
-        return r;
+        return variantInfoDAO.updateVariant(varNew);
     }
 
     /**
@@ -438,12 +430,12 @@ public class Dao {
 
         List<Annotation> staleAnnots = annotationDAO.getAnnotationsModifiedBeforeTimestamp(createdBy, dt, "D");
 
-        System.out.println("total annotation count: "+annotCount);
-        System.out.println("stale annotation delete limit ("+staleAnnotDeleteThresholdStr+"): "+staleAnnotDeleteLimit);
-        System.out.println("stale annotations to be deleted: "+staleAnnots.size());
+        logAnnotator.info("total annotation count: "+annotCount);
+        logAnnotator.info("stale annotation delete limit ("+staleAnnotDeleteThresholdStr+"): "+staleAnnotDeleteLimit);
+        logAnnotator.info("stale annotations to be deleted: "+staleAnnots.size());
 
         if( staleAnnots.size()> staleAnnotDeleteLimit ) {
-            System.out.println("*** DELETE of stale annots aborted! *** "+staleAnnotDeleteThresholdStr+" delete threshold exceeded!");
+            logAnnotator.info("*** DELETE of stale annots aborted! *** "+staleAnnotDeleteThresholdStr+" delete threshold exceeded!");
             return 0;
         }
 

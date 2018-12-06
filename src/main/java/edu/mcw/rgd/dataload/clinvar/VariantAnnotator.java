@@ -5,8 +5,7 @@ import edu.mcw.rgd.datamodel.ontology.Annotation;
 import edu.mcw.rgd.datamodel.ontologyx.Term;
 import edu.mcw.rgd.process.FileDownloader;
 import edu.mcw.rgd.process.Utils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.util.*;
@@ -30,7 +29,8 @@ import java.util.zip.GZIPInputStream;
 public class VariantAnnotator {
 
     Dao dao = new Dao();
-    Log logDebug = LogFactory.getLog("dbg");
+    Logger logDebug = Logger.getLogger("dbg");
+    Logger log = Logger.getLogger("annotator");
 
     private String version;
     private int createdBy;
@@ -57,6 +57,9 @@ public class VariantAnnotator {
     private String staleAnnotDeleteThreshold;
 
     public void run() throws Exception {
+
+        log.info(getVersion());
+        log.info(dao.getConnectionInfo());
 
         Date pipelineStartTime = new Date();
         logDebug.info("Starting...");
@@ -129,36 +132,36 @@ public class VariantAnnotator {
         }
 
         dumpUnmatchableConditions();
-        System.out.println("  drugResponseTermCount="+unmatchableDrugResponseTerms.size());
+        log.info("  drugResponseTermCount="+unmatchableDrugResponseTerms.size());
 
-        System.out.println(variantsProcessed+"  omimToRdoCount="+omimToRdoCount+", meshToRdoCount="+meshToRdoCount);
-        System.out.println("  termNameToRdoCount="+termNameToRdoCount);
+        log.info(variantsProcessed+"  omimToRdoCount="+omimToRdoCount+", meshToRdoCount="+meshToRdoCount);
+        log.info("  termNameToRdoCount="+termNameToRdoCount);
 
         // delete stale annotations
         int annotsDeleted = dao.deleteObsoleteAnnotations(getCreatedBy(), pipelineStartTime, getStaleAnnotDeleteThreshold(),
                 getRefRgdId(), getDataSrc());
 
-        System.out.println();
-        System.out.println("variants processed: "+variantsProcessed);
-        System.out.println(" -out of which variants non carpe compliant: "+variantsNotCarpeCompliant);
-        System.out.println();
+        log.info("");
+        log.info("variants processed: "+variantsProcessed);
+        log.info(" -out of which variants non carpe compliant: "+variantsNotCarpeCompliant);
+        log.info("");
 
         if( annotsMatching>0 )
-            System.out.println("  matching variant annotations: "+annotsMatching);
+            log.info("  matching variant annotations: "+annotsMatching);
         if( annotsInserted>0 )
-            System.out.println("  inserted variant annotations: "+annotsInserted);
+            log.info("  inserted variant annotations: "+annotsInserted);
         if( annotsDeleted>0 )
-            System.out.println("  deleted variant annotations : "+annotsDeleted);
+            log.info("  deleted variant annotations : "+annotsDeleted);
 
         for( int i=1; i<=3; i++ ) {
             String species = SpeciesType.getCommonName(i).toLowerCase();
             if( geneAnnotsMatching[i]>0 )
-                System.out.println("  matching "+species+" gene annotations: "+geneAnnotsMatching[i]);
+                log.info("  matching "+species+" gene annotations: "+geneAnnotsMatching[i]);
             if( geneAnnotsInserted[i]>0 )
-                System.out.println("  inserted "+species+" gene annotations: "+geneAnnotsInserted[i]);
+                log.info("  inserted "+species+" gene annotations: "+geneAnnotsInserted[i]);
         }
 
-        System.out.println("STOP annot pipeline;   elapsed "+Utils.formatElapsedTime(System.currentTimeMillis(), pipelineStartTime.getTime()));
+        log.info("STOP annot pipeline;   elapsed "+Utils.formatElapsedTime(System.currentTimeMillis(), pipelineStartTime.getTime()));
     }
 
     boolean variantIsCarpeCompliant(VariantInfo vi) throws Exception {
@@ -423,11 +426,11 @@ public class VariantAnnotator {
             String geneId = cols[0];
             List<Gene> genes = dao.getHumanGenesByGeneId(geneId);
             if( genes==null || genes.isEmpty() ) {
-                System.out.println("No gene in RGD [" + cols[1] + "] [" + cols[3]+"]");
+                log.warn("No gene in RGD [" + cols[1] + "] [" + cols[3]+"]");
                 continue;
             }
             if( genes.size()>1 ) {
-                System.out.println("Multiple genes in RGD ["+cols[1]+"] ["+cols[3]+"]");
+                log.warn("Multiple genes in RGD ["+cols[1]+"] ["+cols[3]+"]");
                 continue;
             }
             int geneRgdId = genes.get(0).getRgdId();
@@ -443,14 +446,13 @@ public class VariantAnnotator {
         }
         reader.close();
 
-        System.out.println("  concept-to-omim map loaded: "+mapConceptToOmim.size());
+        log.info("  concept-to-omim map loaded: "+mapConceptToOmim.size());
     }
 
     void dumpUnmatchableConditions() throws Exception {
         BufferedWriter writer = new BufferedWriter(new FileWriter("data/unmatchable_conditions.txt"));
 
         String msg = "Unmatchable conditions: "+unmatchableConditions.size()+"\n";
-        System.out.print(msg);
         writer.write(msg);
 
         // build inverse map
@@ -465,12 +467,10 @@ public class VariantAnnotator {
         }
         for( Map.Entry<Integer, Set<String>> entry: imap.entrySet() ) {
             msg = "  ["+entry.getKey()+"] \n";
-            System.out.print(msg);
             writer.write(msg);
 
             for( String name: entry.getValue() ) {
                 msg = "    "+name+"\n";
-                System.out.print(msg);
                 writer.write(msg);
             }
         }

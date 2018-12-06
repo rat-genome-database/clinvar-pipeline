@@ -1,8 +1,7 @@
 package edu.mcw.rgd.dataload.clinvar;
 
 import edu.mcw.rgd.process.Utils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -29,7 +28,8 @@ public class ParseGroup {
     private String chunkDir;
 
     private List<String> chunks = new ArrayList<>(); // names of file chunks
-    private Log logDebug = LogFactory.getLog("dbg");
+    private Logger logDebug = Logger.getLogger("dbg");
+    private Logger log = Logger.getLogger("loader");
 
     public void parse(String fileName) throws IOException {
 
@@ -100,7 +100,7 @@ public class ParseGroup {
         String chunkName = chunks.get(chunks.size()-1);
         logDebug.info("  "+chunkName+" written "+chunkSize);
 
-        System.out.println(" input file split into "+chunks.size()+" chunks");
+        log.info(" input file split into "+chunks.size()+" chunks");
     }
 
     BufferedWriter startNewChunk() throws IOException {

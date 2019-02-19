@@ -68,7 +68,7 @@ public class Dao {
      * <ol>
      * <li>create a new RGD_ID (insert a new row into RGD_IDS)</li>
      * <li>insert variant with this new RGD_ID into GENOMIC_ELEMENTS</li>
-     * <li>insert variant with this new RGD_ID into VARIANTS</li>
+     * <li>insert variant with this new RGD_ID into CLINVAR</li>
      * </ol>
      * Note: method must be synchronized to prevent issue with parallel calls to this method
      *       by multiple threads
@@ -87,7 +87,7 @@ public class Dao {
     }
 
     /**
-     * Update variant in tables GENOMIC_ELEMENTS,VARIANTS given rgdID
+     * Update variant in tables GENOMIC_ELEMENTS,CLINVAR given rgdID
      *
      * @return count of rows affected
      * @throws Exception when unexpected error in spring framework occurs

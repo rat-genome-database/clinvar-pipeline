@@ -1,3 +1,6 @@
+ClinVar v.1.1.39, Feb 19, 2019
+  improved exception handling
+
 ClinVar v.1.1.38, Dec 6, 2018
   refactored logging
 

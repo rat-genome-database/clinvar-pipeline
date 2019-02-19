@@ -30,14 +30,14 @@ public class Manager {
         Manager manager = (Manager) (bf.getBean("manager"));
 
         // parse cmd line parameters
-        boolean runAnnotator = false;
+        VariantAnnotator annotator = null;
         boolean runLoader = false;
         boolean qcDuplicateTerms = false;
 
         for( String arg: args ) {
             switch (arg) {
                 case "--annotate":
-                    runAnnotator = true;
+                    annotator = (VariantAnnotator) (bf.getBean("annotator"));
                     break;
                 case "--load":
                     runLoader = true;
@@ -59,12 +59,16 @@ public class Manager {
                 manager.run();
             }
 
-            if( runAnnotator ) {
-                VariantAnnotator annotator = (VariantAnnotator) (bf.getBean("annotator"));
+            if( annotator!=null ) {
                 annotator.run();
             }
         }catch (Exception e) {
-            Utils.printStackTrace(e, manager.log);
+            if( runLoader ) {
+                Utils.printStackTrace(e, manager.log);
+            }
+            if( annotator!=null ) {
+                Utils.printStackTrace(e, annotator.log);
+            }
             e.printStackTrace();
         }
     }

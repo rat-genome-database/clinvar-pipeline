@@ -3,6 +3,7 @@ package edu.mcw.rgd.dataload.clinvar;
 import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.datamodel.ontology.Annotation;
 import edu.mcw.rgd.datamodel.ontologyx.Term;
+import edu.mcw.rgd.process.CounterPool;
 import edu.mcw.rgd.process.FileDownloader;
 import edu.mcw.rgd.process.Utils;
 import org.apache.log4j.Logger;
@@ -38,8 +39,7 @@ public class VariantAnnotator {
     private String dataSrc;
     private int refRgdId;
 
-    private int[] geneAnnotsMatching = new int[4];
-    private int[] geneAnnotsInserted = new int[4];
+    private CounterPool counters;
 
     private int omimToRdoCount = 0;
     private int meshToRdoCount = 0;
@@ -58,110 +58,95 @@ public class VariantAnnotator {
 
     public void run() throws Exception {
 
+        long time0 = System.currentTimeMillis();
+
+        counters = new CounterPool();
+
         log.info(getVersion());
         log.info(dao.getConnectionInfo());
 
-        Date pipelineStartTime = new Date();
+        Date pipelineStartTime = Utils.addDaysToDate(new Date(), -1);
         logDebug.info("Starting...");
 
         loadConceptToOmimMap();
         logDebug.info("concept-to-omim map loaded");
 
-        int variantsProcessed = 0;
-        int variantsNotCarpeCompliant = 0;
-        int annotsMatching = 0;
-        int annotsInserted = 0;
 
         List<VariantInfo> variants = dao.getActiveVariants();
-        Collections.shuffle(variants);
         logDebug.info("active variants loaded: "+variants.size());
 
-        for(VariantInfo ge: variants ) {
-            variantsProcessed++;
-            logDebug.info("VAR_RGD_ID:"+ge.getRgdId()+" "+ge.getName());
+        variants.parallelStream().forEach( ge -> {
+            counters.increment("INCOMING VARIANTS");
 
-            if( !variantIsCarpeCompliant(ge) ) {
-                variantsNotCarpeCompliant++;
-                logDebug.info("  variant not carpe compliant");
-                continue;
-            }
-            String pubMedIds = getPubMedIds(ge.getRgdId());
+            try {
+                logDebug.info("VAR_RGD_ID:" + ge.getRgdId() + " " + ge.getName());
 
-            // for all the associated genes, collect terms
-            List<Integer> associatedGenes = dao.getAssociatedGenes(ge.getRgdId());
-            Set<Term> diseaseTerms = new HashSet<>();
-            for( Integer geneRgdId: associatedGenes ) {
-                diseaseTerms.addAll(getDiseaseTerms(ge.getRgdId(), geneRgdId, ge.getTraitName()));
-            }
-
-            // find matching RDO terms to make annotations
-            for( Term term: diseaseTerms ) {
-
-                // create incoming annotation
-                Annotation annot = new Annotation();
-                annot.setAnnotatedObjectRgdId(ge.getRgdId());
-                annot.setTermAcc(term.getAccId());
-                annot.setTerm(term.getTerm());
-                annot.setObjectName(ge.getName());
-                annot.setObjectSymbol(ge.getSymbol());
-                annot.setRgdObjectKey(ge.getObjectKey());
-                annot.setAspect("D"); // for RDO
-                annot.setCreatedBy(getCreatedBy()); // ClinVar Annotation pipeline
-                annot.setEvidence(getEvidence());
-                annot.setSpeciesTypeKey(SpeciesType.HUMAN);
-                annot.setDataSrc(getDataSrc());
-                annot.setRefRgdId(getRefRgdId());
-                annot.setXrefSource(pubMedIds);
-                annot.setLastModifiedBy(annot.getCreatedBy());
-                // term comment field contains the original OMIM acc id, or MESH acc id
-                String matchByAccId = term.getComment()==null ? term.getAccId() : term.getComment();
-                annot.setNotes("ClinVar Annotator: match by "+matchByAccId);
-
-                // does incoming annotation match rgd?
-                int inRgdAnnotKey = dao.getAnnotationKey(annot);
-                if( inRgdAnnotKey!=0 ) {
-                    dao.updateLastModifiedDateForAnnotation(inRgdAnnotKey, getCreatedBy());
-                    annotsMatching++;
-                } else {
-                    dao.insertAnnotation(annot);
-                    annotsInserted++;
+                if (!variantIsCarpeCompliant(ge)) {
+                    counters.increment("NOT CARPE-COMPLIANT VARIANTS");
+                    return;
                 }
-            }
+                String pubMedIds = getPubMedIds(ge.getRgdId());
 
-            generateGeneAnnotations(ge.getRgdId(), associatedGenes, pubMedIds, ge.getTraitName());
-        }
+                // for all the associated genes, collect terms
+                List<Integer> associatedGenes = dao.getAssociatedGenes(ge.getRgdId());
+                Set<Term> diseaseTerms = new HashSet<>();
+                for (Integer geneRgdId : associatedGenes) {
+                    diseaseTerms.addAll(getDiseaseTerms(ge.getRgdId(), geneRgdId, ge.getTraitName()));
+                }
+
+                // find matching RDO terms to make annotations
+                for (Term term : diseaseTerms) {
+
+                    // create incoming annotation
+                    Annotation annot = new Annotation();
+                    annot.setAnnotatedObjectRgdId(ge.getRgdId());
+                    annot.setTermAcc(term.getAccId());
+                    annot.setTerm(term.getTerm());
+                    annot.setObjectName(ge.getName());
+                    annot.setObjectSymbol(ge.getSymbol());
+                    annot.setRgdObjectKey(ge.getObjectKey());
+                    annot.setAspect("D"); // for RDO
+                    annot.setCreatedBy(getCreatedBy()); // ClinVar Annotation pipeline
+                    annot.setEvidence(getEvidence());
+                    annot.setSpeciesTypeKey(SpeciesType.HUMAN);
+                    annot.setDataSrc(getDataSrc());
+                    annot.setRefRgdId(getRefRgdId());
+                    annot.setXrefSource(pubMedIds);
+                    annot.setLastModifiedBy(annot.getCreatedBy());
+                    // term comment field contains the original OMIM acc id, or MESH acc id
+                    String matchByAccId = term.getComment() == null ? term.getAccId() : term.getComment();
+                    annot.setNotes("ClinVar Annotator: match by " + matchByAccId);
+
+                    // does incoming annotation match rgd?
+                    int inRgdAnnotKey = dao.getAnnotationKey(annot);
+                    if (inRgdAnnotKey != 0) {
+                        dao.updateLastModifiedDateForAnnotation(inRgdAnnotKey, getCreatedBy());
+                        counters.increment("annotations - variant - matching");
+                    } else {
+                        dao.insertAnnotation(annot);
+                        counters.increment("annotations - variant - inserted");
+                    }
+                }
+
+                generateGeneAnnotations(ge.getRgdId(), associatedGenes, pubMedIds, ge.getTraitName());
+            } catch( Exception e ) {
+                throw new RuntimeException(e);
+            }
+        });
 
         dumpUnmatchableConditions();
         log.info("  drugResponseTermCount="+unmatchableDrugResponseTerms.size());
-
-        log.info(variantsProcessed+"  omimToRdoCount="+omimToRdoCount+", meshToRdoCount="+meshToRdoCount);
+        log.info("  omimToRdoCount="+omimToRdoCount+", meshToRdoCount="+meshToRdoCount);
         log.info("  termNameToRdoCount="+termNameToRdoCount);
 
         // delete stale annotations
         int annotsDeleted = dao.deleteObsoleteAnnotations(getCreatedBy(), pipelineStartTime, getStaleAnnotDeleteThreshold(),
                 getRefRgdId(), getDataSrc());
+        counters.add("annotations - deleted", annotsDeleted);
 
-        log.info("");
-        log.info("variants processed: "+variantsProcessed);
-        log.info(" -out of which variants non carpe compliant: "+variantsNotCarpeCompliant);
-        log.info("");
+        log.info(counters.dumpAlphabetically());
 
-        if( annotsMatching>0 )
-            log.info("  matching variant annotations: "+annotsMatching);
-        if( annotsInserted>0 )
-            log.info("  inserted variant annotations: "+annotsInserted);
-        if( annotsDeleted>0 )
-            log.info("  deleted variant annotations : "+annotsDeleted);
-
-        for( int i=1; i<=3; i++ ) {
-            String species = SpeciesType.getCommonName(i).toLowerCase();
-            if( geneAnnotsMatching[i]>0 )
-                log.info("  matching "+species+" gene annotations: "+geneAnnotsMatching[i]);
-            if( geneAnnotsInserted[i]>0 )
-                log.info("  inserted "+species+" gene annotations: "+geneAnnotsInserted[i]);
-        }
-
-        log.info("STOP annot pipeline;   elapsed "+Utils.formatElapsedTime(System.currentTimeMillis(), pipelineStartTime.getTime()));
+        log.info("STOP annot pipeline;   elapsed "+Utils.formatElapsedTime(System.currentTimeMillis(), time0));
     }
 
     boolean variantIsCarpeCompliant(VariantInfo vi) throws Exception {
@@ -203,6 +188,7 @@ public class VariantAnnotator {
 
             for( Term term: getDiseaseTerms(varRgdId, geneRgdId, conditions) ) {
                 Gene gene = dao.getGene(geneRgdId);
+                String species = getSpeciesName(gene.getSpeciesTypeKey());
 
                 Annotation humanGeneAnnot = (Annotation) annot.clone();
                 humanGeneAnnot.setAnnotatedObjectRgdId(geneRgdId);
@@ -218,16 +204,19 @@ public class VariantAnnotator {
                 int inRgdAnnotKey = dao.getAnnotationKey(humanGeneAnnot);
                 if( inRgdAnnotKey!=0 ) {
                     dao.updateLastModifiedDateForAnnotation(inRgdAnnotKey, getCreatedBy());
-                    geneAnnotsMatching[gene.getSpeciesTypeKey()]++;
+                    counters.increment("annotations - gene - "+species+" - matching");
+                    counters.increment("annotations - gene - ALL SPECIES - matching");
                 } else {
                     dao.insertAnnotation(humanGeneAnnot);
-                    geneAnnotsInserted[gene.getSpeciesTypeKey()]++;
+                    counters.increment("annotations - gene - "+species+" - inserted");
+                    counters.increment("annotations - gene - ALL SPECIES - inserted");
                 }
 
                 // create homologous rat/mouse annotations
                 for( Gene homolog: dao.getHomologs(gene.getRgdId()) ) {
                     if( homolog.getSpeciesTypeKey()!=SpeciesType.RAT && homolog.getSpeciesTypeKey()!=SpeciesType.MOUSE )
                         continue;
+                    species = getSpeciesName(homolog.getSpeciesTypeKey());
 
                     Annotation homologAnnot = (Annotation) humanGeneAnnot.clone();
                     homologAnnot.setSpeciesTypeKey(homolog.getSpeciesTypeKey());
@@ -240,10 +229,12 @@ public class VariantAnnotator {
                     int inRgdAnnotKey2 = dao.getAnnotationKey(homologAnnot);
                     if( inRgdAnnotKey2!=0 ) {
                         dao.updateLastModifiedDateForAnnotation(inRgdAnnotKey2, getCreatedBy());
-                        geneAnnotsMatching[homolog.getSpeciesTypeKey()]++;
+                        counters.increment("annotations - gene - "+species+" - matching");
+                        counters.increment("annotations - gene - ALL SPECIES - matching");
                     } else {
                         dao.insertAnnotation(homologAnnot);
-                        geneAnnotsInserted[homolog.getSpeciesTypeKey()]++;
+                        counters.increment("annotations - gene - "+species+" - inserted");
+                        counters.increment("annotations - gene - ALL SPECIES - inserted");
                     }
                 }
             }
@@ -355,7 +346,7 @@ public class VariantAnnotator {
         return results;
     }
 
-    void addToUnmatchableConditions(String condition) {
+    synchronized void addToUnmatchableConditions(String condition) {
 
         // to reduce nr of duplicate conditions (differing only by case), we convert everything to upper case
         condition = condition.toUpperCase();
@@ -411,7 +402,7 @@ public class VariantAnnotator {
 
         mapConceptToOmim = new HashMap<>();
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(localFileName))));
+        BufferedReader reader = Utils.openReader(localFileName);
         String line;
         while( (line=reader.readLine())!=null ) {
             if( line.startsWith("#") ) // skip comment lines
@@ -478,11 +469,7 @@ public class VariantAnnotator {
     }
 
     List<Term> getDiseaseTermsBySemiExactTermNameMatch(String termName) throws Exception {
-        if( termNameMatcher==null ) {
-            termNameMatcher = new TermNameMatcher();
-            termNameMatcher.indexTermsAndSynonyms(dao);
-        }
-        Set<String> termAccs = termNameMatcher.getTermAccIds(termName);
+        Set<String> termAccs = getTermAccIds(termName);
         if( termAccs==null )
             return Collections.emptyList();
 
@@ -491,6 +478,18 @@ public class VariantAnnotator {
             terms.add(dao.getTermByAccId(accId));
         }
         return terms;
+    }
+
+    synchronized Set<String> getTermAccIds(String termName) throws Exception {
+        if( termNameMatcher==null ) {
+            termNameMatcher = new TermNameMatcher();
+            termNameMatcher.indexTermsAndSynonyms(dao);
+        }
+        return termNameMatcher.getTermAccIds(termName);
+    }
+
+    synchronized String getSpeciesName(int speciesTypeKey) {
+        return SpeciesType.getCommonName(speciesTypeKey).toLowerCase();
     }
 
     public void setVersion(String version) {

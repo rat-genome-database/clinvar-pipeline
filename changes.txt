@@ -1,3 +1,6 @@
+ClinVar v.1.1.40, Apr 11, 2019
+  annotator: code parallelized for significant speed up
+
 ClinVar v.1.1.39, Feb 19, 2019
   improved exception handling
 

@@ -132,7 +132,7 @@ public class TermNameMatcher {
             term = term.replace("T Cell-","TCell").replace("B Cell-","BCell").replace("NK Cell-","NKCell");
         }
 
-        String[] words = term.replace('-',' ').replace(',',' ').replace('(',' ').replace(')',' ')
+        String[] words = term.replace('-',' ').replace(',',' ').replace('(',' ').replace(')',' ').replace('/',' ')
                 .toLowerCase().split("[\\s]");
         Arrays.sort(words);
         return Utils.concatenate(Arrays.asList(words), ".");

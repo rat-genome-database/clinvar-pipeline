@@ -398,7 +398,7 @@ public class VariantAnnotator {
         downloader.setLocalFile("data/concept_to_omim.txt.gz");
         downloader.setPrependDateStamp(true);
         downloader.setUseCompression(true);
-        String localFileName = downloader.download();
+        String localFileName = downloader.downloadNew();
 
         mapConceptToOmim = new HashMap<>();
 
@@ -437,6 +437,11 @@ public class VariantAnnotator {
         }
         reader.close();
 
+        if( mapConceptToOmim.isEmpty() ) {
+            String msg = "ERROR! concept-to-omim map is empty! aborting...";
+            log.error(msg);
+            throw new Exception(msg);
+        }
         log.info("  concept-to-omim map loaded: "+mapConceptToOmim.size());
     }
 

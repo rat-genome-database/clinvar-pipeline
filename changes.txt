@@ -1,5 +1,6 @@
 ClinVar v.1.1.41, Jun 06, 2019
   improved term name matcher (for conditions containing '/' characters)
+  annotator QC: aborts if concept-to-omim file is empty
 
 ClinVar v.1.1.40, Apr 11, 2019
   annotator: code parallelized for significant speed up

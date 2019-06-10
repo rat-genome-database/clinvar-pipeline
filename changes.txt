@@ -1,6 +1,7 @@
 ClinVar v.1.2.0, Jun 10, 2019
   fixed loading of xdb ids
-
+  added handling of 'clinical significance: association not found'
+  
 ClinVar v.1.1.41, Jun 06, 2019
   improved term name matcher (for conditions containing '/' characters)
   annotator QC: aborts if concept-to-omim file is empty

@@ -232,7 +232,9 @@ public class Dao {
         }
 
         xdbIdDAO.deleteXdbIds(obsoleteXdbIds);
-        GlobalCounters.getInstance().incrementCounter("XDB_IDS_DELETED", obsoleteXdbIds.size());
+        if( !obsoleteXdbIds.isEmpty() ) {
+            GlobalCounters.getInstance().incrementCounter("XDB_IDS_DELETED", obsoleteXdbIds.size());
+        }
         return obsoleteXdbIds.size();
     }
 

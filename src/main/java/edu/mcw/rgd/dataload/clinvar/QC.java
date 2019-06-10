@@ -172,7 +172,8 @@ public class QC {
                         case "confers sensitivity": return 85;
                         case "uncertain significance": return 90;
                         case "conflicting data from submitters": return 100;
-                        case "other": return 110;
+                        case "association not found": return 110;
+                        case "other": return 120;
                         case "not provided": return 2000;
                         default:
                             log.warn("unhandled clinical significance: "+clinicalSignificance);

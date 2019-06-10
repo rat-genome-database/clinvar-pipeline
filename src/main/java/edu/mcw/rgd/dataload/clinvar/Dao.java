@@ -40,6 +40,7 @@ public class Dao {
     private RGDManagementDAO rgdIdDAO = new RGDManagementDAO();
     private VariantInfoDAO variantInfoDAO = new VariantInfoDAO();
     private XdbIdDAO xdbIdDAO = new XdbIdDAO();
+    private String deleteThresholdForStaleXdbIds;
 
 
     public String getConnectionInfo() {
@@ -202,11 +203,37 @@ public class Dao {
         return xdbIdDAO.getXdbIdsByRgdId(xdbKeys, variantRgdId);
     }
 
-    public int deleteXdbIds(List<XdbId> xdbIds) throws Exception {
-        for( XdbId id: xdbIds ) {
+    /// xdb-id count for ClinVar pipeline
+    public int getXdbIdCount() throws Exception {
+        String sql = "SELECT COUNT(*) FROM rgd_acc_xdb WHERE src_pipeline='CLINVAR'";
+        return xdbIdDAO.getCount(sql);
+    }
+
+    public int deleteStaleXdbIds(int originalXdbIdCount, Date staleXdbIdsCutoffDate, Logger log) throws Exception {
+
+        int staleXdbIdsDeleteThresholdPerc = Integer.parseInt(getDeleteThresholdForStaleXdbIds().substring(0, getDeleteThresholdForStaleXdbIds().length()-1));
+        int staleAnnotDeleteThresholdCount = (staleXdbIdsDeleteThresholdPerc*originalXdbIdCount) / 100;
+
+        List<XdbId> obsoleteXdbIds = xdbIdDAO.getXdbIdsModifiedBefore(staleXdbIdsCutoffDate, "CLINVAR", 0);
+        if( !obsoleteXdbIds.isEmpty() ) {
+            GlobalCounters.getInstance().incrementCounter("XDB_IDS_OBSOLETE_COUNT", obsoleteXdbIds.size());
+        }
+
+        if( obsoleteXdbIds.size() > staleAnnotDeleteThresholdCount ) {
+
+            log.warn("WARNING: OBSOLETE XDB IDS COUNT: "+obsoleteXdbIds.size());
+            log.warn("WARNING: OBSOLETE XDB IDS DELETE THRESHOLD OF "+getDeleteThresholdForStaleXdbIds() + " IS: "+ staleAnnotDeleteThresholdCount);
+            log.warn("WARNING: OBSOLETE XDB IDS NOT DELETED: "+getDeleteThresholdForStaleXdbIds()+" THRESHOLD VIOLATED!");
+            return 0;
+        }
+
+        for( XdbId id: obsoleteXdbIds ) {
             logXdbIds.info("DELETE "+id.dump("|"));
         }
-        return xdbIdDAO.deleteXdbIds(xdbIds);
+
+        xdbIdDAO.deleteXdbIds(obsoleteXdbIds);
+        GlobalCounters.getInstance().incrementCounter("XDB_IDS_DELETED", obsoleteXdbIds.size());
+        return obsoleteXdbIds.size();
     }
 
     public int insertXdbIds(List<XdbId> xdbIds) throws Exception {
@@ -445,5 +472,13 @@ public class Dao {
             staleAnnotKeys.add(ann.getKey());
         }
         return annotationDAO.deleteAnnotations(staleAnnotKeys);
+    }
+
+    public void setDeleteThresholdForStaleXdbIds(String deleteThresholdForStaleXdbIds) {
+        this.deleteThresholdForStaleXdbIds = deleteThresholdForStaleXdbIds;
+    }
+
+    public String getDeleteThresholdForStaleXdbIds() {
+        return deleteThresholdForStaleXdbIds;
     }
 }

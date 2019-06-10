@@ -85,7 +85,7 @@ public class QC {
 
         rec.getGeneAssociations().qc(getDao());
 
-        rec.getXdbIds().qc(var!=null ? var.getRgdId() : 0, getDao(), rec.getClinVarId());
+        rec.getXdbIds().qc(var!=null ? var.getRgdId() : 0, getDao());
 
         rec.getMapPositions().qc(var!=null ? var.getRgdId() : 0, getDao());
 

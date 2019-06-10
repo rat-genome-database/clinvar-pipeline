@@ -6,6 +6,8 @@ import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.FileSystemResource;
 
+import java.util.Date;
+
 /**
  * @author mtutaj
  * @since 2/11/14
@@ -50,9 +52,8 @@ public class Manager {
 
         try {
             if( qcDuplicateTerms ) {
-                Dao dao = new Dao();
                 TermNameMatcher matcher = new TermNameMatcher();
-                matcher.indexTerms(dao);
+                matcher.indexTerms(manager.getDao());
             }
 
             if( runLoader ) {
@@ -60,7 +61,7 @@ public class Manager {
             }
 
             if( annotator!=null ) {
-                annotator.run();
+                annotator.run(manager.getDao());
             }
         }catch (Exception e) {
             if( runLoader ) {
@@ -77,6 +78,9 @@ public class Manager {
 
         long time0 = System.currentTimeMillis();
 
+        int originalXdbIdCount = getDao().getXdbIdCount();
+        GlobalCounters.getInstance().incrementCounter("XDB_IDS_COUNT_INITIAL", originalXdbIdCount);
+
         log.info(getVersion());
         log.info(getDao().getConnectionInfo());
 
@@ -88,6 +92,12 @@ public class Manager {
         parser.qc = qc;
         parser.loader = loader;
         parser.parse(variantFileName);
+
+        Date staleXdbIdsCutoffDate = Utils.addDaysToDate(new Date(time0), -1);
+        getDao().deleteStaleXdbIds(originalXdbIdCount, staleXdbIdsCutoffDate, log);
+
+        int lastXdbIdCount = getDao().getXdbIdCount();
+        GlobalCounters.getInstance().incrementCounter("XDB_IDS_ZCOUNT_FINAL", lastXdbIdCount);
 
         log.info(GlobalCounters.getInstance().dump());
         log.info("TOTAL ELAPSED TIME "+Utils.formatElapsedTime(time0, System.currentTimeMillis()));

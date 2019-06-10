@@ -15,7 +15,6 @@ public class XdbIds {
     private List<XdbId> inRgdXdbIds;
 
     private List<XdbId> insXdbIds = new ArrayList<>();
-    private List<XdbId> delXdbIds = new ArrayList<>();
     private List<XdbId> updXdbIds = new ArrayList<>();
 
     boolean addIncomingXdbId(int xdbKey, String accId, String clinVarId) {
@@ -65,7 +64,7 @@ public class XdbIds {
      * @param dao
      * @throws Exception
      */
-    public void qc(int varRgdId, Dao dao, String clinVarId) throws Exception {
+    public void qc(int varRgdId, Dao dao) throws Exception {
 
         // all GeneIds must have their link-text set to gene symbol, if available
         updateLinkText(dao);
@@ -85,16 +84,10 @@ public class XdbIds {
                 insXdbIds.add(id);
         }
 
-        // whatever was left in 'inRgdIds' must be deleted, but only if it has matching Clinvar id
-        // (xdb ids imported via different Clinvar record, must NOT be deleted
-        for( XdbId id: inRgdIds ) {
-            if( Utils.stringsAreEqual(id.getNotes(), clinVarId ) )
-                delXdbIds.add(id);
+        if( !insXdbIds.isEmpty() ) {
+            GlobalCounters.getInstance().incrementCounter("XDB_IDS_INSERTED", insXdbIds.size());
         }
-
-        GlobalCounters.getInstance().incrementCounter("XDB_IDS_INSERTED", insXdbIds.size());
-        GlobalCounters.getInstance().incrementCounter("XDB_IDS_UPDATED", updXdbIds.size());
-        GlobalCounters.getInstance().incrementCounter("XDB_IDS_DELETED", delXdbIds.size());
+        GlobalCounters.getInstance().incrementCounter("XDB_IDS_UPDATED_LAST_MODIFIED_DATE", updXdbIds.size());
     }
 
     boolean isIncomingXdbIdInRgd(XdbId id, List<XdbId> inRgdIds) {
@@ -113,10 +106,6 @@ public class XdbIds {
      * sync incoming xdb ids with RGD database
      */
     public void sync(int variantRgdId, Dao dao) throws Exception {
-
-        if( !delXdbIds.isEmpty() ) {
-            dao.deleteXdbIds(delXdbIds);
-        }
 
         if( !insXdbIds.isEmpty() ) {
             // set rgd_id for all to-be-inserted xdb ids
@@ -142,16 +131,4 @@ public class XdbIds {
             }
         }
     }
-/*
-    int extractIncomingPubMedIds(Set<String> pmedIds) {
-        int pmedIdCount = 0;
-        for( XdbId xdbId: incomingXdbIds ) {
-            if( xdbId.getXdbKey()==XdbId.XDB_KEY_PUBMED ) {
-                pmedIds.add(xdbId.getAccId());
-                pmedIdCount++;
-            }
-        }
-        return pmedIdCount;
-    }
-    */
 }

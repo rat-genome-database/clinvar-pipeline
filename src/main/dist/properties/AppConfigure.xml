@@ -2,7 +2,7 @@
 
 <beans>
 	<bean id="manager" class="edu.mcw.rgd.dataload.clinvar.Manager">
-        <property name="version" value="ClinVar Pipeline v. 1.1.41   (Jun 4, 2019)" />
+        <property name="version" value="ClinVar Pipeline v. 1.2.0   (Jun 10, 2019)" />
         <property name="dao" ref="dao" />
         <property name="qc" ref="qc" />
         <property name="loader" ref="loader" />
@@ -10,7 +10,9 @@
         <property name="parser" ref="parseGroup" />
 	</bean>
 
-    <bean id="dao" class="edu.mcw.rgd.dataload.clinvar.Dao" />
+    <bean id="dao" class="edu.mcw.rgd.dataload.clinvar.Dao" >
+        <property name="deleteThresholdForStaleXdbIds" value="9%" />
+    </bean>
 
     <bean id="qc" class="edu.mcw.rgd.dataload.clinvar.QC" />
 

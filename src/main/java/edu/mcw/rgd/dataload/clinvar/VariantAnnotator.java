@@ -29,7 +29,7 @@ import java.util.zip.GZIPInputStream;
  */
 public class VariantAnnotator {
 
-    Dao dao = new Dao();
+    Dao dao;
     Logger logDebug = Logger.getLogger("dbg");
     Logger log = Logger.getLogger("annotator");
 
@@ -56,10 +56,11 @@ public class VariantAnnotator {
     private boolean skipDrugResponseUnmatchableConditions;
     private String staleAnnotDeleteThreshold;
 
-    public void run() throws Exception {
+    public void run(Dao dao) throws Exception {
 
         long time0 = System.currentTimeMillis();
 
+        this.dao = dao;
         counters = new CounterPool();
 
         log.info(getVersion());

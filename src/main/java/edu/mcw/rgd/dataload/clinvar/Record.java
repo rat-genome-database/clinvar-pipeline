@@ -90,38 +90,59 @@ public class Record {
                     : notes
             );
 
-            // ensure that the notes are no longer than 4000 characters
-            notes = getVarIncoming().getNotes();
-            if( notes.length()>4000 ) {
-                // take into account UTF8 encoding
-                try {
-                    String notes2;
-                    int len = 3996;
-                    do {
-                        notes2 = notes.substring(0, len);
-                        len--;
-                    } while (notes2.getBytes("UTF-8").length > 3996);
+            handleNotes4000LimitForVarIncoming();
+        }
+    }
 
-                    Logger log = Logger.getLogger("loader");
-                    log.info("  combined notes too long for "+getVarIncoming().getSymbol()+"! UTF8 str len:"+(len+5));
+    public void handleNotes4000LimitForVarIncoming() {
 
-                    getVarIncoming().setNotes(notes2 + " ...");
-                }catch( UnsupportedEncodingException e ) {
-                    // totally unexpected
-                    throw new RuntimeException(e);
-                }
+        // ensure that the notes are no longer than 4000 characters
+        String notes = getVarIncoming().getNotes();
+        if( notes!=null && notes.length() > 4000 ) {
+            // take into account UTF8 encoding
+            try {
+                String notes2;
+                int len = 3996;
+                do {
+                    notes2 = notes.substring(0, len);
+                    len--;
+                } while (notes2.getBytes("UTF-8").length > 3996);
+
+                Logger log = Logger.getLogger("loader");
+                log.info("  combined notes too long for " + getVarIncoming().getSymbol() + "! UTF8 str len:" + (len + 5));
+
+                getVarIncoming().setNotes(notes2 + " ...");
+            } catch (UnsupportedEncodingException e) {
+                // totally unexpected
+                throw new RuntimeException(e);
             }
         }
     }
 
     public void mergeSubmitterForVarIncoming(String submitter) {
+        if( submitter.isEmpty() ) {
+            return;
+        }
+        if( submitter.endsWith(",") ) { // remove trailing ',' from submitter name
+            submitter = submitter.substring(0, submitter.length()-1).trim();
+        }
+
         if( !submitter.isEmpty() ) {
             String submitters = getVarIncoming().getSubmitter();
             if( submitters!=null ) {
-                Set<String> set = new TreeSet<>(Arrays.asList(submitters.split("[\\|]")));
-                if( set.add(submitter) ) {
-                    getVarIncoming().setSubmitter(Utils.concatenate(set, "|"));
+                Set<String> set = new TreeSet<>();
+                set.add(submitter);
+
+                String[] submitterArray = submitters.split("[\\|]");
+                for( String subm: submitterArray ) {
+                    if( subm.endsWith(",") ) {
+                        set.add(subm.substring(0, subm.length()-1).trim());
+                    } else {
+                        set.add(subm);
+                    }
                 }
+
+                getVarIncoming().setSubmitter(Utils.concatenate(set, "|"));
             } else {
                 getVarIncoming().setSubmitter(submitter);
             }

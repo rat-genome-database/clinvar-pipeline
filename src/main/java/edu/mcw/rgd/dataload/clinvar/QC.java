@@ -31,12 +31,15 @@ public class QC {
         rec.setVarInRgd(var);
 
         if( var!=null ) {
-            // check if object type, name, source or so_acc_id changed
+
             VariantInfo var2 = rec.getVarIncoming();
+            var2.setNotes(merge(var2.getNotes(), var.getNotes(), rec));
+            rec.handleNotes4000LimitForVarIncoming();
+
+            // check if object type, name, source or so_acc_id changed
             if( !Utils.stringsAreEqual(var.getObjectType(), var2.getObjectType()) ||
                 !Utils.stringsAreEqual(var.getName(), var2.getName()) ||
                 !Utils.stringsAreEqual(var.getSoAccId(), var2.getSoAccId()) ||
-                !Utils.stringsAreEqual(var.getNotes(), var2.getNotes()) ||
 
                 !Utils.stringsAreEqual(var.getNucleotideChange(), var2.getNucleotideChange()) ) {
 
@@ -121,18 +124,29 @@ public class QC {
             if( inRgd.contains(incoming) )
                 return inRgd; // in-rgd already contains the incoming value
 
+            // see if the case is different
+            String oldInRgd = inRgd;
+            boolean wasReplaced = false;
+            if( inRgd.toUpperCase().contains(incoming.toUpperCase()) ) {
+                // yes, in-rgd, there is already an entry with different case: replace it
+                int pos = inRgd.toUpperCase().indexOf(incoming.toUpperCase());
+                System.out.println("replaced");
+                System.out.println("   OLD="+inRgd);
+                inRgd = inRgd.substring(0, pos) + incoming + inRgd.substring(pos+incoming.length());
+                wasReplaced = true;
+            }
+
             // in-rgd does not contain incoming value: merge in-rgd with incoming
             Set<String> inRgdSet = new TreeSet<String>(Arrays.asList(inRgd.split("[\\|]")));
-            int inRgdSetSize = inRgdSet.size();
             Collections.addAll(inRgdSet, incoming.split("\\|"));
-            if( inRgdSet.size()>inRgdSetSize ) {
-                // new value added
+            String newInRgd = Utils.concatenate(inRgdSet,"|");
+            if( wasReplaced ) {
+                System.out.println("   NEW="+newInRgd);
+            }
+            if( !oldInRgd.equals(newInRgd) ) {
                 rec.setUpdateRecordFlag(true);
-                return Utils.concatenate(inRgdSet,"|");
             }
-            else {
-                return inRgd; // in-rgd already contains the incoming value
-            }
+            return newInRgd;
         }
 
         // case 3. non-null incoming, null in-rgd

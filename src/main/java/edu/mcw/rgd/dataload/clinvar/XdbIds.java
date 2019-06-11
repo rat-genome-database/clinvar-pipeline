@@ -96,6 +96,7 @@ public class XdbIds {
         while( it.hasNext() ) {
             XdbId xdbId = it.next();
             if( xdbId.getXdbKey()==id.getXdbKey() && xdbId.getAccId().equals(id.getAccId()) ) {
+                id.setKey(xdbId.getKey()); // transfer KEY to incoming xdb id
                 it.remove();
                 return true;
             }

@@ -27,10 +27,16 @@ public class Loader {
             GlobalCounters.getInstance().incrementCounter("VARIANTS_INSERTED", 1);
         }
         else if( rec.isUpdateRecordFlag() ) {
-            dao.updateVariant(rec.getVarIncoming(), rec.getVarInRgd());
-            rec.setVarInRgd(rec.getVarIncoming());
+            if( dao.updateVariant(rec.getVarIncoming(), rec.getVarInRgd()) ) {
+                rec.setVarInRgd(rec.getVarIncoming());
 
-            GlobalCounters.getInstance().incrementCounter("VARIANTS_UPDATED", 1);
+                GlobalCounters.getInstance().incrementCounter("VARIANTS_UPDATED", 1);
+            } else {
+                // incoming variant is the same as variant in rgd -- downgrading UPDATE to UP-TO-DATE
+                dao.updateVariantLastModifiedDate(rec.getVarInRgd().getRgdId());
+
+                GlobalCounters.getInstance().incrementCounter("VARIANTS_MATCHING (DOWNGRADED FROM UPDATE)", 1);
+            }
         }
         else {
             dao.updateVariantLastModifiedDate(rec.getVarInRgd().getRgdId());

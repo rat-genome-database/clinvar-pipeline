@@ -90,16 +90,23 @@ public class Dao {
     /**
      * Update variant in tables GENOMIC_ELEMENTS,CLINVAR given rgdID
      *
-     * @return count of rows affected
+     * @return true if the variant has been updated;
+     *   false otherwise (incoming variant is the same as variant in RGD)
      * @throws Exception when unexpected error in spring framework occurs
      */
-    public int updateVariant(VariantInfo varNew, VariantInfo varOld) throws Exception{
+    public boolean updateVariant(VariantInfo varNew, VariantInfo varOld) throws Exception{
 
         varNew.setRgdId(varOld.getRgdId());
 
-        logUpdatedVariants.info("OLD: "+varOld.dump("|"));
-        logUpdatedVariants.info("NEW: "+varNew.dump("|"));
-        return variantInfoDAO.updateVariant(varNew);
+        String varOldDump = varOld.dump("|");
+        String varNewDump = varNew.dump("|");
+        if( varOldDump.equals(varNewDump) ) {
+            return false;
+        }
+        logUpdatedVariants.info("OLD: "+varOldDump);
+        logUpdatedVariants.info("NEW: "+varNewDump);
+        variantInfoDAO.updateVariant(varNew);
+        return true;
     }
 
     /**

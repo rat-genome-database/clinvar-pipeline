@@ -1,3 +1,7 @@
+Jun 10, 2019
+  fixed loading of xdb ids (added code mistakenly removed yesterday)
+  improved handling of updates
+
 ClinVar v.1.2.0, Jun 10, 2019
   fixed loading of xdb ids
   added handling of 'clinical significance: association not found'

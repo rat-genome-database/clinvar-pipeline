@@ -94,7 +94,8 @@ public class QC {
 
         rec.getHgvsNames().qc(var!=null ? var.getRgdId() : 0, getDao());
 
-        rec.getAliases().qc(var!=null ? var.getRgdId() : 0, getDao());
+        // NOTE: aliases QC must be performed *after* xdb ids QC
+        rec.getAliases().qc(var!=null ? var.getRgdId() : 0, getDao(), rec.getClinVarId(), rec.getXdbIds().getClinVarIds());
     }
 
     void updateLastEvaluatedDate(VariantInfo varInRgd, VariantInfo varIncoming) {

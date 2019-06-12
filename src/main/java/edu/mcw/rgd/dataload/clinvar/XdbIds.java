@@ -59,6 +59,21 @@ public class XdbIds {
         return null;
     }
 
+    Set<String> getClinVarIds() {
+        Set<String> clinVarIds = new HashSet<>();
+        for( XdbId xdbId: inRgdXdbIds ) {
+            if( xdbId.getXdbKey()==52 ) {
+                clinVarIds.add(xdbId.getAccId());
+            }
+        }
+        for( XdbId xdbId: insXdbIds ) {
+            if( xdbId.getXdbKey()==52 ) {
+                clinVarIds.add(xdbId.getAccId());
+            }
+        }
+        return clinVarIds;
+    }
+
     /**
      * perform qc
      * @param dao

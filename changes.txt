@@ -1,3 +1,6 @@
+Jun 12, 2019
+  fixed loading of aliases (some aliases were not deleted when needed)
+
 Jun 10, 2019
   fixed loading of xdb ids (added code mistakenly removed yesterday)
   improved handling of updates

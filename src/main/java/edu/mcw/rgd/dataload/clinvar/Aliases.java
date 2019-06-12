@@ -16,7 +16,6 @@ public class Aliases {
     private List<Alias> matching = new ArrayList<Alias>();
     private List<Alias> forInsert = new ArrayList<Alias>();
     private List<Alias> forDelete;
-    private String clinVarId;
 
     /**
      * add the alias to the incoming list, if not a duplicate;
@@ -42,8 +41,6 @@ public class Aliases {
             return false;
         }
 
-        this.clinVarId = clinVarId;
-
         for( String alias: incoming ) {
             if( Utils.stringsAreEqualIgnoreCase(alias, aliasName) )
                 return false;
@@ -51,27 +48,24 @@ public class Aliases {
         return incoming.add(aliasName.trim());
     }
 
-    public void qc(int varRgdId, Dao dao) throws Exception {
+    public void qc(int varRgdId, Dao dao, String clinVarId, Collection<String> clinVarIds) throws Exception {
 
         List<Alias> inRgd = dao.getAliases(varRgdId);
-        List<Alias> inRgdCopy = new ArrayList<Alias>(inRgd);
 
-        // filter out aliases of different clinVarId
-        List<Alias> inRgdDiffClinVarId = new ArrayList<Alias>();
+        // filter out aliases of different clinVarIds
+        forDelete = new ArrayList<>();
         Iterator<Alias> it = inRgd.iterator();
         while( it.hasNext() ) {
             Alias a = it.next();
-            if( a.getNotes()!=null
-             && a.getNotes().startsWith("RCV")
-             && !a.getNotes().equals(clinVarId) ) {
+            if( a.getNotes()!=null && !clinVarIds.contains(a.getNotes()) ) {
                 it.remove();
-                inRgdDiffClinVarId.add(a);
+                forDelete.add(a);
             }
         }
 
 
         for( String aliasName: incoming ) {
-            Alias matchingAlias = detach(inRgdCopy, aliasName);
+            Alias matchingAlias = detach(inRgd, aliasName);
             if( matchingAlias!=null ) {
                 // matches RGD
                 matching.add(matchingAlias);
@@ -87,8 +81,12 @@ public class Aliases {
             }
         }
 
-        inRgdCopy.removeAll(inRgdDiffClinVarId);
-        forDelete = inRgdCopy;
+        // delete in-rgd aliases that have the same RCV id as the incoming id
+        for( Alias a: inRgd ) {
+            if( Utils.stringsAreEqual(a.getNotes(), clinVarId) ) {
+                forDelete.add(a);
+            }
+        }
     }
 
     private Alias detach(List<Alias> aliases, String aliasName) {
@@ -110,6 +108,12 @@ public class Aliases {
             GlobalCounters.getInstance().incrementCounter("ALIASES_MATCHED", matching.size());
         }
 
+        // NOTE: deletions must be performed *before* insertions to avoid unique key violations
+        if( !forDelete.isEmpty() ) {
+            dao.deleteAliases(forDelete);
+            GlobalCounters.getInstance().incrementCounter("ALIASES_DELETED", forDelete.size());
+        }
+
         if( !forInsert.isEmpty() ) {
             for( Alias alias: forInsert ) {
                 alias.setRgdId(varRgdId);
@@ -117,11 +121,6 @@ public class Aliases {
 
             dao.insertAliases(forInsert);
             GlobalCounters.getInstance().incrementCounter("ALIASES_INSERTED", forInsert.size());
-        }
-
-        if( !forDelete.isEmpty() ) {
-            dao.deleteAliases(forDelete);
-            GlobalCounters.getInstance().incrementCounter("ALIASES_DELETED", forDelete.size());
         }
     }
 }

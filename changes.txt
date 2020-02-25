@@ -1,3 +1,6 @@
+Feb 25, 2020
+  empty hgvs names are no longer loaded
+
 Jun 12, 2019
   fixed loading of aliases (some aliases were not deleted when needed)
 

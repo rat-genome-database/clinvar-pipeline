@@ -1,6 +1,7 @@
 package edu.mcw.rgd.dataload.clinvar;
 
 import edu.mcw.rgd.datamodel.HgvsName;
+import edu.mcw.rgd.process.Utils;
 
 import java.util.ArrayList;
 import java.util.Iterator;

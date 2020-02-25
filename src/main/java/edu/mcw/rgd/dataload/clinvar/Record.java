@@ -16,7 +16,6 @@ import java.util.TreeSet;
  */
 public class Record {
 
-    public int recno;
     private VariantInfo varIncoming;
     private VariantInfo varInRgd;
     private boolean updateRecordFlag;

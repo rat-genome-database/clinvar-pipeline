@@ -12,7 +12,6 @@ import org.jaxen.xom.XOMXPath;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author mtutaj
@@ -22,7 +21,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Parser extends XomAnalyzer {
 
     static final SimpleDateFormat SDT_YYYYMMDD = new SimpleDateFormat("yyyy-MM-dd");
-    static AtomicInteger recno = new AtomicInteger(0);
 
     Logger log = Logger.getLogger("loader");
     Logger logDebug = Logger.getLogger("dbg");
@@ -35,7 +33,6 @@ public class Parser extends XomAnalyzer {
     private void createRecord(String varID) {
 
         rec = new Record();
-        rec.recno = recno.incrementAndGet();
 
         VariantInfo var = new VariantInfo();
         var.setSource(Manager.SOURCE);
@@ -84,7 +81,7 @@ public class Parser extends XomAnalyzer {
             }
 
             String clinVarId = xpClinVarAcc.stringValueOf(element);
-            logDebug.info(recno + ". " + clinVarId);
+            logDebug.info(clinVarId);
 
             // parse Measures from MeasureSet
             Elements measureSets = element.getChildElements("MeasureSet");
@@ -132,8 +129,7 @@ public class Parser extends XomAnalyzer {
 
         }
         catch(Exception e) {
-            Utils.printStackTrace(e, log);
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
         return null;
     }
@@ -231,7 +227,9 @@ public class Parser extends XomAnalyzer {
             String hgvsNameType = el.getAttributeValue("Type");
             hgvsNameType = hgvsNameType.replace(", ", "_").replace(" ","").toLowerCase().replace("hgvs_","");
             String hgvsName = el.getValue();
-            rec.getHgvsNames().addIncomingHgvsName(hgvsNameType, hgvsName);
+            if( !Utils.isStringEmpty(hgvsName) ) {
+                rec.getHgvsNames().addIncomingHgvsName(hgvsNameType, hgvsName);
+            }
         }
 
         String nucleotideChange = xpNucChange.stringValueOf(measure).toLowerCase();

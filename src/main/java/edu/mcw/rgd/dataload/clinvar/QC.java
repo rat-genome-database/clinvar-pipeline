@@ -81,6 +81,12 @@ public class QC {
                 // Brugada syndrome 3 [RCV000019201]|Brugada syndrome [RCV000058286]
                 rec.setUpdateRecordFlag(true);
             }
+            if( qcTraitNameDuplicates(var2) ) {
+                // Brugada syndrome 3 [RCV000019201]|BRUGADA SYNDROME 3 [RCV000019201]
+                // ==>
+                // Brugada syndrome 3 [RCV000019201]
+                rec.setUpdateRecordFlag(true);
+            }
 
             // if incoming last-evaluated-date is newer, use it
             updateLastEvaluatedDate(var, var2);
@@ -280,5 +286,39 @@ public class QC {
             }
         }
         return result;
+    }
+
+    // Brugada Syndrome 3 [RCV000019201]|Brugada syndrome 3 [RCV000019201]
+    // trait names differ only by case: leave only the first one
+    // return true if trait name changed and must be updated in db
+    boolean qcTraitNameDuplicates(VariantInfo var) {
+        String traitName = var.getTraitName();
+
+        String[] conditions = var.getTraitName().split("\\|", -1);
+        if( conditions.length==1 )
+            return false;
+
+        Set<String> results = new TreeSet<>();
+        Set<String> conditionsLC = new HashSet<>();
+
+        for( int i=0; i<conditions.length; i++ ) {
+            String condition = conditions[i];
+            String conditionLC = condition.toLowerCase();
+            if( conditionsLC.add(conditionLC) ) {
+                results.add(condition);
+            }
+        }
+
+        if( results.size()==conditionsLC.size() ) {
+            return false;
+        }
+
+        String traitName2 = Utils.concatenate(results, "|");
+        var.setTraitName(traitName2);
+
+        Logger log = Logger.getLogger("dbg");
+        log.info("DUPLICATE TRAIT NAME ["+traitName+"] replaced to ["+traitName2+"] "+var.getSymbol());
+        GlobalCounters.getInstance().incrementCounter("ZZZ_DUPLICATE_TRAIT_NAMES", 1);
+        return true;
     }
 }

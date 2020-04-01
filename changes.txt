@@ -1,3 +1,7 @@
+Apr 01, 2020
+  removed redundant error.log -- error messages are logged into loader.log and annotator.log
+  improved handling of duplicate trait names, per RGDD-1288
+
 Feb 25, 2020
   empty hgvs names are no longer loaded
 

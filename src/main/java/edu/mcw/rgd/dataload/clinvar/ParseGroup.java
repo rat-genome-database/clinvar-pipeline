@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 /**
@@ -46,7 +47,7 @@ public class ParseGroup {
             try {
                 parser.parse(file);
             } catch (Exception e) {
-                e.printStackTrace();
+                log.warn("*** problem parsing file "+chunk);
                 throw new RuntimeException(e);
             }
             logDebug.info("  done with "+chunk+ " active threads: "+Thread.activeCount());
@@ -65,21 +66,18 @@ public class ParseGroup {
             chunkSize += line.length() + 1;
 
             if( chunkSize < getChunkSize() ) {
-                out.write(line);
-                out.write('\n');
+                writeLine(line, out);
             } else {
                 // chunk is full: read the lines until end of record is found
                 String line2 = line.trim();
                 while( !line2.startsWith(getRecordEnd()) ) {
-                    out.write(line);
-                    out.write('\n');
+                    writeLine(line, out);
                     line = reader.readLine();
                     line2 = line.trim();
                     chunkSize += line.length() + 1;
                 }
                 // finish the record
-                out.write(line);
-                out.write('\n');
+                writeLine(line, out);
                 // finish the root element
                 out.write(getChunkTrailer());
                 out.write('\n');
@@ -101,6 +99,11 @@ public class ParseGroup {
         logDebug.info("  "+chunkName+" written "+chunkSize);
 
         log.info(" input file split into "+chunks.size()+" chunks");
+    }
+
+    void writeLine(String line, BufferedWriter out) throws IOException {
+        out.write(line);
+        out.write("\n");
     }
 
     BufferedWriter startNewChunk() throws IOException {

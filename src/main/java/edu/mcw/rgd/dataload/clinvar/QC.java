@@ -81,12 +81,6 @@ public class QC {
                 // Brugada syndrome 3 [RCV000019201]|Brugada syndrome [RCV000058286]
                 rec.setUpdateRecordFlag(true);
             }
-            if( qcTraitNameDuplicates(var2) ) {
-                // Brugada syndrome 3 [RCV000019201]|BRUGADA SYNDROME 3 [RCV000019201]
-                // ==>
-                // Brugada syndrome 3 [RCV000019201]
-                rec.setUpdateRecordFlag(true);
-            }
 
             // if incoming last-evaluated-date is newer, use it
             updateLastEvaluatedDate(var, var2);
@@ -128,28 +122,18 @@ public class QC {
 
         // case 2. non-null incoming, non-null in-rgd
         if( inRgd!=null ) {
-            if( inRgd.contains(incoming) )
-                return inRgd; // in-rgd already contains the incoming value
-
-            // see if the case is different
+            // delete all occurrences of 'incoming' from 'inRgd', regardless of case
             String oldInRgd = inRgd;
-            boolean wasReplaced = false;
-            if( inRgd.toUpperCase().contains(incoming.toUpperCase()) ) {
+            while( inRgd.toUpperCase().contains(incoming.toUpperCase()) ) {
                 // yes, in-rgd, there is already an entry with different case: replace it
                 int pos = inRgd.toUpperCase().indexOf(incoming.toUpperCase());
-                System.out.println("replaced");
-                System.out.println("   OLD="+inRgd);
-                inRgd = inRgd.substring(0, pos) + incoming + inRgd.substring(pos+incoming.length());
-                wasReplaced = true;
+                inRgd = inRgd.substring(0, pos) + inRgd.substring(pos+incoming.length());
             }
 
             // in-rgd does not contain incoming value: merge in-rgd with incoming
             Set<String> inRgdSet = new TreeSet<String>(Arrays.asList(inRgd.split("[\\|]")));
             Collections.addAll(inRgdSet, incoming.split("\\|"));
             String newInRgd = Utils.concatenate(inRgdSet,"|");
-            if( wasReplaced ) {
-                System.out.println("   NEW="+newInRgd);
-            }
             if( !oldInRgd.equals(newInRgd) ) {
                 rec.setUpdateRecordFlag(true);
             }
@@ -286,39 +270,5 @@ public class QC {
             }
         }
         return result;
-    }
-
-    // Brugada Syndrome 3 [RCV000019201]|Brugada syndrome 3 [RCV000019201]
-    // trait names differ only by case: leave only the first one
-    // return true if trait name changed and must be updated in db
-    boolean qcTraitNameDuplicates(VariantInfo var) {
-        String traitName = var.getTraitName();
-
-        String[] conditions = var.getTraitName().split("\\|", -1);
-        if( conditions.length==1 )
-            return false;
-
-        Set<String> results = new TreeSet<>();
-        Set<String> conditionsLC = new HashSet<>();
-
-        for( int i=0; i<conditions.length; i++ ) {
-            String condition = conditions[i];
-            String conditionLC = condition.toLowerCase();
-            if( conditionsLC.add(conditionLC) ) {
-                results.add(condition);
-            }
-        }
-
-        if( results.size()==conditionsLC.size() ) {
-            return false;
-        }
-
-        String traitName2 = Utils.concatenate(results, "|");
-        var.setTraitName(traitName2);
-
-        Logger log = Logger.getLogger("dbg");
-        log.info("DUPLICATE TRAIT NAME ["+traitName+"] replaced to ["+traitName2+"] "+var.getSymbol());
-        GlobalCounters.getInstance().incrementCounter("ZZZ_DUPLICATE_TRAIT_NAMES", 1);
-        return true;
     }
 }

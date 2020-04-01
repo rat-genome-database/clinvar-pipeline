@@ -1,12 +1,13 @@
 package edu.mcw.rgd.dataload.clinvar;
 
+import edu.mcw.rgd.datamodel.VariantInfo;
 import edu.mcw.rgd.process.Utils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.FileSystemResource;
 
-import java.util.Date;
+import java.util.*;
 
 /**
  * @author mtutaj
@@ -71,7 +72,42 @@ public class Manager {
                 Utils.printStackTrace(e, annotator.log);
             }
             e.printStackTrace();
+            throw e;
         }
+    }
+
+    // Brugada Syndrome 3 [RCV000019201]|Brugada syndrome 3 [RCV000019201]
+    // trait names differ only by case: leave only the first one
+    // return true if trait name changed and must be updated in db
+    boolean qcTraitNameDuplicates(VariantInfo var) {
+        String traitName = var.getTraitName();
+
+        String[] conditions = var.getTraitName().split("\\|", -1);
+        if( conditions.length==1 )
+            return false;
+
+        Set<String> results = new TreeSet<>();
+        Set<String> conditionsLC = new HashSet<>();
+
+        for( int i=0; i<conditions.length; i++ ) {
+            String condition = conditions[i];
+            String conditionLC = condition.toLowerCase();
+            if( conditionsLC.add(conditionLC) ) {
+                results.add(condition);
+            }
+        }
+
+        if( results.size()==conditionsLC.size() ) {
+            return false;
+        }
+
+        String traitName2 = Utils.concatenate(results, "|");
+        var.setTraitName(traitName2);
+
+        Logger log = Logger.getLogger("dbg");
+        log.info("DUPLICATE TRAIT NAME ["+traitName+"] replaced to ["+traitName2+"] "+var.getSymbol());
+        GlobalCounters.getInstance().incrementCounter("ZZZ_DUPLICATE_TRAIT_NAMES", 1);
+        return true;
     }
 
     public void run() throws Exception {

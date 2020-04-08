@@ -6,6 +6,7 @@ import edu.mcw.rgd.datamodel.ontology.Annotation;
 import edu.mcw.rgd.datamodel.ontologyx.Term;
 import edu.mcw.rgd.datamodel.ontologyx.TermSynonym;
 import edu.mcw.rgd.datamodel.ontologyx.TermWithStats;
+import edu.mcw.rgd.process.CounterPool;
 import edu.mcw.rgd.process.Utils;
 import org.apache.log4j.Logger;
 
@@ -456,7 +457,7 @@ public class Dao {
      * @return count of annotations deleted
      * @throws Exception on spring framework dao failure
      */
-    public int deleteObsoleteAnnotations(int createdBy, Date dt, String staleAnnotDeleteThresholdStr, int refRgdId, String dataSource) throws Exception{
+    public int deleteObsoleteAnnotations(int createdBy, Date dt, String staleAnnotDeleteThresholdStr, int refRgdId, String dataSource, CounterPool counters) throws Exception{
 
         // convert delete-threshold string to number; i.e. '5%' --> '5'
         int staleAnnotDeleteThresholdPerc = Integer.parseInt(staleAnnotDeleteThresholdStr.substring(0, staleAnnotDeleteThresholdStr.length()-1));
@@ -479,6 +480,18 @@ public class Dao {
         for( Annotation ann: staleAnnots ) {
             logAnnotations.info("DELETE "+ann.dump("|"));
             staleAnnotKeys.add(ann.getKey());
+
+            if( ann.getRgdObjectKey()==1 ) {
+                counters.increment("annotations - gene - ALL SPECIES - deleted");
+                switch(ann.getSpeciesTypeKey()) {
+                    case 1: counters.increment("annotations - gene - rat - deleted"); break;
+                    case 2: counters.increment("annotations - gene - mouse - deleted"); break;
+                    case 3: counters.increment("annotations - gene - human - deleted"); break;
+                    default: counters.increment("annotations - gene - other - deleted"); break;
+                }
+            } else {
+                counters.increment("annotations - variant - deleted");
+            }
         }
         return annotationDAO.deleteAnnotations(staleAnnotKeys);
     }

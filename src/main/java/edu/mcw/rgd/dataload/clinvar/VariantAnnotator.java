@@ -142,7 +142,7 @@ public class VariantAnnotator {
 
         // delete stale annotations
         int annotsDeleted = dao.deleteObsoleteAnnotations(getCreatedBy(), pipelineStartTime, getStaleAnnotDeleteThreshold(),
-                getRefRgdId(), getDataSrc());
+                getRefRgdId(), getDataSrc(), counters);
         counters.add("annotations - deleted", annotsDeleted);
 
         log.info(counters.dumpAlphabetically());

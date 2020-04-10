@@ -116,7 +116,7 @@ public class Dao {
 
     public void updateTraitName(int rgdId, String oldTraitName, String newTraitName) throws Exception{
 
-        String sql = "UPDATE clinvar SET trait_name WHERE rgd_id=?";
+        String sql = "UPDATE clinvar SET trait_name=? WHERE rgd_id=?";
 
         logTraitNames.debug(rgdId
                 + "\nOLD " + oldTraitName

@@ -19,6 +19,8 @@ public class Loader {
 
     public void run(Record rec) throws Exception {
 
+        boolean updateVariantLastModifiedDate = false;
+
         // insert/update variants
         if( rec.getVarInRgd()==null ) {
             dao.insertVariant(rec.getVarIncoming());
@@ -29,34 +31,45 @@ public class Loader {
         else if( rec.isUpdateRecordFlag() ) {
             if( dao.updateVariant(rec.getVarIncoming(), rec.getVarInRgd()) ) {
                 rec.setVarInRgd(rec.getVarIncoming());
+                updateVariantLastModifiedDate = true;
 
                 GlobalCounters.getInstance().incrementCounter("VARIANTS_UPDATED", 1);
             } else {
                 // incoming variant is the same as variant in rgd -- downgrading UPDATE to UP-TO-DATE
-                dao.updateVariantLastModifiedDate(rec.getVarInRgd().getRgdId());
-
                 GlobalCounters.getInstance().incrementCounter("VARIANTS_MATCHING (DOWNGRADED FROM UPDATE)", 1);
             }
         }
         else {
-            dao.updateVariantLastModifiedDate(rec.getVarInRgd().getRgdId());
-
             GlobalCounters.getInstance().incrementCounter("VARIANTS_MATCHING", 1);
         }
 
         // insert/update/delete gene associations for variant
-        rec.getGeneAssociations().sync(rec.getVarInRgd().getRgdId(), getDao());
+        if( rec.getGeneAssociations().sync(rec.getVarInRgd().getRgdId(), getDao()) ) {
+            updateVariantLastModifiedDate = true;
+        }
 
         // insert/update/delete xdb ids for variant
-        rec.getXdbIds().sync(rec.getVarInRgd().getRgdId(), getDao());
+        if( rec.getXdbIds().sync(rec.getVarInRgd().getRgdId(), getDao()) ) {
+            updateVariantLastModifiedDate = true;
+        }
 
         // insert/update/delete map positions for variant
-        rec.getMapPositions().sync(rec.getVarInRgd().getRgdId(), getDao());
+        if( rec.getMapPositions().sync(rec.getVarInRgd().getRgdId(), getDao()) ) {
+            updateVariantLastModifiedDate = true;
+        }
 
         // insert/update/delete hgvs names for variant
-        rec.getHgvsNames().sync(rec.getVarInRgd().getRgdId(), getDao());
+        if( rec.getHgvsNames().sync(rec.getVarInRgd().getRgdId(), getDao()) ) {
+            updateVariantLastModifiedDate = true;
+        }
 
         // insert/update/delete aliases for variant
-        rec.getAliases().sync(rec.getVarInRgd().getRgdId(), getDao());
+        if( rec.getAliases().sync(rec.getVarInRgd().getRgdId(), getDao()) ) {
+            updateVariantLastModifiedDate = true;
+        }
+
+        if( updateVariantLastModifiedDate ) {
+            dao.updateVariantLastModifiedDate(rec.getVarInRgd().getRgdId());
+        }
     }
 }

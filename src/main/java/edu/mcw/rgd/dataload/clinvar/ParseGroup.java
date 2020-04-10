@@ -6,7 +6,6 @@ import org.apache.log4j.Logger;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 /**
@@ -55,6 +54,12 @@ public class ParseGroup {
     }
 
     void splitInputFileIntoChunks(String fileName) throws IOException {
+
+        // debug: one big file parsing
+        if( getChunkSize()<=0 ) {
+            chunks.add(fileName);
+            return;
+        }
 
         BufferedReader reader = Utils.openReader(fileName);
 

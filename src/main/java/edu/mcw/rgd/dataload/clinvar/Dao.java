@@ -31,6 +31,7 @@ public class Dao {
     Logger logAliases = Logger.getLogger("aliases");
     Logger logAnnotations = Logger.getLogger("annotations");
     Logger logAnnotator = Logger.getLogger("annotator");
+    Logger logTraitNames = Logger.getLogger("traitNameUpdates");
 
     private AliasDAO aliasDAO = new AliasDAO();
     private AnnotationDAO annotationDAO = new AnnotationDAO();
@@ -99,6 +100,9 @@ public class Dao {
 
         varNew.setRgdId(varOld.getRgdId());
 
+        // trait names should stay unchanged: it will be updated by TraitNameCollection
+        varNew.setTraitName(varOld.getTraitName());
+
         String varOldDump = varOld.dump("|");
         String varNewDump = varNew.dump("|");
         if( varOldDump.equals(varNewDump) ) {
@@ -108,6 +112,19 @@ public class Dao {
         logUpdatedVariants.info("NEW: "+varNewDump);
         variantInfoDAO.updateVariant(varNew);
         return true;
+    }
+
+    public void updateTraitName(int rgdId, String oldTraitName, String newTraitName) throws Exception{
+
+        String sql = "UPDATE clinvar SET trait_name WHERE rgd_id=?";
+
+        logTraitNames.debug(rgdId
+                + "\nOLD " + oldTraitName
+                + "\nNEW " + newTraitName);
+
+        variantInfoDAO.update(sql, newTraitName, rgdId);
+
+        updateVariantLastModifiedDate(rgdId);
     }
 
     /**

@@ -59,7 +59,16 @@ public class HgvsNames {
         return null;
     }
 
-    public void sync(int varRgdId, Dao dao) throws Exception {
+    /**
+     *
+     * @param varRgdId
+     * @param dao
+     * @return true if there were any changes
+     * @throws Exception
+     */
+    public boolean sync(int varRgdId, Dao dao) throws Exception {
+
+        int changes = 0;
 
         if( !matchingNames.isEmpty() ) {
             GlobalCounters.getInstance().incrementCounter("HGVS_NAME_MATCHED", matchingNames.size());
@@ -72,11 +81,15 @@ public class HgvsNames {
 
             dao.insertHgvsNames(forInsertNames);
             GlobalCounters.getInstance().incrementCounter("HGVS_NAME_INSERTED", forInsertNames.size());
+            changes++;
         }
 
         if( !forDeleteNames.isEmpty() ) {
             dao.deleteHgvsNames(forDeleteNames);
             GlobalCounters.getInstance().incrementCounter("HGVS_NAME_DELETED", forDeleteNames.size());
+            changes++;
         }
+
+        return changes!=0;
     }
 }

@@ -73,8 +73,11 @@ public class GeneAssociations {
 
     /**
      * sync incoming gene associations with RGD database
+     * @return true if there were any changes
      */
-    public void sync(int variantRgdId, Dao dao) throws Exception {
+    public boolean sync(int variantRgdId, Dao dao) throws Exception {
+
+        int changes = 0;
 
         // load gene rgd id for gene associated with this variant
         inRgdAssocGeneRgdIds = dao.getAssociatedGenes(variantRgdId);
@@ -90,6 +93,7 @@ public class GeneAssociations {
         for( Integer incomingAssocGeneRgdId: arr ) {
             dao.createGeneAssociation(variantRgdId, incomingAssocGeneRgdId);
             GlobalCounters.getInstance().incrementCounter("GENE_VAR_ASSOC_INSERTED", 1);
+            changes++;
         }
 
         // determine obsolete gene rgd ids
@@ -98,6 +102,9 @@ public class GeneAssociations {
         for( Integer inRgdAssocGeneRgdId: arr ) {
             dao.deleteGeneAssociation(variantRgdId, inRgdAssocGeneRgdId);
             GlobalCounters.getInstance().incrementCounter("GENE_VAR_ASSOC_DELETED", 1);
+            changes++;
         }
+
+        return changes!=0;
     }
 }

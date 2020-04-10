@@ -29,6 +29,9 @@ LOGIC NOTES
 
     since variant notes are stored in VARCHAR2(4000) column in the database, they are truncated to 4000 characters
 
+4. last modified date of variant rgd id is set to current timestamp if any or variant properties changed,
+  including aliases, gene associations, map positions, hgvs names, etc
+  
 ANNOTATIONS
 
   primary annotations, to human variants and associated human genes, are made with 'IAGP' evidence code

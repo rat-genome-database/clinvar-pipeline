@@ -102,7 +102,16 @@ public class Aliases {
         return null;
     }
 
-    public void sync(int varRgdId, Dao dao) throws Exception {
+    /**
+     *
+     * @param varRgdId
+     * @param dao
+     * @return true if there were any changes
+     * @throws Exception
+     */
+    public boolean sync(int varRgdId, Dao dao) throws Exception {
+
+        int changes = 0;
 
         if( !matching.isEmpty() ) {
             GlobalCounters.getInstance().incrementCounter("ALIASES_MATCHED", matching.size());
@@ -112,6 +121,7 @@ public class Aliases {
         if( !forDelete.isEmpty() ) {
             dao.deleteAliases(forDelete);
             GlobalCounters.getInstance().incrementCounter("ALIASES_DELETED", forDelete.size());
+            changes++;
         }
 
         if( !forInsert.isEmpty() ) {
@@ -121,6 +131,9 @@ public class Aliases {
 
             dao.insertAliases(forInsert);
             GlobalCounters.getInstance().incrementCounter("ALIASES_INSERTED", forInsert.size());
+            changes++;
         }
+
+        return changes!=0;
     }
 }

@@ -120,8 +120,11 @@ public class XdbIds {
     }
     /**
      * sync incoming xdb ids with RGD database
+     * @return true if there were any changes
      */
-    public void sync(int variantRgdId, Dao dao) throws Exception {
+    public boolean sync(int variantRgdId, Dao dao) throws Exception {
+
+        int changes = 0;
 
         if( !insXdbIds.isEmpty() ) {
             // set rgd_id for all to-be-inserted xdb ids
@@ -130,11 +133,16 @@ public class XdbIds {
             }
 
             dao.insertXdbIds(insXdbIds);
+
+            changes++;
         }
 
         if( !updXdbIds.isEmpty() ) {
             dao.updateXdbIds(updXdbIds);
+            changes++;
         }
+
+        return changes!=0;
     }
 
     void updateLinkText(Dao dao) throws Exception {

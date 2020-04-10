@@ -71,16 +71,7 @@ public class QC {
             // submitter could be combined from multiple RCV entries
             var2.setSubmitter(merge(var2.getSubmitter(), var.getSubmitter(), rec));
 
-            // traits could be combined from multiple RCV entries
-            var2.setTraitName(merge(var2.getTraitName(), var.getTraitName(), rec));
-            if( qcTraitName(var2) ) {
-                // removed 'not provided' redundant entry from trait name
-                // f.e.
-                // Brugada syndrome 3 [RCV000019201]|not provided [RCV000058286]|Brugada syndrome [RCV000058286]
-                // ==>
-                // Brugada syndrome 3 [RCV000019201]|Brugada syndrome [RCV000058286]
-                rec.setUpdateRecordFlag(true);
-            }
+            TraitNameCollection.getInstance().add(var.getRgdId(), var2.getTraitName(), var.getTraitName());
 
             // if incoming last-evaluated-date is newer, use it
             updateLastEvaluatedDate(var, var2);
@@ -215,60 +206,4 @@ public class QC {
         return incoming;
     }
 
-    // after a number of ClinVar updates, condition name could become like that one:
-    // Brugada syndrome 3 [RCV000019201]|not provided [RCV000058286]|Brugada syndrome [RCV000058286]
-    // you could see redundant 'not provided' for [RCV000058286]
-    // we remove these 'not provided' redundant entries
-    // return true if trait name changed and must be updated in db
-    boolean qcTraitName(VariantInfo var) {
-        String traitName = var.getTraitName();
-
-        // remove from condition name "(1 patient)" and "(1 family)"
-        boolean result = false;
-        if( traitName.contains(" (1 family) ") ) {
-            result = true;
-            traitName = traitName.replace(" (1 family) ", " ");
-            var.setTraitName(traitName);
-        }
-        if( traitName.contains(" (1 patient) ") ) {
-            result = true;
-            traitName = traitName.replace(" (1 patient) ", " ");
-            var.setTraitName(traitName);
-        }
-
-        if( !traitName.contains("not provided") )
-            return result;
-        String[] conditions = var.getTraitName().split("\\|", -1);
-        if( conditions.length==1 )
-            return result;
-
-        for( int i=0; i<conditions.length; i++ ) {
-            String condition = conditions[i];
-            // look for 'not provided' condition
-            if( condition.startsWith("not provided") ) {
-                // extract rcv
-                int pos = condition.indexOf(" [RCV");
-                String rcv = condition.substring(pos);
-
-                // look for multiple conditions for same rcv
-                for( int j=0; j<conditions.length; j++ ) {
-                    if( i==j )
-                        continue;
-                    if( conditions[j].contains(rcv) ) {
-                        // we found different condition with same rcv!
-                        // remove 'not provided' duplicate
-                        List<String> condList = new ArrayList<String>(conditions.length-1);
-                        for( int k=0; k<conditions.length; k++ ) {
-                            if( k!=i )
-                                condList.add(conditions[k]);
-                        }
-                        traitName = Utils.concatenate(condList,"|");
-                        var.setTraitName(traitName);
-                        return true;
-                    }
-                }
-            }
-        }
-        return result;
-    }
 }

@@ -116,8 +116,11 @@ public class MapPositions {
 
     /**
      * sync incoming xdb ids with RGD database
+     * @return true if there were any changes
      */
-    public void sync(int variantRgdId, Dao dao) throws Exception {
+    public boolean sync(int variantRgdId, Dao dao) throws Exception {
+
+        int changes = 0;
 
         if( !syncer.getMatchingObjects().isEmpty() ) {
             GlobalCounters.getInstance().incrementCounter("MAPPOS_MATCHED", syncer.getMatchingObjects().size());
@@ -129,16 +132,20 @@ public class MapPositions {
             }
             dao.insertMapData(syncer.getObjectsForInsert());
             GlobalCounters.getInstance().incrementCounter("MAPPOS_INSERTED", syncer.getObjectsForInsert().size());
+            changes++;
         }
 
         if( !syncer.getObjectsForDelete().isEmpty() ) {
             dao.deleteMapData(syncer.getObjectsForDelete());
             GlobalCounters.getInstance().incrementCounter("MAPPOS_DELETED", syncer.getObjectsForDelete().size());
+            changes++;
         }
 
         if( !syncer.getObjectsForUpdate().isEmpty() ) {
             dao.updateMapData(syncer.getObjectsForUpdate());
             GlobalCounters.getInstance().incrementCounter("MAPPOS_UPDATED", syncer.getObjectsForUpdate().size());
+            changes++;
         }
+        return changes!=0;
     }
 }

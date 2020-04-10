@@ -1,3 +1,11 @@
+Apr 10, 2020
+  loader: variant last-modified-date is set to SYSDATE only if any of variant properties or any associated data
+    like aliases, gene associations, hgvs names, xdb ids or map positions have been changed;
+    otherwise it is left unchanged
+    note: previously the logic was flawed
+  loader: trait names are now handled properly by separate class TraitNameCollection
+    previous logic was flawed and led to accumulation of obsolete instances of trait names
+
 Apr 08, 2020
   annotator: improved summary email
   

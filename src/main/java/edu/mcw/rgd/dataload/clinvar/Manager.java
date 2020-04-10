@@ -1,6 +1,5 @@
 package edu.mcw.rgd.dataload.clinvar;
 
-import edu.mcw.rgd.datamodel.VariantInfo;
 import edu.mcw.rgd.process.Utils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
@@ -76,40 +75,6 @@ public class Manager {
         }
     }
 
-    // Brugada Syndrome 3 [RCV000019201]|Brugada syndrome 3 [RCV000019201]
-    // trait names differ only by case: leave only the first one
-    // return true if trait name changed and must be updated in db
-    boolean qcTraitNameDuplicates(VariantInfo var) {
-        String traitName = var.getTraitName();
-
-        String[] conditions = var.getTraitName().split("\\|", -1);
-        if( conditions.length==1 )
-            return false;
-
-        Set<String> results = new TreeSet<>();
-        Set<String> conditionsLC = new HashSet<>();
-
-        for( int i=0; i<conditions.length; i++ ) {
-            String condition = conditions[i];
-            String conditionLC = condition.toLowerCase();
-            if( conditionsLC.add(conditionLC) ) {
-                results.add(condition);
-            }
-        }
-
-        if( results.size()==conditionsLC.size() ) {
-            return false;
-        }
-
-        String traitName2 = Utils.concatenate(results, "|");
-        var.setTraitName(traitName2);
-
-        Logger log = Logger.getLogger("dbg");
-        log.info("DUPLICATE TRAIT NAME ["+traitName+"] replaced to ["+traitName2+"] "+var.getSymbol());
-        GlobalCounters.getInstance().incrementCounter("ZZZ_DUPLICATE_TRAIT_NAMES", 1);
-        return true;
-    }
-
     public void run() throws Exception {
 
         long time0 = System.currentTimeMillis();
@@ -134,6 +99,8 @@ public class Manager {
 
         int lastXdbIdCount = getDao().getXdbIdCount();
         GlobalCounters.getInstance().incrementCounter("XDB_IDS_ZCOUNT_FINAL", lastXdbIdCount);
+
+        TraitNameCollection.getInstance().qcAndLoad(getDao());
 
         log.info(GlobalCounters.getInstance().dump());
         log.info("TOTAL ELAPSED TIME "+Utils.formatElapsedTime(time0, System.currentTimeMillis()));

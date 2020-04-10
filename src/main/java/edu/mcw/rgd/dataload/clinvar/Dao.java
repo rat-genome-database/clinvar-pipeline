@@ -119,8 +119,8 @@ public class Dao {
         String sql = "UPDATE clinvar SET trait_name=? WHERE rgd_id=?";
 
         logTraitNames.debug(rgdId
-                + "\nOLD " + oldTraitName
-                + "\nNEW " + newTraitName);
+                + "\n    OLD " + oldTraitName
+                + "\n    NEW " + newTraitName);
 
         variantInfoDAO.update(sql, newTraitName, rgdId);
 

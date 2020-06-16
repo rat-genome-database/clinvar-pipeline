@@ -468,18 +468,22 @@ public class Dao {
         logAnnotations.info("INSERT "+annot.dump("|"));
     }
 
+    public int getCountOfAnnotationsByReference(int refRgdId, String dataSource) throws Exception {
+        return annotationDAO.getCountOfAnnotationsByReference(refRgdId, dataSource, "D");
+    }
+
     /**
      * delete all pipeline annotations older than given date
      *
      * @return count of annotations deleted
      * @throws Exception on spring framework dao failure
      */
-    public int deleteObsoleteAnnotations(int createdBy, Date dt, String staleAnnotDeleteThresholdStr, int refRgdId, String dataSource, CounterPool counters) throws Exception{
+    public int deleteObsoleteAnnotations(int createdBy, Date dt, String staleAnnotDeleteThresholdStr, int refRgdId, String dataSource, int origAnnotCount, CounterPool counters) throws Exception{
 
         // convert delete-threshold string to number; i.e. '5%' --> '5'
         int staleAnnotDeleteThresholdPerc = Integer.parseInt(staleAnnotDeleteThresholdStr.substring(0, staleAnnotDeleteThresholdStr.length()-1));
         // compute maximum allowed number of stale annots to be deleted
-        int annotCount = annotationDAO.getCountOfAnnotationsByReference(refRgdId, dataSource, "D");
+        int annotCount = getCountOfAnnotationsByReference(refRgdId, dataSource);
         int staleAnnotDeleteLimit = (staleAnnotDeleteThresholdPerc * annotCount) / 100;
 
         List<Annotation> staleAnnots = annotationDAO.getAnnotationsModifiedBeforeTimestamp(createdBy, dt, "D");
@@ -488,7 +492,9 @@ public class Dao {
         logAnnotator.info("stale annotation delete limit ("+staleAnnotDeleteThresholdStr+"): "+staleAnnotDeleteLimit);
         logAnnotator.info("stale annotations to be deleted: "+staleAnnots.size());
 
-        if( staleAnnots.size()> staleAnnotDeleteLimit ) {
+        int newAnnotCount = annotCount - staleAnnots.size();
+        int annotDiffCount = Math.abs(newAnnotCount - origAnnotCount);
+        if( annotDiffCount > staleAnnotDeleteLimit ) {
             logAnnotator.info("*** DELETE of stale annots aborted! *** "+staleAnnotDeleteThresholdStr+" delete threshold exceeded!");
             return 0;
         }

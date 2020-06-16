@@ -66,12 +66,14 @@ public class VariantAnnotator {
         log.info(getVersion());
         log.info(dao.getConnectionInfo());
 
-        Date pipelineStartTime = Utils.addDaysToDate(new Date(), -1);
+        Date pipelineStartTime = Utils.addHoursToDate(new Date(), -1);
         logDebug.info("Starting...");
 
         loadConceptToOmimMap();
         logDebug.info("concept-to-omim map loaded");
 
+        int origAnnotCount = dao.getCountOfAnnotationsByReference(getRefRgdId(), getDataSrc());
+        log.info("initial annotation count: "+Utils.formatThousands(origAnnotCount));
 
         List<VariantInfo> variants = dao.getActiveVariants();
         logDebug.info("active variants loaded: "+variants.size());
@@ -142,7 +144,7 @@ public class VariantAnnotator {
 
         // delete stale annotations
         int annotsDeleted = dao.deleteObsoleteAnnotations(getCreatedBy(), pipelineStartTime, getStaleAnnotDeleteThreshold(),
-                getRefRgdId(), getDataSrc(), counters);
+                getRefRgdId(), getDataSrc(), origAnnotCount, counters);
         counters.add("annotations - deleted", annotsDeleted);
 
         log.info(counters.dumpAlphabetically());

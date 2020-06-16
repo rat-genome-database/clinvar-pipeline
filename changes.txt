@@ -1,3 +1,6 @@
+Jun 16, 2020
+  annotator: improved handling of obsolete annotations
+  
 Apr 10, 2020
   loader: variant last-modified-date is set to SYSDATE only if any of variant properties or any associated data
     like aliases, gene associations, hgvs names, xdb ids or map positions have been changed;

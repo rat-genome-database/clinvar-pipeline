@@ -1,3 +1,6 @@
+Aug 11, 2020
+  annotator: fixed handling of obsolete annotations
+
 Jul 14, 2020
   loader: proper handling of hgvs names longer than 4000
 

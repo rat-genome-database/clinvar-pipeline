@@ -484,7 +484,7 @@ public class Dao {
         int staleAnnotDeleteThresholdPerc = Integer.parseInt(staleAnnotDeleteThresholdStr.substring(0, staleAnnotDeleteThresholdStr.length()-1));
         // compute maximum allowed number of stale annots to be deleted
         int annotCount = getCountOfAnnotationsByReference(refRgdId, dataSource);
-        int staleAnnotDeleteLimit = (staleAnnotDeleteThresholdPerc * annotCount) / 100;
+        int staleAnnotDeleteLimit = (staleAnnotDeleteThresholdPerc * origAnnotCount) / 100;
 
         List<Annotation> staleAnnots = annotationDAO.getAnnotationsModifiedBeforeTimestamp(createdBy, dt, "D");
 
@@ -493,8 +493,8 @@ public class Dao {
         logAnnotator.info("stale annotations to be deleted: "+staleAnnots.size());
 
         int newAnnotCount = annotCount - staleAnnots.size();
-        int annotDiffCount = Math.abs(newAnnotCount - origAnnotCount);
-        if( annotDiffCount > staleAnnotDeleteLimit ) {
+        int annotDiffCount = newAnnotCount - origAnnotCount;
+        if( annotDiffCount<0 && annotDiffCount+staleAnnotDeleteLimit<0 ) {
             logAnnotator.info("*** DELETE of stale annots aborted! *** "+staleAnnotDeleteThresholdStr+" delete threshold exceeded!");
             return 0;
         }

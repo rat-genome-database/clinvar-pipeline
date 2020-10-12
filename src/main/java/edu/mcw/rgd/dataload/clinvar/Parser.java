@@ -30,6 +30,23 @@ public class Parser extends XomAnalyzer {
     private Record rec;
     private String title;
 
+
+    private static boolean terminationRequested = false;
+
+    synchronized public void requestTermination() {
+        terminationRequested = true;
+    }
+
+    synchronized public boolean isTerminationRequested() {
+        return terminationRequested;
+    }
+
+    public void initRecord(String name) {
+        if( isTerminationRequested() ) {
+            throw new RuntimeException(new InterruptedException("xml parsing termination requested"));
+        }
+    }
+
     private void createRecord(String varID) {
 
         rec = new Record();

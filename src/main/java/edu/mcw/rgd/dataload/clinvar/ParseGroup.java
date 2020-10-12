@@ -36,6 +36,10 @@ public class ParseGroup {
         splitInputFileIntoChunks(fileName);
 
         // process in parallel all of the chunks
+
+        // note: when one worker threads is terminated due to RuntimeException,
+        // other threads are still allowed to run :-)
+
         chunks.parallelStream().forEach( chunk -> {
             logDebug.info("  processing "+chunk+ " active threads: "+Thread.activeCount());
             File file = new File(chunk);
@@ -45,8 +49,11 @@ public class ParseGroup {
             parser.setValidate(false);
             try {
                 parser.parse(file);
+            } catch (InterruptedException e) {
+                logDebug.warn("*** intercepted InterruptedException "+chunk);
             } catch (Exception e) {
                 log.warn("*** problem parsing file "+chunk);
+                parser.requestTermination();
                 throw new RuntimeException(e);
             }
             logDebug.info("  done with "+chunk+ " active threads: "+Thread.activeCount());
@@ -114,7 +121,7 @@ public class ParseGroup {
     BufferedWriter startNewChunk() throws IOException {
         String chunkName = getChunkDir() + "chunk" + chunks.size() + ".xml.gz";
         //BufferedWriter out = new BufferedWriter(new FileWriter(chunkName));
-        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(chunkName))));
+        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(chunkName)), "UTF8"));
         chunks.add(chunkName);
         return out;
     }

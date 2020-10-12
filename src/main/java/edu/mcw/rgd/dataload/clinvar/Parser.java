@@ -199,8 +199,7 @@ public class Parser extends XomAnalyzer {
                 loader.run(rec);
 
             }catch(Exception e) {
-                Utils.printStackTrace(e, log);
-                e.printStackTrace();
+                throw new RuntimeException(e);
             }
         }
         return null;

@@ -1,6 +1,7 @@
 package edu.mcw.rgd.dataload.clinvar;
 
 import edu.mcw.rgd.process.Utils;
+import org.apache.log4j.Logger;
 
 import java.util.*;
 
@@ -28,6 +29,8 @@ public class SubmitterCollection {
     // map of clinvar rgd id to submitter info
     private Map<Integer, SubmitterCollection.SubmitterInfo> map = new HashMap<>();
 
+    private Logger logDebug = Logger.getLogger("dbg");
+
     public synchronized void add(int rgdId, String submitterIncoming, String submitterInRgd) {
         SubmitterCollection.SubmitterInfo info = map.get(rgdId);
         if( info==null ) {
@@ -36,7 +39,7 @@ public class SubmitterCollection {
         }
         info.submittersIncoming.add(submitterIncoming);
         if( info.submitterInRgd!=null && !info.submitterInRgd.equals(submitterInRgd) ) {
-            System.out.println("WARNING: submitter in RGD override RGD:"+rgdId+"  OLD ["+info.submitterInRgd+"] NEW ["+submitterInRgd+"]");
+            logDebug.warn("WARNING: submitter in RGD override RGD:"+rgdId+"  OLD ["+info.submitterInRgd+"] NEW ["+submitterInRgd+"]");
         }
         info.submitterInRgd = submitterInRgd;
     }

@@ -1,6 +1,7 @@
 package edu.mcw.rgd.dataload.clinvar;
 
 import edu.mcw.rgd.process.Utils;
+import org.apache.log4j.Logger;
 
 import java.util.*;
 
@@ -31,6 +32,8 @@ public class TraitNameCollection {
     // map of clinvar rgd id to trait name info
     private Map<Integer, TraitNameInfo> map = new HashMap<>();
 
+    private Logger logDebug = Logger.getLogger("dbg");
+
     public synchronized void add(int rgdId, String traitNameIncoming, String traitNameInRgd) {
         TraitNameInfo info = map.get(rgdId);
         if( info==null ) {
@@ -39,7 +42,7 @@ public class TraitNameCollection {
         }
         info.traitNamesIncoming.add(traitNameIncoming);
         if( info.traitNameInRgd!=null && !info.traitNameInRgd.equals(traitNameInRgd) ) {
-            System.out.println("WARNING: trait name in RGD override RGD:"+rgdId+"  OLD ["+info.traitNameInRgd+"] NEW ["+traitNameInRgd+"]");
+            logDebug.warn("WARNING: trait name in RGD override RGD:"+rgdId+"  OLD ["+info.traitNameInRgd+"] NEW ["+traitNameInRgd+"]");
         }
         info.traitNameInRgd = traitNameInRgd;
     }

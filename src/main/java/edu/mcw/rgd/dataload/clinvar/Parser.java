@@ -359,6 +359,13 @@ public class Parser extends XomAnalyzer {
     void handleSoAccId(Element measure, Record rec) throws Exception {
 
         String soAccId = xpSoAccId.stringValueOf(measure);
+
+        // special handling for obsolete SO terms without replacements
+        if( soAccId.equals("SO:1000064") ) {
+            // this is an obsolete SO term 'sequence_variation_affecting_reading_frame'
+            soAccId = "";
+        }
+
         if( soAccId.isEmpty() ) {
             // SO ACC ID not given -- evaluate measure type
             String varType = rec.getVarIncoming().getObjectType();

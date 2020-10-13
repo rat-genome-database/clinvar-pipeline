@@ -5,6 +5,7 @@ import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
@@ -111,6 +112,9 @@ public class ParseGroup {
         logDebug.info("  "+chunkName+" written "+chunkSize);
 
         log.info(" input file split into "+chunks.size()+" chunks");
+
+        // randomize chunks
+        Collections.shuffle(chunks);
     }
 
     void writeLine(String line, BufferedWriter out) throws IOException {

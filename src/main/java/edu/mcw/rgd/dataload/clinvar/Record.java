@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -123,8 +124,9 @@ public class Record {
             return;
         }
         if( submitter.endsWith(",") ) { // remove trailing ',' from submitter name
-            submitter = submitter.substring(0, submitter.length()-1).trim();
+            submitter = submitter.substring(0, submitter.length()-1);
         }
+        submitter = submitter.trim();
 
         if( !submitter.isEmpty() ) {
             String submitters = getVarIncoming().getSubmitter();
@@ -133,13 +135,7 @@ public class Record {
                 set.add(submitter);
 
                 String[] submitterArray = submitters.split("[\\|]");
-                for( String subm: submitterArray ) {
-                    if( subm.endsWith(",") ) {
-                        set.add(subm.substring(0, subm.length()-1).trim());
-                    } else {
-                        set.add(subm);
-                    }
-                }
+                Collections.addAll(set, submitterArray);
 
                 getVarIncoming().setSubmitter(Utils.concatenate(set, "|"));
             } else {

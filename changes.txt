@@ -1,5 +1,6 @@
 Oct 12, 2020
   loader: improved exception handling
+  parser: added handling of obsolete term SO:1000064
 
 Aug 11, 2020
   annotator: fixed handling of obsolete annotations

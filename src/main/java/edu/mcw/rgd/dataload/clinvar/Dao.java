@@ -32,6 +32,7 @@ public class Dao {
     Logger logAnnotations = Logger.getLogger("annotations");
     Logger logAnnotator = Logger.getLogger("annotator");
     Logger logTraitNames = Logger.getLogger("traitNameUpdates");
+    Logger logSubmitters = Logger.getLogger("submitterUpdates");
 
     private AliasDAO aliasDAO = new AliasDAO();
     private AnnotationDAO annotationDAO = new AnnotationDAO();
@@ -123,6 +124,19 @@ public class Dao {
                 + "\n    NEW " + newTraitName);
 
         variantInfoDAO.update(sql, newTraitName, rgdId);
+
+        updateVariantLastModifiedDate(rgdId);
+    }
+
+    public void updateSubmitter(int rgdId, String oldSubmitter, String newSubmitter) throws Exception{
+
+        String sql = "UPDATE clinvar SET submitter=? WHERE rgd_id=?";
+
+        logSubmitters.debug(rgdId
+                + "\n    OLD " + oldSubmitter
+                + "\n    NEW " + newSubmitter);
+
+        variantInfoDAO.update(sql, newSubmitter, rgdId);
 
         updateVariantLastModifiedDate(rgdId);
     }

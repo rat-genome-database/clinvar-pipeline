@@ -68,10 +68,8 @@ public class QC {
             // review-status could be combined from multiple RCV entries
             var2.setReviewStatus(merge(var2.getReviewStatus(), var.getReviewStatus(), rec));
 
-            // submitter could be combined from multiple RCV entries
-            var2.setSubmitter(merge(var2.getSubmitter(), var.getSubmitter(), rec));
-
             TraitNameCollection.getInstance().add(var.getRgdId(), var2.getTraitName(), var.getTraitName());
+            SubmitterCollection.getInstance().add(var.getRgdId(), var2.getSubmitter(), var.getSubmitter());
 
             // if incoming last-evaluated-date is newer, use it
             updateLastEvaluatedDate(var, var2);

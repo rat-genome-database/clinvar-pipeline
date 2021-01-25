@@ -11,7 +11,6 @@ import org.apache.log4j.Logger;
 import java.io.*;
 import java.util.*;
 import java.util.Map;
-import java.util.zip.GZIPInputStream;
 
 /**
  * @author mtutaj
@@ -44,12 +43,14 @@ public class VariantAnnotator {
     private int omimToRdoCount = 0;
     private int meshToRdoCount = 0;
     private int termNameToRdoCount = 0;
+    private int termNameToHpoCount = 0;
 
     private Map<String,List<String>> mapConceptToOmim;
     private String conceptToOmimFile;
     private Map<String,Integer> unmatchableConditions = new HashMap<>();
     private Set<String> unmatchableDrugResponseTerms = new TreeSet<>();
-    private TermNameMatcher termNameMatcher = null;
+    private TermNameMatcher rdoTermNameMatcher = null;
+    private TermNameMatcher hpoTermNameMatcher = null;
     private Set<String> excludedConditionNames;
     private Set<String> excludedClinicalSignificance;
     private Set<String> processedVariantTypes;
@@ -92,46 +93,11 @@ public class VariantAnnotator {
 
                 // for all the associated genes, collect terms
                 List<Integer> associatedGenes = dao.getAssociatedGenes(ge.getRgdId());
-                Set<Term> diseaseTerms = new HashSet<>();
-                for (Integer geneRgdId : associatedGenes) {
-                    diseaseTerms.addAll(getDiseaseTerms(ge.getRgdId(), geneRgdId, ge.getTraitName()));
-                }
 
-                // find matching RDO terms to make annotations
-                for (Term term : diseaseTerms) {
+                generateDiseaseAnnotations(ge, associatedGenes, pubMedIds, dao);
 
-                    // create incoming annotation
-                    Annotation annot = new Annotation();
-                    annot.setAnnotatedObjectRgdId(ge.getRgdId());
-                    annot.setTermAcc(term.getAccId());
-                    annot.setTerm(term.getTerm());
-                    annot.setObjectName(ge.getName());
-                    annot.setObjectSymbol(ge.getSymbol());
-                    annot.setRgdObjectKey(ge.getObjectKey());
-                    annot.setAspect("D"); // for RDO
-                    annot.setCreatedBy(getCreatedBy()); // ClinVar Annotation pipeline
-                    annot.setEvidence(getEvidence());
-                    annot.setSpeciesTypeKey(SpeciesType.HUMAN);
-                    annot.setDataSrc(getDataSrc());
-                    annot.setRefRgdId(getRefRgdId());
-                    annot.setXrefSource(pubMedIds);
-                    annot.setLastModifiedBy(annot.getCreatedBy());
-                    // term comment field contains the original OMIM acc id, or MESH acc id
-                    String matchByAccId = term.getComment() == null ? term.getAccId() : term.getComment();
-                    annot.setNotes("ClinVar Annotator: match by " + matchByAccId);
+                generatePhenotypeAnnotations(ge, associatedGenes, pubMedIds, dao);
 
-                    // does incoming annotation match rgd?
-                    int inRgdAnnotKey = dao.getAnnotationKey(annot);
-                    if (inRgdAnnotKey != 0) {
-                        dao.updateLastModifiedDateForAnnotation(inRgdAnnotKey, getCreatedBy());
-                        counters.increment("annotations - variant - matching");
-                    } else {
-                        dao.insertAnnotation(annot);
-                        counters.increment("annotations - variant - inserted");
-                    }
-                }
-
-                generateGeneAnnotations(ge.getRgdId(), associatedGenes, pubMedIds, ge.getTraitName());
             } catch( Exception e ) {
                 throw new RuntimeException(e);
             }
@@ -141,6 +107,7 @@ public class VariantAnnotator {
         log.info("  drugResponseTermCount="+unmatchableDrugResponseTerms.size());
         log.info("  omimToRdoCount="+omimToRdoCount+", meshToRdoCount="+meshToRdoCount);
         log.info("  termNameToRdoCount="+termNameToRdoCount);
+        log.info("  termNameToHpoCount="+termNameToHpoCount);
 
         // delete stale annotations
         int annotsDeleted = dao.deleteObsoleteAnnotations(getCreatedBy(), pipelineStartTime, getStaleAnnotDeleteThreshold(),
@@ -150,6 +117,94 @@ public class VariantAnnotator {
         log.info(counters.dumpAlphabetically());
 
         log.info("STOP annot pipeline;   elapsed "+Utils.formatElapsedTime(System.currentTimeMillis(), time0));
+    }
+
+    void generateDiseaseAnnotations(VariantInfo ge, List<Integer> associatedGenes, String pubMedIds, Dao dao) throws Exception {
+
+        Set<Term> diseaseTerms = new HashSet<>();
+        for (Integer geneRgdId : associatedGenes) {
+            diseaseTerms.addAll(getDiseaseTerms(ge.getRgdId(), geneRgdId, ge.getTraitName()));
+        }
+
+        // find matching RDO terms to make annotations
+        for (Term term : diseaseTerms) {
+
+            // create incoming annotation for variant
+            Annotation annot = new Annotation();
+            annot.setAnnotatedObjectRgdId(ge.getRgdId());
+            annot.setTermAcc(term.getAccId());
+            annot.setTerm(term.getTerm());
+            annot.setObjectName(ge.getName());
+            annot.setObjectSymbol(ge.getSymbol());
+            annot.setRgdObjectKey(ge.getObjectKey());
+            annot.setAspect("D"); // for RDO
+            annot.setCreatedBy(getCreatedBy()); // ClinVar Annotation pipeline
+            annot.setEvidence(getEvidence());
+            annot.setSpeciesTypeKey(SpeciesType.HUMAN);
+            annot.setDataSrc(getDataSrc());
+            annot.setRefRgdId(getRefRgdId());
+            annot.setXrefSource(pubMedIds);
+            annot.setLastModifiedBy(annot.getCreatedBy());
+            // term comment field contains the original OMIM acc id, or MESH acc id
+            String matchByAccId = term.getComment() == null ? term.getAccId() : term.getComment();
+            annot.setNotes("ClinVar Annotator: match by " + matchByAccId);
+
+            // does incoming annotation match rgd?
+            int inRgdAnnotKey = dao.getAnnotationKey(annot);
+            if (inRgdAnnotKey != 0) {
+                dao.updateLastModifiedDateForAnnotation(inRgdAnnotKey, getCreatedBy());
+                counters.increment("RDO annotations - variant - matching");
+            } else {
+                dao.insertAnnotation(annot);
+                counters.increment("RDO annotations - variant - inserted");
+            }
+        }
+
+        generateGeneDiseaseAnnotations(ge.getRgdId(), associatedGenes, pubMedIds, ge.getTraitName());
+    }
+
+    void generatePhenotypeAnnotations(VariantInfo ge, List<Integer> associatedGenes, String pubMedIds, Dao dao) throws Exception {
+
+        Set<Term> phenotypeTerms = new HashSet<>();
+        for (Integer geneRgdId : associatedGenes) {
+            phenotypeTerms.addAll(getPhenotypeTerms(ge.getRgdId(), geneRgdId, ge.getTraitName()));
+        }
+
+        // find matching HPO terms to make annotations
+        for (Term term : phenotypeTerms) {
+
+            // create incoming annotation for variant
+            Annotation annot = new Annotation();
+            annot.setAnnotatedObjectRgdId(ge.getRgdId());
+            annot.setTermAcc(term.getAccId());
+            annot.setTerm(term.getTerm());
+            annot.setObjectName(ge.getName());
+            annot.setObjectSymbol(ge.getSymbol());
+            annot.setRgdObjectKey(ge.getObjectKey());
+            annot.setAspect("H"); // for HPO
+            annot.setCreatedBy(getCreatedBy()); // ClinVar Annotation pipeline
+            annot.setEvidence(getEvidence());
+            annot.setSpeciesTypeKey(SpeciesType.HUMAN);
+            annot.setDataSrc(getDataSrc());
+            annot.setRefRgdId(getRefRgdId());
+            annot.setXrefSource(pubMedIds);
+            annot.setLastModifiedBy(annot.getCreatedBy());
+            // term comment field contains the original OMIM acc id, or MESH acc id
+            String matchByAccId = term.getComment() == null ? term.getAccId() : term.getComment();
+            annot.setNotes("ClinVar Annotator: match by " + matchByAccId);
+
+            // does incoming annotation match rgd?
+            int inRgdAnnotKey = dao.getAnnotationKey(annot);
+            if (inRgdAnnotKey != 0) {
+                dao.updateLastModifiedDateForAnnotation(inRgdAnnotKey, getCreatedBy());
+                counters.increment("HPO annotations - variant - matching");
+            } else {
+                dao.insertAnnotation(annot);
+                counters.increment("HPO annotations - variant - inserted");
+            }
+        }
+
+        generateGenePhenotypeAnnotations(ge.getRgdId(), associatedGenes, pubMedIds, ge.getTraitName());
     }
 
     boolean variantIsCarpeCompliant(VariantInfo vi) throws Exception {
@@ -175,7 +230,7 @@ public class VariantAnnotator {
         return true;
     }
 
-    void generateGeneAnnotations(int varRgdId, List<Integer> associatedGenes, String pubMedIds, String conditions) throws Exception {
+    void generateGeneDiseaseAnnotations(int varRgdId, List<Integer> associatedGenes, String pubMedIds, String conditions) throws Exception {
 
         Annotation annot = new Annotation();
         annot.setAspect("D"); // for RDO
@@ -207,12 +262,12 @@ public class VariantAnnotator {
                 int inRgdAnnotKey = dao.getAnnotationKey(humanGeneAnnot);
                 if( inRgdAnnotKey!=0 ) {
                     dao.updateLastModifiedDateForAnnotation(inRgdAnnotKey, getCreatedBy());
-                    counters.increment("annotations - gene - "+species+" - matching");
-                    counters.increment("annotations - gene - ALL SPECIES - matching");
+                    counters.increment("RDO annotations - gene - "+species+" - matching");
+                    counters.increment("RDO annotations - gene - ALL SPECIES - matching");
                 } else {
                     dao.insertAnnotation(humanGeneAnnot);
-                    counters.increment("annotations - gene - "+species+" - inserted");
-                    counters.increment("annotations - gene - ALL SPECIES - inserted");
+                    counters.increment("RDO annotations - gene - "+species+" - inserted");
+                    counters.increment("RDO annotations - gene - ALL SPECIES - inserted");
                 }
 
                 // create homologous rat/mouse annotations
@@ -232,13 +287,56 @@ public class VariantAnnotator {
                     int inRgdAnnotKey2 = dao.getAnnotationKey(homologAnnot);
                     if( inRgdAnnotKey2!=0 ) {
                         dao.updateLastModifiedDateForAnnotation(inRgdAnnotKey2, getCreatedBy());
-                        counters.increment("annotations - gene - "+species+" - matching");
-                        counters.increment("annotations - gene - ALL SPECIES - matching");
+                        counters.increment("RDO annotations - gene - "+species+" - matching");
+                        counters.increment("RDO annotations - gene - ALL SPECIES - matching");
                     } else {
                         dao.insertAnnotation(homologAnnot);
-                        counters.increment("annotations - gene - "+species+" - inserted");
-                        counters.increment("annotations - gene - ALL SPECIES - inserted");
+                        counters.increment("RDO annotations - gene - "+species+" - inserted");
+                        counters.increment("RDO annotations - gene - ALL SPECIES - inserted");
                     }
+                }
+            }
+        }
+    }
+
+    void generateGenePhenotypeAnnotations(int varRgdId, List<Integer> associatedGenes, String pubMedIds, String conditions) throws Exception {
+
+        Annotation annot = new Annotation();
+        annot.setAspect("H"); // for HPO
+        annot.setCreatedBy(getCreatedBy()); // ClinVar Annotation pipeline
+        annot.setEvidence("IAGP");
+        annot.setSpeciesTypeKey(SpeciesType.HUMAN);
+        annot.setDataSrc(getDataSrc());
+        annot.setRefRgdId(getRefRgdId());
+        annot.setXrefSource(pubMedIds);
+        annot.setLastModifiedBy(annot.getCreatedBy());
+
+        for( Integer geneRgdId: associatedGenes ) {
+
+            for( Term term: getPhenotypeTerms(varRgdId, geneRgdId, conditions) ) {
+                Gene gene = dao.getGene(geneRgdId);
+                String species = getSpeciesName(gene.getSpeciesTypeKey());
+
+                Annotation humanGeneAnnot = (Annotation) annot.clone();
+                humanGeneAnnot.setAnnotatedObjectRgdId(geneRgdId);
+                humanGeneAnnot.setRgdObjectKey(RgdId.OBJECT_KEY_GENES);
+                humanGeneAnnot.setObjectName(gene.getName());
+                humanGeneAnnot.setObjectSymbol(gene.getSymbol());
+                humanGeneAnnot.setWithInfo("RGD:"+varRgdId);
+                humanGeneAnnot.setTermAcc(term.getAccId());
+                humanGeneAnnot.setTerm(term.getTerm());
+                humanGeneAnnot.setNotes("ClinVar Annotator: match by "+term.getComment());
+
+                // does incoming annotation match rgd?
+                int inRgdAnnotKey = dao.getAnnotationKey(humanGeneAnnot);
+                if( inRgdAnnotKey!=0 ) {
+                    dao.updateLastModifiedDateForAnnotation(inRgdAnnotKey, getCreatedBy());
+                    counters.increment("HPO annotations - gene - "+species+" - matching");
+                    counters.increment("HPO annotations - gene - ALL SPECIES - matching");
+                } else {
+                    dao.insertAnnotation(humanGeneAnnot);
+                    counters.increment("HPO annotations - gene - "+species+" - inserted");
+                    counters.increment("HPO annotations - gene - ALL SPECIES - inserted");
                 }
             }
         }
@@ -277,6 +375,93 @@ public class VariantAnnotator {
 
         return diseaseTerms;
     }
+
+    List<Term> getPhenotypeTermsByConditionName(String conditionString, int varRgdId) throws Exception {
+
+        List<Term> results = new ArrayList<>();
+        List<Alias> synonyms = null;
+        List<String> aliases = new ArrayList<>();
+
+        // there could be multiple conditions, like this:
+        // Global developmental delay [RCV000052977]|See cases [RCV000052977]
+        for( String condition: conditionString.split("\\|", -1) ) {
+            // get rid of terminating RCV id: " [RCVxxxx"
+            int cutOffPos = condition.lastIndexOf(" [RCV");
+            if( cutOffPos>0 ) {
+                condition = condition.substring(0, cutOffPos);
+            }
+
+            // filter out junk words, like 'not specified'
+            if( getExcludedConditionNames().contains(condition) ) {
+                logDebug.info("  excluded condition name: "+condition);
+                continue;
+            }
+
+            List<Term> phenotypes = getPhenotypeTermsBySemiExactTermNameMatch(condition);
+            if( !phenotypes.isEmpty() ) {
+                checkIfHpoTerms(phenotypes);
+                for( Term phenotype: phenotypes ) {
+                    phenotype.setComment("term: "+condition);
+                }
+                results.addAll(phenotypes);
+                continue;
+            }
+            aliases.add(condition);
+
+            // exact match by disease name did not work
+            // try variant synonyms
+            if( synonyms==null )
+                synonyms = dao.getAliases(varRgdId);
+            int hitCount = 0;
+            for( Alias syn: synonyms ) {
+                phenotypes = getPhenotypeTermsBySemiExactTermNameMatch(syn.getValue());
+                checkIfHpoTerms(phenotypes);
+                for( Term phenotype: phenotypes ) {
+                    phenotype.setComment("term: "+syn.getValue());
+                }
+                results.addAll(phenotypes);
+                hitCount += phenotypes.size();
+                aliases.add(syn.getValue());
+            }
+            if( hitCount>0 ) {
+                continue;
+            }
+
+            // no match by exact match of condition synonyms to term name -- try synonyms
+            hitCount = 0;
+            for( String syn: aliases ) {
+                phenotypes = getPhenotypeTermsBySemiExactTermNameMatch(syn);
+                checkIfHpoTerms(phenotypes);
+                for( Term phenotype: phenotypes ) {
+                    phenotype.setComment("synonym: "+syn);
+                }
+                results.addAll(phenotypes);
+                hitCount += phenotypes.size();
+            }
+            if( hitCount>0 ) {
+                continue;
+            }
+
+            // no match by
+            // addToUnmatchableConditions(condition);
+        }
+
+        return results;
+    }
+
+    Collection<Term> getPhenotypeTerms(int varRgdId, int geneRgdId, String conditions) throws Exception {
+
+        Set<Term> phenotypeTerms = new HashSet<>();
+
+        // try also exact match by condition name
+        int oldCount = phenotypeTerms.size();
+        phenotypeTerms.addAll(getPhenotypeTermsByConditionName(conditions, varRgdId));
+        int newCount = phenotypeTerms.size();
+        termNameToHpoCount += newCount - oldCount;
+
+        return phenotypeTerms;
+    }
+
 
     List<Term> getDiseaseTermsByConditionName(String conditionString, int varRgdId) throws Exception {
 
@@ -383,6 +568,14 @@ public class VariantAnnotator {
         }
     }
 
+    void checkIfHpoTerms(Collection<Term> terms) throws Exception {
+        for( Term term: terms ) {
+            if( !term.getOntologyId().equals("HP") ) {
+                throw new Exception(term.getAccId()+" is NOT an HP term!");
+            }
+        }
+    }
+
     String getPubMedIds(int rgdId) throws Exception {
         List<String> pubMedIds = new ArrayList<>();
         for( XdbId id: dao.getXdbIds(rgdId, XdbId.XDB_KEY_PUBMED) ) {
@@ -477,7 +670,7 @@ public class VariantAnnotator {
     }
 
     List<Term> getDiseaseTermsBySemiExactTermNameMatch(String termName) throws Exception {
-        Set<String> termAccs = getTermAccIds(termName);
+        Set<String> termAccs = getTermAccIds("RDO", termName);
         if( termAccs==null )
             return Collections.emptyList();
 
@@ -488,10 +681,30 @@ public class VariantAnnotator {
         return terms;
     }
 
-    synchronized Set<String> getTermAccIds(String termName) throws Exception {
+    List<Term> getPhenotypeTermsBySemiExactTermNameMatch(String termName) throws Exception {
+        Set<String> termAccs = getTermAccIds("HP", termName);
+        if( termAccs==null )
+            return Collections.emptyList();
+
+        List<Term> terms = new ArrayList<>();
+        for( String accId: termAccs ) {
+            terms.add(dao.getTermByAccId(accId));
+        }
+        return terms;
+    }
+
+    synchronized Set<String> getTermAccIds(String ontId, String termName) throws Exception {
+
+        TermNameMatcher termNameMatcher = ontId.equals("RDO") ? rdoTermNameMatcher : hpoTermNameMatcher;
         if( termNameMatcher==null ) {
-            termNameMatcher = new TermNameMatcher();
+            termNameMatcher = new TermNameMatcher(ontId);
             termNameMatcher.indexTermsAndSynonyms(dao);
+
+            if( ontId.equals("RDO") ) {
+                rdoTermNameMatcher = termNameMatcher;
+            } else {
+                hpoTermNameMatcher = termNameMatcher;
+            }
         }
         return termNameMatcher.getTermAccIds(termName);
     }

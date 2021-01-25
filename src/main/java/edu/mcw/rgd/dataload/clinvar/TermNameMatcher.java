@@ -18,6 +18,12 @@ public class TermNameMatcher {
 
     Map<String, Set<String>> map = new HashMap<>();
 
+    String ontId;
+
+    public TermNameMatcher(String ontId) {
+        this.ontId = ontId;
+    }
+
     public void indexTermsAndSynonyms(Dao dao) throws Exception {
         indexTerms(dao);
         indexSynonyms(dao);
@@ -29,7 +35,7 @@ public class TermNameMatcher {
 
         log.info("DUPLICATES {count of annotations}");
 
-        for( Term t: dao.getActiveTerms("RDO") ) {
+        for( Term t: dao.getActiveTerms(ontId) ) {
             // sanity check
             if( t.getTerm() == null ) {
                 log.warn("ERROR: No term name for "+t.getAccId());
@@ -67,7 +73,7 @@ public class TermNameMatcher {
 
         Map<String,String> duplicates = new HashMap<>();
 
-        for( TermSynonym s: dao.getActiveSynonyms("RDO") ) {
+        for( TermSynonym s: dao.getActiveSynonyms(ontId) ) {
             String normalizedName = normalizeTerm(s.getName());
             Collection<String> accIds = map.get(normalizedName);
             if( accIds==null ) {

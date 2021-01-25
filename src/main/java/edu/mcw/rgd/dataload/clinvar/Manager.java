@@ -54,7 +54,7 @@ public class Manager {
 
         try {
             if( qcDuplicateTerms ) {
-                TermNameMatcher matcher = new TermNameMatcher();
+                TermNameMatcher matcher = new TermNameMatcher("RDO");
                 matcher.indexTerms(manager.getDao());
             }
 

@@ -1,3 +1,6 @@
+Jan 25, 2021
+  annotator: implemented phenotype annotations, to HP ontology
+
 Oct 13, 2020
   loader: improved handling of 'submitter' field
 

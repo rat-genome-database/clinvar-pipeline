@@ -1,3 +1,6 @@
+Mar 24, 2021
+  suppressed dumping of term/synonym duplicates for HPO ontology -- not very useful
+
 Jan 25, 2021
   annotator: implemented phenotype annotations, to HP ontology
 

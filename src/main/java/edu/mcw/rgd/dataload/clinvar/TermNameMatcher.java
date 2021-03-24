@@ -64,8 +64,10 @@ public class TermNameMatcher {
             }
         }
 
-        // dump duplicate terms
-        dumpDuplicates(" DUPLICATE TERMS: ", duplicates);
+        // dump duplicate terms only for RDO (for HPO they are not very useful)
+        if( ontId.equals("RDO") ) {
+            dumpDuplicates(" DUPLICATE TERMS: ", duplicates);
+        }
         log.info("");
     }
 
@@ -116,8 +118,10 @@ public class TermNameMatcher {
             }
         }
 
-        // dump duplicate synonyms
-        dumpDuplicates(" DUPLICATE SYNONYMS: ", duplicates);
+        // dump duplicate synonyms only for RDO (not very useful for HPO)
+        if( ontId.equals("RDO") ) {
+            dumpDuplicates(" DUPLICATE SYNONYMS: ", duplicates);
+        }
         log.info("");
     }
 

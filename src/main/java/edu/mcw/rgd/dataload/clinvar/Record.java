@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author mtutaj
@@ -108,8 +109,13 @@ public class Record {
                     len--;
                 } while (notes2.getBytes("UTF-8").length > 3996);
 
+                // warn only once per ClinVar object about combined notes too long
                 Logger log = Logger.getLogger("loader");
-                log.info("  combined notes too long for " + getVarIncoming().getSymbol() + "! UTF8 str len:" + (len + 5));
+                String msg = "  combined notes too long for " + getVarIncoming().getSymbol() + "! UTF8 str len:" + (len + 5);
+                Object prevMsg = _combinedNotesTooLongMap.putIfAbsent(msg, "");
+                if( prevMsg==null ) {
+                    log.info(msg);
+                }
 
                 getVarIncoming().setNotes(notes2 + " ...");
             } catch (UnsupportedEncodingException e) {
@@ -118,6 +124,8 @@ public class Record {
             }
         }
     }
+
+    static ConcurrentHashMap<String,Object> _combinedNotesTooLongMap = new ConcurrentHashMap<>();
 
     public void mergeSubmitterForVarIncoming(String submitter) {
         if( submitter.isEmpty() ) {

@@ -77,7 +77,7 @@ public class VariantAnnotator {
         log.info("initial annotation count: "+Utils.formatThousands(origAnnotCount));
 
         List<VariantInfo> variants = dao.getActiveVariants();
-        logDebug.info("active variants loaded: "+variants.size());
+        logDebug.info("active variants loaded: "+Utils.formatThousands(variants.size()));
 
         variants.parallelStream().forEach( ge -> {
             counters.increment("INCOMING VARIANTS");
@@ -104,10 +104,10 @@ public class VariantAnnotator {
         });
 
         dumpUnmatchableConditions();
-        log.info("  drugResponseTermCount="+unmatchableDrugResponseTerms.size());
-        log.info("  omimToRdoCount="+omimToRdoCount+", meshToRdoCount="+meshToRdoCount);
-        log.info("  termNameToRdoCount="+termNameToRdoCount);
-        log.info("  termNameToHpoCount="+termNameToHpoCount);
+        log.info("  drugResponseTermCount = "+Utils.formatThousands(unmatchableDrugResponseTerms.size()));
+        log.info("  omimToRdoCount = "+Utils.formatThousands(omimToRdoCount)+",   meshToRdoCount = "+Utils.formatThousands(meshToRdoCount));
+        log.info("  termNameToRdoCount = "+Utils.formatThousands(termNameToRdoCount));
+        log.info("  termNameToHpoCount = "+Utils.formatThousands(termNameToHpoCount));
 
         // delete stale annotations
         int annotsDeleted = dao.deleteObsoleteAnnotations(getCreatedBy(), pipelineStartTime, getStaleAnnotDeleteThreshold(),

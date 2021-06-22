@@ -111,7 +111,17 @@ public class Dao {
         }
         logUpdatedVariants.info("OLD: "+varOldDump);
         logUpdatedVariants.info("NEW: "+varNewDump);
-        variantInfoDAO.updateVariant(varNew);
+        try {
+            variantInfoDAO.updateVariant(varNew);
+        } catch(Exception e) {
+            Logger l = Logger.getLogger("dbg");
+            l.warn("EXCEPTION\n"+
+                    "OLD: "+varOldDump+"\n"+
+                    "NEW: "+varNewDump+"\n"+
+                    e.toString()
+            );
+            throw new RuntimeException(e);
+        }
         return true;
     }
 

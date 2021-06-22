@@ -99,19 +99,24 @@ public class Record {
 
         // ensure that the notes are no longer than 4000 characters
         String notes = getVarIncoming().getNotes();
-        if( notes!=null && notes.length() > 4000 ) {
+        if( notes!=null && notes.length() > 3980 ) {
             // take into account UTF8 encoding
             try {
                 String notes2;
-                int len = 3996;
+                int len = notes.length();
+                if( len > 4000 ) {
+                    len = 4000;
+                }
+                int utf8Len = 0;
                 do {
                     notes2 = notes.substring(0, len);
                     len--;
-                } while (notes2.getBytes("UTF-8").length > 3996);
+                    utf8Len = notes2.getBytes("UTF-8").length;
+                } while (utf8Len > 3996);
 
                 // warn only once per ClinVar object about combined notes too long
                 Logger log = Logger.getLogger("loader");
-                String msg = "  combined notes too long for " + getVarIncoming().getSymbol() + "! UTF8 str len:" + (len + 5);
+                String msg = "  combined notes too long for " + getVarIncoming().getSymbol() + "! UTF8 str len:" + (4+utf8Len);
                 Object prevMsg = _combinedNotesTooLongMap.putIfAbsent(msg, "");
                 if( prevMsg==null ) {
                     log.info(msg);

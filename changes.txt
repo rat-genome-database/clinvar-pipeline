@@ -1,5 +1,6 @@
 Jan 04, 2022
   updated log4j to avoid zero day exploit
+  implemented replacement of obsolete SO:1000184 'sequence_variant_causes_exon_loss' with SO:0001572 'exon_loss_variant'
 
 Jun 22, 2021
   fixed handling of notes longer than 4000, esp. regarding UTF-8 characters in the notes

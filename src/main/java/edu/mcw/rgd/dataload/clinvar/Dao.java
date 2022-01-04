@@ -413,6 +413,13 @@ public class Dao {
                 term = term2;
                 break;
             }
+
+            // 3. hard-coded substitutions
+            if( soAccId.equals("SO:1000184") ) {
+                soAccId = "SO:0001572"; // replace 'sequence_variant_causes_exon_loss' with 'exon_loss_variant'
+                GlobalCounters.getInstance().incrementCounter("VARIANTS_WITH_SUBSTITUTE_SO_ACC_ID", 1);
+                return validateSoAccId(soAccId);
+            }
         }
 
         if( term==null || term.isObsolete() )

@@ -2,10 +2,10 @@ package edu.mcw.rgd.dataload.clinvar;
 
 import edu.mcw.rgd.datamodel.VariantInfo;
 import edu.mcw.rgd.process.Utils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
@@ -115,7 +115,7 @@ public class Record {
                 } while (utf8Len > 3996);
 
                 // warn only once per ClinVar object about combined notes too long
-                Logger log = Logger.getLogger("loader");
+                Logger log = LogManager.getLogger("loader");
                 String msg = "  combined notes too long for " + getVarIncoming().getSymbol() + "! UTF8 str len:" + (4+utf8Len);
                 Object prevMsg = _combinedNotesTooLongMap.putIfAbsent(msg, "");
                 if( prevMsg==null ) {

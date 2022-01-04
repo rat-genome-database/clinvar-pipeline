@@ -6,7 +6,8 @@ import edu.mcw.rgd.datamodel.ontologyx.Term;
 import edu.mcw.rgd.process.CounterPool;
 import edu.mcw.rgd.process.FileDownloader;
 import edu.mcw.rgd.process.Utils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.util.*;
@@ -29,8 +30,8 @@ import java.util.Map;
 public class VariantAnnotator {
 
     Dao dao;
-    Logger logDebug = Logger.getLogger("dbg");
-    Logger log = Logger.getLogger("annotator");
+    Logger logDebug = LogManager.getLogger("dbg");
+    Logger log = LogManager.getLogger("annotator");
 
     private String version;
     private int createdBy;

@@ -8,7 +8,8 @@ import edu.mcw.rgd.datamodel.ontologyx.TermSynonym;
 import edu.mcw.rgd.datamodel.ontologyx.TermWithStats;
 import edu.mcw.rgd.process.CounterPool;
 import edu.mcw.rgd.process.Utils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.Map;
@@ -22,17 +23,17 @@ public class Dao {
 
     public static final String ASSOC_TYPE = "variant_to_gene";
 
-    Logger logInsertedVariants = Logger.getLogger("insertedVariants");
-    Logger logUpdatedVariants = Logger.getLogger("updatedVariants");
-    Logger logGeneAssociations = Logger.getLogger("geneAssociations");
-    Logger logMapPos = Logger.getLogger("mapPos");
-    Logger logXdbIds = Logger.getLogger("xdbIds");
-    Logger logHgvsNames = Logger.getLogger("hgvsNames");
-    Logger logAliases = Logger.getLogger("aliases");
-    Logger logAnnotations = Logger.getLogger("annotations");
-    Logger logAnnotator = Logger.getLogger("annotator");
-    Logger logTraitNames = Logger.getLogger("traitNameUpdates");
-    Logger logSubmitters = Logger.getLogger("submitterUpdates");
+    Logger logInsertedVariants = LogManager.getLogger("insertedVariants");
+    Logger logUpdatedVariants = LogManager.getLogger("updatedVariants");
+    Logger logGeneAssociations = LogManager.getLogger("geneAssociations");
+    Logger logMapPos = LogManager.getLogger("mapPos");
+    Logger logXdbIds = LogManager.getLogger("xdbIds");
+    Logger logHgvsNames = LogManager.getLogger("hgvsNames");
+    Logger logAliases = LogManager.getLogger("aliases");
+    Logger logAnnotations = LogManager.getLogger("annotations");
+    Logger logAnnotator = LogManager.getLogger("annotator");
+    Logger logTraitNames = LogManager.getLogger("traitNameUpdates");
+    Logger logSubmitters = LogManager.getLogger("submitterUpdates");
 
     private AliasDAO aliasDAO = new AliasDAO();
     private AnnotationDAO annotationDAO = new AnnotationDAO();
@@ -114,7 +115,7 @@ public class Dao {
         try {
             variantInfoDAO.updateVariant(varNew);
         } catch(Exception e) {
-            Logger l = Logger.getLogger("dbg");
+            Logger l = LogManager.getLogger("dbg");
             l.warn("EXCEPTION\n"+
                     "OLD: "+varOldDump+"\n"+
                     "NEW: "+varNewDump+"\n"+

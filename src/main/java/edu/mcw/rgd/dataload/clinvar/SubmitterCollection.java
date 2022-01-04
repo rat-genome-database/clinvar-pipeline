@@ -1,7 +1,8 @@
 package edu.mcw.rgd.dataload.clinvar;
 
 import edu.mcw.rgd.process.Utils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 
@@ -29,7 +30,7 @@ public class SubmitterCollection {
     // map of clinvar rgd id to submitter info
     private Map<Integer, SubmitterCollection.SubmitterInfo> map = new HashMap<>();
 
-    private Logger logDebug = Logger.getLogger("dbg");
+    private Logger logDebug = LogManager.getLogger("dbg");
 
     public synchronized void add(int rgdId, String submitterIncoming, String submitterInRgd) {
         SubmitterCollection.SubmitterInfo info = map.get(rgdId);

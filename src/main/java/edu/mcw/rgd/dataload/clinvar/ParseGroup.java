@@ -1,13 +1,13 @@
 package edu.mcw.rgd.dataload.clinvar;
 
 import edu.mcw.rgd.process.Utils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 /**
@@ -30,8 +30,8 @@ public class ParseGroup {
     private String chunkDir;
 
     private List<String> chunks = new ArrayList<>(); // names of file chunks
-    private Logger logDebug = Logger.getLogger("dbg");
-    private Logger log = Logger.getLogger("loader");
+    private Logger logDebug = LogManager.getLogger("dbg");
+    private Logger log = LogManager.getLogger("loader");
 
     public void parse(String fileName) throws IOException {
 

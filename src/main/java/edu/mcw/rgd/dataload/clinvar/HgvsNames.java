@@ -1,8 +1,8 @@
 package edu.mcw.rgd.dataload.clinvar;
 
 import edu.mcw.rgd.datamodel.HgvsName;
-import edu.mcw.rgd.process.Utils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -23,7 +23,7 @@ public class HgvsNames {
     public void addIncomingHgvsName(String type, String name) {
         if( name.length()>4000 ) {
             GlobalCounters.getInstance().incrementCounter("HGVS_NAME_SKIPPED_LONGER_THAN_4000", 1);
-            Logger log = Logger.getLogger("hgvsNames");
+            Logger log = LogManager.getLogger("hgvsNames");
             log.warn("HGVS name skipped because it is longer than 4000: type={"+type+"} name={"+name+"}");
             return;
         }

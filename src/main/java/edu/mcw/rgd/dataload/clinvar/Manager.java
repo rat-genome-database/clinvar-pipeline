@@ -1,7 +1,8 @@
 package edu.mcw.rgd.dataload.clinvar;
 
 import edu.mcw.rgd.process.Utils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.FileSystemResource;
@@ -16,7 +17,7 @@ public class Manager {
 
     public static final String SOURCE = "CLINVAR";
 
-    Logger log = Logger.getLogger("loader");
+    Logger log = LogManager.getLogger("loader");
 
     private String version;
     private Dao dao;

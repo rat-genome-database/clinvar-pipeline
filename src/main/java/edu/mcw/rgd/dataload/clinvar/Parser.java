@@ -4,7 +4,8 @@ import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.process.Utils;
 import edu.mcw.rgd.xml.XomAnalyzer;
 import nu.xom.*;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jaxen.JaxenException;
 import org.jaxen.XPath;
 import org.jaxen.xom.XOMXPath;
@@ -22,8 +23,8 @@ public class Parser extends XomAnalyzer {
 
     static final SimpleDateFormat SDT_YYYYMMDD = new SimpleDateFormat("yyyy-MM-dd");
 
-    Logger log = Logger.getLogger("loader");
-    Logger logDebug = Logger.getLogger("dbg");
+    Logger log = LogManager.getLogger("loader");
+    Logger logDebug = LogManager.getLogger("dbg");
 
     public QC qc;
     public Loader loader;
@@ -488,7 +489,7 @@ public class Parser extends XomAnalyzer {
             xpPrevalence = new XOMXPath("TraitSet/Trait/AttributeSet/Attribute[@Type='prevalence']");
         }
         catch(Exception e) {
-            Utils.printStackTrace(e, Logger.getLogger("loader"));
+            Utils.printStackTrace(e, LogManager.getLogger("loader"));
             e.printStackTrace();
         }
     }

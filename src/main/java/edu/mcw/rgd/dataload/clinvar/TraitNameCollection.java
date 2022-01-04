@@ -1,7 +1,8 @@
 package edu.mcw.rgd.dataload.clinvar;
 
 import edu.mcw.rgd.process.Utils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 
@@ -32,7 +33,7 @@ public class TraitNameCollection {
     // map of clinvar rgd id to trait name info
     private Map<Integer, TraitNameInfo> map = new HashMap<>();
 
-    private Logger logDebug = Logger.getLogger("dbg");
+    private Logger logDebug = LogManager.getLogger("dbg");
 
     public synchronized void add(int rgdId, String traitNameIncoming, String traitNameInRgd) {
         TraitNameInfo info = map.get(rgdId);

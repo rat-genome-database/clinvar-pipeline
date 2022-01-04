@@ -4,7 +4,8 @@ import edu.mcw.rgd.datamodel.ontologyx.Term;
 import edu.mcw.rgd.datamodel.ontologyx.TermSynonym;
 import edu.mcw.rgd.datamodel.ontologyx.TermWithStats;
 import edu.mcw.rgd.process.Utils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 
@@ -14,7 +15,7 @@ import java.util.*;
  */
 public class TermNameMatcher {
 
-    Logger log = Logger.getLogger("duplicates");
+    Logger log = LogManager.getLogger("duplicates");
 
     Map<String, Set<String>> map = new HashMap<>();
 

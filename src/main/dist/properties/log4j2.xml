@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <!-- <PatternLayout pattern="%d{HH:mm:ss} [%t] %-5level %logger{36} - %msg%n"/> -->
+            <PatternLayout pattern="[%d{yyyy-MM-hh HH:mm:ss}] %msg%n"/>
+        </Console>
+
+        <RollingFile name="dbg" append="true" fileName="logs/dbg.log" filePattern="logs/dbg.log.%d{yyyy-MM}">
+            <PatternLayout pattern="%d %p [%c] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+
+        <RollingFile name="loader" append="true" fileName="logs/loader.log" filePattern="logs/loader.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="annotator" append="true" fileName="logs/annotator.log" filePattern="logs/annotator.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="duplicates" append="true" fileName="logs/duplicates.log" filePattern="logs/duplicates.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="insertedVariants" append="true" fileName="logs/insertedVariants.log" filePattern="logs/insertedVariants.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="updatedVariants" append="true" fileName="logs/updatedVariants.log" filePattern="logs/updatedVariants.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="geneAssociations" append="true" fileName="logs/geneAssociations.log" filePattern="logs/geneAssociations.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="xdbIds" append="true" fileName="logs/xdbIds.log" filePattern="logs/xdbIds.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="mapPos" append="true" fileName="logs/mapPos.log" filePattern="logs/mapPos.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="hgvsNames" append="true" fileName="logs/hgvsNames.log" filePattern="logs/hgvsNames.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="aliases" append="true" fileName="logs/aliases.log" filePattern="logs/aliases.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="annotations" append="true" fileName="logs/annotations.log" filePattern="logs/annotations.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="traitNameUpdates" append="true" fileName="logs/traitNameUpdates.log" filePattern="logs/traitNameUpdates.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="submitterUpdates" append="true" fileName="logs/submitterUpdates.log" filePattern="logs/submitterUpdates.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <Root level="INFO">
+            <AppenderRef ref="Console"/>
+        </Root>
+        <!-- dbg -->
+        <Logger name="dbg" level="debug" additivity="false">
+            <AppenderRef ref="dbg"/>
+        </Logger>
+
+        <!-- monthly -->
+        <Logger name="loader" level="debug" additivity="false">
+            <AppenderRef ref="loader"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="annotator" level="debug" additivity="false">
+            <AppenderRef ref="annotator"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="duplicates" level="debug" additivity="false">
+            <AppenderRef ref="duplicates"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="insertedVariants" level="debug" additivity="false">
+            <AppenderRef ref="insertedVariants"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="updatedVariants" level="debug" additivity="false">
+            <AppenderRef ref="updatedVariants"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="geneAssociations" level="debug" additivity="false">
+            <AppenderRef ref="geneAssociations"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="xdbIds" level="debug" additivity="false">
+            <AppenderRef ref="xdbIds"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="mapPos" level="debug" additivity="false">
+            <AppenderRef ref="mapPos"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="hgvsNames" level="debug" additivity="false">
+            <AppenderRef ref="hgvsNames"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="aliases" level="debug" additivity="false">
+            <AppenderRef ref="aliases"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="annotations" level="debug" additivity="false">
+            <AppenderRef ref="annotations"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="traitNameUpdates" level="debug" additivity="false">
+            <AppenderRef ref="traitNameUpdates"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="submitterUpdates" level="debug" additivity="false">
+            <AppenderRef ref="submitterUpdates"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+    </Loggers>
+</Configuration>

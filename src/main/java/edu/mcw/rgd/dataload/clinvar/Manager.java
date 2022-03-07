@@ -166,33 +166,4 @@ public class Manager {
     public ParseGroup getParser() {
         return parser;
     }
-    /*
-    static void v() throws Exception {
-
-        Connection con = DataSourceFactory.getInstance().getDataSource().getConnection();
-        PreparedStatement ps = con.prepareStatement("SELECT rgd_id,submitter FROM cc");
-        ResultSet rs = ps.executeQuery();
-        Map<Integer,String> m = new HashMap<>();
-        while( rs.next() ) {
-            m.put(rs.getInt(1), rs.getString(2));
-        }
-        ps.close();
-
-        int rows = 0;
-        ps = con.prepareStatement("UPDATE clinvar SEt submitter=? WHERE rgd_id=?");
-        for( Map.Entry<Integer,String> entry: m.entrySet() ) {
-            int rgdId = entry.getKey();
-            String submitter = entry.getValue();;
-            ps.setString(1, submitter);
-            ps.setInt(2, rgdId);
-            ps.executeUpdate();
-
-            rows++;
-            System.out.println(rows);
-        }
-        con.close();
-
-        System.exit(-1);
-    }
-    */
 }

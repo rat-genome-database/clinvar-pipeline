@@ -25,12 +25,18 @@
                 <TimeBasedTriggeringPolicy interval="1"/>
             </Policies>
         </RollingFile>
-        <RollingFile name="duplicates" append="true" fileName="logs/duplicates.log" filePattern="logs/duplicates.log.%d{yyyy-MM}">
+
+        <RollingFile name="duplicates_monthly" append="true" fileName="logs/duplicates_monthly.log" filePattern="logs/duplicates_monthly.log.%d{yyyy-MM}">
             <PatternLayout pattern="[%d{yyyy-MM-hh HH:mm:ss}] - %m%n"/>
             <Policies>
                 <TimeBasedTriggeringPolicy interval="1"/>
             </Policies>
         </RollingFile>
+        <File name="duplicates" append="false" fileName="logs/duplicates.log">
+            <PatternLayout pattern="%m%n"/>
+            <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
+        </File>
+
         <RollingFile name="insertedVariants" append="true" fileName="logs/insertedVariants.log" filePattern="logs/insertedVariants.log.%d{yyyy-MM}">
             <PatternLayout pattern="[%d{yyyy-MM-hh HH:mm:ss}] - %m%n"/>
             <Policies>
@@ -113,6 +119,7 @@
         </Logger>
         <Logger name="duplicates" level="debug" additivity="false">
             <AppenderRef ref="duplicates"/>
+            <AppenderRef ref="duplicates_monthly"/>
             <AppenderRef ref="Console" level="info"/>
         </Logger>
         <Logger name="insertedVariants" level="debug" additivity="false">

@@ -271,7 +271,9 @@ public class VariantAnnotator {
                     counters.increment("RDO annotations - gene - ALL SPECIES - inserted");
                 }
 
-                // create homologous rat/mouse annotations
+                // create homologous rat/mouse annotations -- discontinued
+                // we would rely on transitive-annotations-pipeline to create these
+                if( false )
                 for( Gene homolog: dao.getHomologs(gene.getRgdId()) ) {
                     if( homolog.getSpeciesTypeKey()!=SpeciesType.RAT && homolog.getSpeciesTypeKey()!=SpeciesType.MOUSE )
                         continue;

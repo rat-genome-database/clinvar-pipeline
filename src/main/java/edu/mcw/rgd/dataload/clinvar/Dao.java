@@ -1,6 +1,7 @@
 package edu.mcw.rgd.dataload.clinvar;
 
 import edu.mcw.rgd.dao.impl.*;
+import edu.mcw.rgd.dao.spring.IntListQuery;
 import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.datamodel.ontology.Annotation;
 import edu.mcw.rgd.datamodel.ontologyx.Term;

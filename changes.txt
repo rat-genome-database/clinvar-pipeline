@@ -1,3 +1,8 @@
+Mar 31, 2022
+  disabled generation of gene orthologous annotations -- transitive annotation pipeline (TAP) will take care of it
+    and since TAP is also consolidating annotations by XREF_SRC field, this will result in significant reduction
+    of ISO annotations in general
+
 Mar 07, 2022
   fixed up 'duplicates' log
 

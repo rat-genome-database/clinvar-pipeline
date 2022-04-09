@@ -57,6 +57,7 @@ public class VariantAnnotator {
     private Set<String> processedVariantTypes;
     private boolean skipDrugResponseUnmatchableConditions;
     private String staleAnnotDeleteThreshold;
+    private AnnotCache annotCache = new AnnotCache(); // annot cache for orthologous annotations
 
     public void run(Dao dao) throws Exception {
 
@@ -68,17 +69,24 @@ public class VariantAnnotator {
         log.info(getVersion());
         log.info(dao.getConnectionInfo());
 
-        Date pipelineStartTime = Utils.addHoursToDate(new Date(), -1);
+        Date pipelineStartTime = Utils.addMinutesToDate(new Date(), -10);
         logDebug.info("Starting...");
 
         loadConceptToOmimMap();
         logDebug.info("concept-to-omim map loaded");
 
-        int origAnnotCount = dao.getCountOfAnnotationsByReference(getRefRgdId(), getDataSrc());
-        log.info("initial annotation count: "+Utils.formatThousands(origAnnotCount));
+        int origAnnotCountD = dao.getCountOfAnnotationsByReference(getRefRgdId(), getDataSrc(), "D");
+        log.info("D initial annotation count: "+Utils.formatThousands(origAnnotCountD));
+        int origAnnotCountH = dao.getCountOfAnnotationsByReference(getRefRgdId(), getDataSrc(), "H");
+        log.info("H initial annotation count: "+Utils.formatThousands(origAnnotCountH));
 
         List<VariantInfo> variants = dao.getActiveVariants();
         logDebug.info("active variants loaded: "+Utils.formatThousands(variants.size()));
+        Collections.shuffle(variants); // variant randomization is always helpful in highly parallel processing
+
+        // ### DEBUG
+        //List<VariantInfo> variants2 = variants.subList(0, 1000);
+        //variants = variants2;
 
         variants.parallelStream().forEach( ge -> {
             counters.increment("INCOMING VARIANTS");
@@ -104,6 +112,28 @@ public class VariantAnnotator {
             }
         });
 
+
+        // qc incoming annots to determine annots for insertion / deletion
+        annotCache.qcAndLoadAnnots(dao);
+
+        int count = annotCache.insertedAnnots.get();
+        if( count!=0 ) {
+            log.info("ISO orthologous annotations inserted: " + Utils.formatThousands(count));
+        }
+
+        count = annotCache.updatedFullAnnotKeys.size();
+        if( count!=0 ) {
+            log.info("ISO orthologous annotations updated: " + Utils.formatThousands(count));
+        }
+
+        // update last modified date for matching annots in batches
+        updateLastModified(annotCache);
+
+        annotCache.clear();
+        annotCache = null;
+
+
+
         dumpUnmatchableConditions();
         log.info("  drugResponseTermCount = "+Utils.formatThousands(unmatchableDrugResponseTerms.size()));
         log.info("  omimToRdoCount = "+Utils.formatThousands(omimToRdoCount)+",   meshToRdoCount = "+Utils.formatThousands(meshToRdoCount));
@@ -111,13 +141,34 @@ public class VariantAnnotator {
         log.info("  termNameToHpoCount = "+Utils.formatThousands(termNameToHpoCount));
 
         // delete stale annotations
-        int annotsDeleted = dao.deleteObsoleteAnnotations(getCreatedBy(), pipelineStartTime, getStaleAnnotDeleteThreshold(),
-                getRefRgdId(), getDataSrc(), origAnnotCount, counters);
-        counters.add("annotations - deleted", annotsDeleted);
+        int annotsDeletedD = dao.deleteObsoleteAnnotations(getCreatedBy(), pipelineStartTime, getStaleAnnotDeleteThreshold(),
+                getRefRgdId(), getDataSrc(), origAnnotCountD, counters, "D");
+        counters.add("D annotations - deleted", annotsDeletedD);
+        int annotsDeletedH = dao.deleteObsoleteAnnotations(getCreatedBy(), pipelineStartTime, getStaleAnnotDeleteThreshold(),
+                getRefRgdId(), getDataSrc(), origAnnotCountH, counters, "H");
+        counters.add("H annotations - deleted", annotsDeletedH);
 
         log.info(counters.dumpAlphabetically());
 
         log.info("STOP annot pipeline;   elapsed "+Utils.formatElapsedTime(System.currentTimeMillis(), time0));
+    }
+
+    int updateLastModified(AnnotCache info) throws Exception {
+
+        int rowsUpdated = 0;
+
+        // do the updates in batches of 999, because Oracle has an internal limit of 1000
+        List<Integer> fullAnnotKeys = new ArrayList<>(info.upToDateFullAnnotKeys.keySet());
+        for( int i=0; i<fullAnnotKeys.size(); i+= 999 ) {
+            int j = i + 999;
+            if( j > fullAnnotKeys.size() ) {
+                j = fullAnnotKeys.size();
+            }
+            List<Integer> fullAnnotKeysSubset = fullAnnotKeys.subList(i, j);
+            rowsUpdated += dao.updateLastModified(fullAnnotKeysSubset);
+        }
+
+        return rowsUpdated;
     }
 
     void generateDiseaseAnnotations(VariantInfo ge, List<Integer> associatedGenes, String pubMedIds, Dao dao) throws Exception {
@@ -273,29 +324,46 @@ public class VariantAnnotator {
 
                 // create homologous rat/mouse annotations -- discontinued
                 // we would rely on transitive-annotations-pipeline to create these
-                if( false )
-                for( Gene homolog: dao.getHomologs(gene.getRgdId()) ) {
-                    if( homolog.getSpeciesTypeKey()!=SpeciesType.RAT && homolog.getSpeciesTypeKey()!=SpeciesType.MOUSE )
-                        continue;
-                    species = getSpeciesName(homolog.getSpeciesTypeKey());
+                if( false ) {
+                    for (Gene homolog : dao.getHomologs(gene.getRgdId())) {
+                        if (homolog.getSpeciesTypeKey() != SpeciesType.RAT && homolog.getSpeciesTypeKey() != SpeciesType.MOUSE)
+                            continue;
+                        species = getSpeciesName(homolog.getSpeciesTypeKey());
 
-                    Annotation homologAnnot = (Annotation) humanGeneAnnot.clone();
-                    homologAnnot.setSpeciesTypeKey(homolog.getSpeciesTypeKey());
-                    homologAnnot.setAnnotatedObjectRgdId(homolog.getRgdId());
-                    homologAnnot.setObjectName(homolog.getName());
-                    homologAnnot.setObjectSymbol(homolog.getSymbol());
-                    homologAnnot.setWithInfo("RGD:"+gene.getRgdId());
-                    homologAnnot.setEvidence("ISO");
+                        Annotation homologAnnot = (Annotation) humanGeneAnnot.clone();
+                        homologAnnot.setSpeciesTypeKey(homolog.getSpeciesTypeKey());
+                        homologAnnot.setAnnotatedObjectRgdId(homolog.getRgdId());
+                        homologAnnot.setObjectName(homolog.getName());
+                        homologAnnot.setObjectSymbol(homolog.getSymbol());
+                        homologAnnot.setWithInfo("RGD:" + gene.getRgdId());
+                        homologAnnot.setEvidence("ISO");
 
-                    int inRgdAnnotKey2 = dao.getAnnotationKey(homologAnnot);
-                    if( inRgdAnnotKey2!=0 ) {
-                        dao.updateLastModifiedDateForAnnotation(inRgdAnnotKey2, getCreatedBy());
-                        counters.increment("RDO annotations - gene - "+species+" - matching");
-                        counters.increment("RDO annotations - gene - ALL SPECIES - matching");
-                    } else {
-                        dao.insertAnnotation(homologAnnot);
-                        counters.increment("RDO annotations - gene - "+species+" - inserted");
-                        counters.increment("RDO annotations - gene - ALL SPECIES - inserted");
+                        int inRgdAnnotKey2 = dao.getAnnotationKey(homologAnnot);
+                        if (inRgdAnnotKey2 != 0) {
+                            dao.updateLastModifiedDateForAnnotation(inRgdAnnotKey2, getCreatedBy());
+                            counters.increment("RDO annotations - gene - " + species + " - matching");
+                            counters.increment("RDO annotations - gene - ALL SPECIES - matching");
+                        } else {
+                            dao.insertAnnotation(homologAnnot);
+                            counters.increment("RDO annotations - gene - " + species + " - inserted");
+                            counters.increment("RDO annotations - gene - ALL SPECIES - inserted");
+                        }
+                    }
+                } else {
+                    for (Gene homolog : dao.getHomologs(gene.getRgdId())) {
+                        if( !SpeciesType.isSearchable(homolog.getSpeciesTypeKey()) ) {
+                            continue;
+                        }
+
+                        Annotation homologAnnot = (Annotation) humanGeneAnnot.clone();
+                        homologAnnot.setSpeciesTypeKey(homolog.getSpeciesTypeKey());
+                        homologAnnot.setAnnotatedObjectRgdId(homolog.getRgdId());
+                        homologAnnot.setObjectName(homolog.getName());
+                        homologAnnot.setObjectSymbol(homolog.getSymbol());
+                        homologAnnot.setWithInfo("RGD:" + gene.getRgdId());
+                        homologAnnot.setEvidence("ISO");
+
+                        annotCache.addIncomingAnnot(homologAnnot);
                     }
                 }
             }

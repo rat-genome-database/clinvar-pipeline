@@ -2,7 +2,7 @@
 
 <beans>
 	<bean id="manager" class="edu.mcw.rgd.dataload.clinvar.Manager">
-        <property name="version" value="ClinVar Pipeline  -- build Mar 31, 2022" />
+        <property name="version" value="ClinVar Pipeline  -- build Apr 08, 2022" />
         <property name="dao" ref="dao" />
         <property name="qc" ref="qc" />
         <property name="loader" ref="loader" />
@@ -31,14 +31,14 @@
     </bean>
 
     <bean id="annotator" class="edu.mcw.rgd.dataload.clinvar.VariantAnnotator">
-        <property name="version" value="ClinVar Annotator  -- build May 31, 2022" />
+        <property name="version" value="ClinVar Annotator  -- build Apr 08, 2022" />
         <property name="createdBy" value="68" /><!-- ClinVar Annotation pipeline -->
         <property name="evidence" value="IAGP" />
         <property name="dataSrc" value="ClinVar" />
         <property name="refRgdId" value="8554872" />
         <property name="conceptToOmimFile" value="ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/gene_condition_source_id" />
         <property name="skipDrugResponseUnmatchableConditions" value="true" />
-        <property name="staleAnnotDeleteThreshold" value="5%" />
+        <property name="staleAnnotDeleteThreshold" value="500%" />
 
         <!-- variants with these condition names will be excluded from annotations -->
         <property name="excludedConditionNames">

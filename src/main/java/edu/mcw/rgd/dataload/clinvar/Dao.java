@@ -1,7 +1,6 @@
 package edu.mcw.rgd.dataload.clinvar;
 
 import edu.mcw.rgd.dao.impl.*;
-import edu.mcw.rgd.dao.spring.IntListQuery;
 import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.datamodel.ontology.Annotation;
 import edu.mcw.rgd.datamodel.ontologyx.Term;
@@ -14,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author 2/11/14
@@ -88,7 +88,7 @@ public class Dao {
         var.setObjectKey(rgdId.getObjectKey());
         var.setSpeciesTypeKey(rgdId.getSpeciesTypeKey());
         int rowsAffected = 1 + variantInfoDAO.insertVariantInfo(var);
-        logInsertedVariants.info(var.dump("|"));
+        logInsertedVariants.debug(var.dump("|"));
         return rowsAffected;
     }
 
@@ -111,8 +111,8 @@ public class Dao {
         if( varOldDump.equals(varNewDump) ) {
             return false;
         }
-        logUpdatedVariants.info("OLD: "+varOldDump);
-        logUpdatedVariants.info("NEW: "+varNewDump);
+        logUpdatedVariants.debug("OLD: "+varOldDump);
+        logUpdatedVariants.debug("NEW: "+varNewDump);
         try {
             variantInfoDAO.updateVariant(varNew);
         } catch(Exception e) {
@@ -164,6 +164,14 @@ public class Dao {
 
     public List<VariantInfo> getActiveVariants() throws Exception {
         return variantInfoDAO.getVariantsBySource("CLINVAR");
+
+        /*
+        String sql = "SELECT v.*,ge.*,r.species_type_key,r.object_status,r.object_key FROM clinvar v,genomic_elements ge, rgd_ids r "+
+                "WHERE ge.source=? AND ge.rgd_id=r.rgd_id AND r.object_key=? AND v.rgd_id=ge.rgd_id "+
+                "and Trait_name like '%Myoclonic-atonic epilepsy%'";
+        VariantQuery q = new VariantQuery(geneDAO.getDataSource(), sql);
+        return geneDAO.execute(q, new Object[]{"CLINVAR", 7});
+        */
     }
 
     // =========== ASSOCIATED GENES =================
@@ -220,7 +228,7 @@ public class Dao {
         assoc.setDetailRgdId(geneRgdId);
         assoc.setSrcPipeline(Manager.SOURCE);
         associationDAO.insertAssociation(assoc);
-        logGeneAssociations.info("INSERT "+assoc.dump("|"));
+        logGeneAssociations.debug("INSERT "+assoc.dump("|"));
         return assoc.getAssocKey();
     }
 
@@ -231,7 +239,7 @@ public class Dao {
         assoc.setMasterRgdId(variantRgdId);
         assoc.setDetailRgdId(geneRgdId);
         assoc.setSrcPipeline(Manager.SOURCE);
-        logGeneAssociations.info("DELETE "+assoc.dump("|"));
+        logGeneAssociations.debug("DELETE "+assoc.dump("|"));
 
         return associationDAO.deleteAssociations(variantRgdId, geneRgdId, ASSOC_TYPE);
     }
@@ -279,7 +287,7 @@ public class Dao {
         }
 
         for( XdbId id: obsoleteXdbIds ) {
-            logXdbIds.info("DELETE "+id.dump("|"));
+            logXdbIds.debug("DELETE "+id.dump("|"));
         }
 
         xdbIdDAO.deleteXdbIds(obsoleteXdbIds);
@@ -292,7 +300,7 @@ public class Dao {
     public int insertXdbIds(List<XdbId> xdbIds) throws Exception {
         int rowsAffected = xdbIdDAO.insertXdbs(xdbIds);
         for( XdbId id: xdbIds ) {
-            logXdbIds.info("INSERT "+id.dump("|"));
+            logXdbIds.debug("INSERT "+id.dump("|"));
         }
         return rowsAffected;
     }
@@ -326,7 +334,7 @@ public class Dao {
         mapDAO.updateMapData(mds);
 
         for( MapData md: mds ) {
-            logMapPos.info("UPDATE "+md.dump("|"));
+            logMapPos.debug("UPDATE "+md.dump("|"));
         }
     }
 
@@ -336,7 +344,7 @@ public class Dao {
         mapDAO.insertMapData(mds);
 
         for( MapData md: mds ) {
-            logMapPos.info("INSERT "+md.dump("|"));
+            logMapPos.debug("INSERT "+md.dump("|"));
         }
     }
 
@@ -345,7 +353,7 @@ public class Dao {
         mapDAO.deleteMapData(mds);
 
         for( MapData md: mds ) {
-            logMapPos.info("DELETE "+md.dump("|"));
+            logMapPos.debug("DELETE "+md.dump("|"));
         }
     }
 
@@ -358,14 +366,14 @@ public class Dao {
     public int insertHgvsNames(List<HgvsName> hgvsNames) throws Exception {
         int rowCount = variantInfoDAO.insertHgvsNames(hgvsNames);
         for( HgvsName hgvsName: hgvsNames ) {
-            logHgvsNames.info("INSERT "+hgvsName.dump("|"));
+            logHgvsNames.debug("INSERT "+hgvsName.dump("|"));
         }
         return rowCount;
     }
 
     public int deleteHgvsNames(List<HgvsName> hgvsNames) throws Exception {
         for( HgvsName hgvsName: hgvsNames ) {
-            logHgvsNames.info("DELETE "+hgvsName.dump("|"));
+            logHgvsNames.debug("DELETE "+hgvsName.dump("|"));
         }
         return variantInfoDAO.deleteHgvsNames(hgvsNames);
     }
@@ -380,14 +388,14 @@ public class Dao {
     synchronized public int insertAliases(List<Alias> aliases) throws Exception {
         int rowCount = aliasDAO.insertAliases(aliases);
         for( Alias alias: aliases ) {
-            logAliases.info("INSERT "+alias.dump("|"));
+            logAliases.debug("INSERT "+alias.dump("|"));
         }
         return rowCount;
     }
 
     synchronized public int deleteAliases(List<Alias> aliases) throws Exception {
         for( Alias alias: aliases ) {
-            logAliases.info("DELETE "+alias.dump("|"));
+            logAliases.debug("DELETE "+alias.dump("|"));
         }
         return aliasDAO.deleteAliases(aliases);
     }
@@ -491,39 +499,70 @@ public class Dao {
         return annotationDAO.getAnnotationKey(annot);
     }
 
+    public Annotation getAnnotation(int annotKey) throws Exception {
+        return annotationDAO.getAnnotation(annotKey);
+    }
+
     public void updateLastModifiedDateForAnnotation(int fullAnnotKey, int lastModifiedBy) throws Exception {
         annotationDAO.updateLastModified(fullAnnotKey, lastModifiedBy);
+    }
+
+    public int updateLastModified(List<Integer> fullAnnotKeys) throws Exception{
+        return annotationDAO.updateLastModified(fullAnnotKeys);
+    }
+
+    public void updateAnnotation(Annotation annot) throws Exception {
+        annotationDAO.updateAnnotation(annot);
     }
 
     public void insertAnnotation(Annotation annot) throws Exception {
         annotationDAO.insertAnnotation(annot);
 
-        logAnnotations.info("INSERT "+annot.dump("|"));
+        logAnnotations.debug("INSERT "+annot.dump("|"));
     }
 
-    public int getCountOfAnnotationsByReference(int refRgdId, String dataSource) throws Exception {
-        return annotationDAO.getCountOfAnnotationsByReference(refRgdId, dataSource, "D");
+    public int getCountOfAnnotationsByReference(int refRgdId, String dataSource, String aspect) throws Exception {
+        return annotationDAO.getCountOfAnnotationsByReference(refRgdId, dataSource, aspect);
     }
 
-    /**
-     * delete all pipeline annotations older than given date
-     *
-     * @return count of annotations deleted
-     * @throws Exception on spring framework dao failure
-     */
-    public int deleteObsoleteAnnotations(int createdBy, Date dt, String staleAnnotDeleteThresholdStr, int refRgdId, String dataSource, int origAnnotCount, CounterPool counters) throws Exception{
+    public int getAnnotationCount(int rgdId, String termAcc, String qualifier, int refRgdId) throws Exception {
+
+        String key = rgdId+"|"+termAcc+"|"+qualifier;
+        Integer cnt = _annotCache2.get(key);
+        if( cnt!=null ) {
+            return cnt;
+        }
+
+        List<Annotation> annots = annotationDAO.getAnnotations(rgdId, termAcc);
+        Iterator<Annotation> it = annots.iterator();
+        while( it.hasNext() ) {
+            Annotation a = it.next();
+            if( refRgdId==a.getRefRgdId() ) {
+                it.remove();
+                continue;
+            }
+            if( !Utils.stringsAreEqual(qualifier, a.getQualifier()) ) {
+                it.remove();
+            }
+        }
+        _annotCache2.put(key, annots.size());
+        return annots.size();
+    }
+    static ConcurrentHashMap<String, Integer> _annotCache2 = new ConcurrentHashMap<>();
+
+    public int deleteObsoleteAnnotations(int createdBy, Date dt, String staleAnnotDeleteThresholdStr, int refRgdId, String dataSource, int origAnnotCount, CounterPool counters, String aspect) throws Exception{
 
         // convert delete-threshold string to number; i.e. '5%' --> '5'
         int staleAnnotDeleteThresholdPerc = Integer.parseInt(staleAnnotDeleteThresholdStr.substring(0, staleAnnotDeleteThresholdStr.length()-1));
         // compute maximum allowed number of stale annots to be deleted
-        int annotCount = getCountOfAnnotationsByReference(refRgdId, dataSource);
+        int annotCount = getCountOfAnnotationsByReference(refRgdId, dataSource, aspect);
         int staleAnnotDeleteLimit = (staleAnnotDeleteThresholdPerc * origAnnotCount) / 100;
 
-        List<Annotation> staleAnnots = annotationDAO.getAnnotationsModifiedBeforeTimestamp(createdBy, dt, "D");
+        List<Annotation> staleAnnots = annotationDAO.getAnnotationsModifiedBeforeTimestamp(createdBy, dt, aspect);
 
-        logAnnotator.info("total annotation count: "+annotCount);
-        logAnnotator.info("stale annotation delete limit ("+staleAnnotDeleteThresholdStr+"): "+staleAnnotDeleteLimit);
-        logAnnotator.info("stale annotations to be deleted: "+staleAnnots.size());
+        logAnnotator.info(aspect+" total annotation count: "+annotCount);
+        logAnnotator.info(aspect+" stale annotation delete limit ("+staleAnnotDeleteThresholdStr+"): "+staleAnnotDeleteLimit);
+        logAnnotator.info(aspect+"stale annotations to be deleted: "+staleAnnots.size());
 
         int newAnnotCount = annotCount - staleAnnots.size();
         int annotDiffCount = newAnnotCount - origAnnotCount;
@@ -534,19 +573,19 @@ public class Dao {
 
         List<Integer> staleAnnotKeys = new ArrayList<>();
         for( Annotation ann: staleAnnots ) {
-            logAnnotations.info("DELETE "+ann.dump("|"));
+            logAnnotations.debug("DELETE "+ann.dump("|"));
             staleAnnotKeys.add(ann.getKey());
 
             if( ann.getRgdObjectKey()==1 ) {
-                counters.increment("annotations - gene - ALL SPECIES - deleted");
+                counters.increment(aspect+" annotations - gene - ALL SPECIES - deleted");
                 switch(ann.getSpeciesTypeKey()) {
-                    case 1: counters.increment("annotations - gene - rat - deleted"); break;
-                    case 2: counters.increment("annotations - gene - mouse - deleted"); break;
-                    case 3: counters.increment("annotations - gene - human - deleted"); break;
-                    default: counters.increment("annotations - gene - other - deleted"); break;
+                    case 1: counters.increment(aspect+" annotations - gene - rat - deleted"); break;
+                    case 2: counters.increment(aspect+" annotations - gene - mouse - deleted"); break;
+                    case 3: counters.increment(aspect+" annotations - gene - human - deleted"); break;
+                    default: counters.increment(aspect+" annotations - gene - other - deleted"); break;
                 }
             } else {
-                counters.increment("annotations - variant - deleted");
+                counters.increment(aspect+" annotations - variant - deleted");
             }
         }
         return annotationDAO.deleteAnnotations(staleAnnotKeys);

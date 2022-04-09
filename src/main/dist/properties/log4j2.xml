@@ -79,12 +79,6 @@
                 <TimeBasedTriggeringPolicy interval="1"/>
             </Policies>
         </RollingFile>
-        <RollingFile name="annotations" append="true" fileName="logs/annotations.log" filePattern="logs/annotations.log.%d{yyyy-MM}">
-            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
-            <Policies>
-                <TimeBasedTriggeringPolicy interval="1"/>
-            </Policies>
-        </RollingFile>
         <RollingFile name="traitNameUpdates" append="true" fileName="logs/traitNameUpdates.log" filePattern="logs/traitNameUpdates.log.%d{yyyy-MM}">
             <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
             <Policies>
@@ -92,6 +86,19 @@
             </Policies>
         </RollingFile>
         <RollingFile name="submitterUpdates" append="true" fileName="logs/submitterUpdates.log" filePattern="logs/submitterUpdates.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+
+        <RollingFile name="annotations" append="true" fileName="logs/annotations.log" filePattern="logs/annotations.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="annotationsUpdated" append="true" fileName="logs/annotationsUpdated.log" filePattern="logs/annotationsUpdated.log.%d{yyyy-MM}">
             <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
             <Policies>
                 <TimeBasedTriggeringPolicy interval="1"/>
@@ -111,10 +118,6 @@
         <!-- monthly -->
         <Logger name="loader" level="debug" additivity="false">
             <AppenderRef ref="loader"/>
-            <AppenderRef ref="Console" level="info"/>
-        </Logger>
-        <Logger name="annotator" level="debug" additivity="false">
-            <AppenderRef ref="annotator"/>
             <AppenderRef ref="Console" level="info"/>
         </Logger>
         <Logger name="duplicates" level="debug" additivity="false">
@@ -150,16 +153,25 @@
             <AppenderRef ref="aliases"/>
             <AppenderRef ref="Console" level="info"/>
         </Logger>
-        <Logger name="annotations" level="debug" additivity="false">
-            <AppenderRef ref="annotations"/>
-            <AppenderRef ref="Console" level="info"/>
-        </Logger>
         <Logger name="traitNameUpdates" level="debug" additivity="false">
             <AppenderRef ref="traitNameUpdates"/>
             <AppenderRef ref="Console" level="info"/>
         </Logger>
         <Logger name="submitterUpdates" level="debug" additivity="false">
             <AppenderRef ref="submitterUpdates"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+
+        <Logger name="annotator" level="debug" additivity="false">
+            <AppenderRef ref="annotator"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="annotations" level="debug" additivity="false">
+            <AppenderRef ref="annotations"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="annotationsUpdated" level="debug" additivity="false">
+            <AppenderRef ref="annotationsUpdated"/>
             <AppenderRef ref="Console" level="info"/>
         </Logger>
     </Loggers>

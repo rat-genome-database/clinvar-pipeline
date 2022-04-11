@@ -1,3 +1,7 @@
+Apr 11, 2022
+  annotator: enabled generation of orthologous gene annotations for all searchable species
+    implemented compression of XREF_SOURCE and NOTES fields
+
 Mar 31, 2022
   disabled generation of gene orthologous annotations -- transitive annotation pipeline (TAP) will take care of it
     and since TAP is also consolidating annotations by XREF_SRC field, this will result in significant reduction

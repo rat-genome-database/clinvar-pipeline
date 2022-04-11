@@ -95,8 +95,8 @@ public class AnnotCache {
 
     /**
      * Incoming annots built on the base of human ClinVar annots are often quite similar, differing only in XREF_SOURCE field.
-     * Per RGD strategy, we can safely merge these annots into a single one, with its WITH_INFO field being an aggregate of WITH_INFO field
-     * from source annotations.
+     * Per RGD strategy, we can safely merge these annots into a single one, with its XREF_SOURCE field being an aggregate of XREF_SOURCE field
+     * from source annotations. Also NOTES field is being merged as well.
      */
     List<Annotation> mergeIncomingAnnots() throws CloneNotSupportedException {
 
@@ -109,7 +109,7 @@ public class AnnotCache {
             if( mergedA==null ) {
                 mergedAnnots.put(key, a);
             } else {
-                // merge WITH_INFO field
+                // merge XREF_SOURCE field
                 Set<String> xrefs;
                 if( a.getXrefSource()!=null ) {
                     xrefs = new TreeSet<>(Arrays.asList(a.getXrefSource().split("[\\|\\,\\;]")));
@@ -120,6 +120,18 @@ public class AnnotCache {
                     xrefs.addAll(Arrays.asList(mergedA.getXrefSource().split("[\\|\\,\\;]")));
                 }
                 mergedA.setXrefSource(Utils.concatenate(xrefs,"|"));
+
+
+                Set<String> notes;
+                if( a.getNotes()!=null ) {
+                    notes = new TreeSet<>(Arrays.asList(a.getNotes().split(" \\| ")));
+                } else {
+                    notes = new TreeSet<>();
+                }
+                if( mergedA.getNotes()!=null ) {
+                    notes.addAll(Arrays.asList(mergedA.getNotes().split(" \\| ")));
+                }
+                mergedA.setNotes(Utils.concatenate(notes," | "));
             }
         }
 
@@ -166,7 +178,7 @@ public class AnnotCache {
     String getMergeKey(Annotation a) {
         return a.getAnnotatedObjectRgdId()+"|"+a.getTermAcc()+"|"+a.getDataSrc()+"|"+a.getEvidence()
                 +"|"+a.getRefRgdId()+"|"+a.getCreatedBy()+"|"+Utils.defaultString(a.getQualifier())
-                +"|"+a.getWithInfo()+"|"+a.getNotes()
+                +"|"+a.getWithInfo()
                 +"|"+Utils.defaultString(a.getAnnotationExtension())+"|"+Utils.defaultString(a.getQualifier());
     }
 

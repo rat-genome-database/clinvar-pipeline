@@ -35,4 +35,4 @@ LOGIC NOTES
 ANNOTATIONS
 
   primary annotations, to human variants and associated human genes, are made with 'IAGP' evidence code
-  homologous annotations to rat and mouse genes are made with 'ISO' evidence code
+  homologous gene annotations to searchable species are made with 'ISO' evidence code

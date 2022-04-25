@@ -1,5 +1,6 @@
 Apr 25, 2022
   loader: simplified summary email (moved some debug messages to 'dbg' log)
+  loader: improved handling of clinical conditions
 
 Apr 11, 2022
   annotator: enabled generation of orthologous gene annotations for all searchable species

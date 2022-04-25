@@ -3,13 +3,11 @@ package edu.mcw.rgd.dataload.clinvar;
 import edu.mcw.rgd.datamodel.VariantInfo;
 import edu.mcw.rgd.process.Utils;
 import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author mtutaj
@@ -84,18 +82,23 @@ public class Record {
         this.variantAltName = variantAltName;
     }
 
-    public void mergeNotesForVarIncoming(String notes) {
+    public int mergeNotesForVarIncoming(String notes) {
+
+        int r = 0;
         if( !notes.isEmpty() ) {
             getVarIncoming().setNotes(getVarIncoming().getNotes()!=null
                     ? getVarIncoming().getNotes() + "; " + notes
                     : notes
             );
 
-            handleNotes4000LimitForVarIncoming();
+            r = handleNotes4000LimitForVarIncoming();
         }
+        return r;
     }
 
-    public void handleNotes4000LimitForVarIncoming() {
+    public int handleNotes4000LimitForVarIncoming() {
+
+        int combinedNotesTooLong = 0;
 
         // ensure that the notes are no longer than 4000 characters
         String notes = getVarIncoming().getNotes();
@@ -114,13 +117,9 @@ public class Record {
                     utf8Len = notes2.getBytes("UTF-8").length;
                 } while (utf8Len > 3996);
 
-                // warn only once per ClinVar object about combined notes too long
-                Logger log = LogManager.getLogger("loader");
                 String msg = "  combined notes too long for " + getVarIncoming().getSymbol() + "! UTF8 str len:" + (4+utf8Len);
-                Object prevMsg = _combinedNotesTooLongMap.putIfAbsent(msg, "");
-                if( prevMsg==null ) {
-                    log.info(msg);
-                }
+                LogManager.getLogger("dbg").debug(msg);
+                combinedNotesTooLong++;
 
                 getVarIncoming().setNotes(notes2 + " ...");
             } catch (UnsupportedEncodingException e) {
@@ -128,9 +127,8 @@ public class Record {
                 throw new RuntimeException(e);
             }
         }
+        return combinedNotesTooLong;
     }
-
-    static ConcurrentHashMap<String,Object> _combinedNotesTooLongMap = new ConcurrentHashMap<>();
 
     public void mergeSubmitterForVarIncoming(String submitter) {
         if( submitter.isEmpty() ) {

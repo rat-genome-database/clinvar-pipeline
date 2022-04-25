@@ -70,7 +70,10 @@ public class Parser extends XomAnalyzer {
                     // extract ClinVarAssertion/Comment
                     Element elComment = element.getFirstChildElement("Comment");
                     if( elComment!=null ) {
-                        rec.mergeNotesForVarIncoming(elComment.getValue());
+                        int mergeCount = rec.mergeNotesForVarIncoming(elComment.getValue());
+                        if( mergeCount>0 ) {
+                            GlobalCounters.getInstance().incrementCounter("NOTES_MERGED_DUE_TO_4000_ORACLE_LIMIT", mergeCount);
+                        }
                     }
 
                     // extract ClinVarAssertion/submitter

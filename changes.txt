@@ -1,3 +1,6 @@
+Apr 25, 2022
+  loader: simplified summary email (moved some debug messages to 'dbg' log)
+
 Apr 11, 2022
   annotator: enabled generation of orthologous gene annotations for all searchable species
     implemented compression of XREF_SOURCE and NOTES fields

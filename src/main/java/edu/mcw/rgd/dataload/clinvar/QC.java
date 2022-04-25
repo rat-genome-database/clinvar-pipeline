@@ -35,7 +35,10 @@ public class QC {
 
             VariantInfo var2 = rec.getVarIncoming();
             var2.setNotes(merge(var2.getNotes(), var.getNotes(), rec));
-            rec.handleNotes4000LimitForVarIncoming();
+            int notesMergeCount = rec.handleNotes4000LimitForVarIncoming();
+            if( notesMergeCount>0 ) {
+                GlobalCounters.getInstance().incrementCounter("NOTES_MERGED_DUE_TO_4000_ORACLE_LIMIT", notesMergeCount);
+            }
 
             // check if object type, name, source or so_acc_id changed
             if( !Utils.stringsAreEqual(var.getObjectType(), var2.getObjectType()) ||

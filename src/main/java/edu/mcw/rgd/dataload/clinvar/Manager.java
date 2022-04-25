@@ -32,8 +32,6 @@ public class Manager {
         new XmlBeanDefinitionReader(bf).loadBeanDefinitions(new FileSystemResource("properties/AppConfigure.xml"));
         Manager manager = (Manager) (bf.getBean("manager"));
 
-        //v();
-
         // parse cmd line parameters
         VariantAnnotator annotator = null;
         boolean runLoader = false;

@@ -183,7 +183,7 @@ public class QC {
                     }
                 }
             });
-            String[] inRgdParts = inRgd.split("[/]|[\\|]|\\s*,\\s*");
+            String[] inRgdParts = inRgd.split("[/]|\\s*,\\s*|\\s*;\\s*");
             set.addAll(Arrays.asList(inRgdParts));
 
             // case 2a. if 'incoming' contains ',', ';' or '/', it must be split into multiple incoming tokens

@@ -183,16 +183,14 @@ public class QC {
                     }
                 }
             });
-            String[] inRgdParts = inRgd.split("[/]|\\s*,\\s*|\\s*;\\s*");
+
+            // case 2a. split 'incoming' and 'inRgd' by separators: ',', ';', '/' and '|'
+            final String regex = "\\s*[,;|/]\\s*";
+            String[] inRgdParts = inRgd.split(regex);
             set.addAll(Arrays.asList(inRgdParts));
 
-            // case 2a. if 'incoming' contains ',', ';' or '/', it must be split into multiple incoming tokens
-            if( incoming.indexOf(',')>=0 || incoming.indexOf(';')>=0 || incoming.indexOf('/')>=0 ) {
-                String[] incomingParts = incoming.split("[/]|\\s*,\\s*|\\s*;\\s*");
-                set.addAll(Arrays.asList(incomingParts));
-            } else {
-                set.add(incoming);
-            }
+            String[] incomingParts = incoming.split(regex);
+            set.addAll(Arrays.asList(incomingParts));
 
             String clinicalSignificance = Utils.concatenate(set, "|");
 

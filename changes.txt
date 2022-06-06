@@ -1,5 +1,6 @@
 Jun 06, 2022
   loader: fixed logging
+  loaded: added handling of clinical significance: 'low penetrance', 'uncertain risk allele'
 
 Apr 25, 2022
   loader: simplified summary email (moved some debug messages to 'dbg' log)

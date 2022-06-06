@@ -169,7 +169,9 @@ public class QC {
                         case "drug response": return 70;
                         case "protective": return 80;
                         case "confers sensitivity": return 85;
+                        case "uncertain risk allele": return 87;
                         case "uncertain significance": return 90;
+                        case "low penetrance": return 95;
                         case "conflicting data from submitters": return 100;
                         case "association not found": return 110;
                         case "other": return 120;

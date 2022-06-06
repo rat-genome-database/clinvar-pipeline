@@ -19,6 +19,11 @@
                 <TimeBasedTriggeringPolicy interval="1"/>
             </Policies>
         </RollingFile>
+        <File name="loader_daily" append="false" fileName="logs/loader_daily.log">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
+            <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
+        </File>
+
         <RollingFile name="annotator" append="true" fileName="logs/annotator.log" filePattern="logs/annotator.log.%d{yyyy-MM}">
             <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
             <Policies>
@@ -118,6 +123,7 @@
         <!-- monthly -->
         <Logger name="loader" level="debug" additivity="false">
             <AppenderRef ref="loader"/>
+            <AppenderRef ref="loader_daily"/>
             <AppenderRef ref="Console" level="info"/>
         </Logger>
         <Logger name="duplicates" level="debug" additivity="false">

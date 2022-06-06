@@ -1,3 +1,6 @@
+Jun 06, 2022
+  loader: fixed logging
+
 Apr 25, 2022
   loader: simplified summary email (moved some debug messages to 'dbg' log)
   loader: improved handling of clinical conditions

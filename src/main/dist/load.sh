@@ -5,4 +5,4 @@ EMAIL_LIST=mtutaj@mcw.edu
 
 $APPDIR/run.sh --load
 
-mailx -s "[$SERVER] ClinVar Pipeline OK" $EMAIL_LIST < $APPDIR/logs/loader.log
+mailx -s "[$SERVER] ClinVar Pipeline OK" $EMAIL_LIST < $APPDIR/logs/loader_daily.log

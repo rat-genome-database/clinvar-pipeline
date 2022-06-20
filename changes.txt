@@ -1,3 +1,6 @@
+Jun 20, 2022
+  annotator: fixed logging
+
 Jun 06, 2022
   loader: fixed logging
   loaded: added handling of clinical significance: 'low penetrance', 'uncertain risk allele'

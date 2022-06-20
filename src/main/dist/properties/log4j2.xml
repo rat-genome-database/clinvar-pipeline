@@ -24,12 +24,16 @@
             <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
         </File>
 
-        <RollingFile name="annotator" append="true" fileName="logs/annotator.log" filePattern="logs/annotator.log.%d{yyyy-MM}">
+        <RollingFile name="annotator_monthly" append="true" fileName="logs/annotator_monthly.log" filePattern="logs/annotator_monthly.log.%d{yyyy-MM}">
             <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
             <Policies>
                 <TimeBasedTriggeringPolicy interval="1"/>
             </Policies>
         </RollingFile>
+        <File name="annotator" append="false" fileName="logs/annotator.log">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
+            <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
+        </File>
 
         <RollingFile name="duplicates_monthly" append="true" fileName="logs/duplicates_monthly.log" filePattern="logs/duplicates_monthly.log.%d{yyyy-MM}">
             <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
@@ -170,6 +174,7 @@
 
         <Logger name="annotator" level="debug" additivity="false">
             <AppenderRef ref="annotator"/>
+            <AppenderRef ref="annotator_monthly"/>
             <AppenderRef ref="Console" level="info"/>
         </Logger>
         <Logger name="annotations" level="debug" additivity="false">

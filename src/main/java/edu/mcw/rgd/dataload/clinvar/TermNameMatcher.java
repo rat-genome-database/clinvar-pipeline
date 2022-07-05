@@ -158,19 +158,31 @@ public class TermNameMatcher {
         duplicates.put(synonym, extraInfo+acc1+"{"+annotCount1+"} "+acc2+"{"+annotCount2+"}");
     }
 
-    void dumpDuplicates(String title, Map<String,String> duplicates) throws Exception {
-        log.info(duplicates.size()+title);
+    void dumpDuplicates(String title, Map<String,String> duplicates) {
+
+        // remove 1-, 2- or 3-char long synonyms, all capital letters from the list of duplicates
+        Map<String,String> duplicates2 = new HashMap<>(duplicates.size());
+        for( Map.Entry<String, String> entry: duplicates.entrySet() ) {
+            String syn = entry.getKey();
+            if( syn.length()<=3 && syn.toUpperCase().equals(syn) ) {
+                // skip it: up to 3 char long synonym, all uppercase characters
+                continue;
+            }
+            duplicates2.put(syn, entry.getValue());
+        }
+        duplicates.clear();
+
+        log.info(duplicates2.size()+title);
 
         // display additional info what g1/g2 means
-        if( duplicates.size()>10 ) {
+        if( duplicates2.size()>10 ) {
             log.info("  g1 - conflicting terms on same ontology branch, one better annotated/more general term will be annotated");
             log.info("  g2 - conflicting terms on separate ontology branches, both terms will be annotated");
         }
 
-        for( Map.Entry<String, String> entry: duplicates.entrySet() ) {
+        for( Map.Entry<String, String> entry: duplicates2.entrySet() ) {
             log.info("  ["+entry.getKey()+"]: "+entry.getValue());
         }
-        duplicates.clear();
     }
 
     /**

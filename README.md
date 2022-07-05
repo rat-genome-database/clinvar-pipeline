@@ -35,4 +35,8 @@ LOGIC NOTES
 ANNOTATIONS
 
   primary annotations, to human variants and associated human genes, are made with 'IAGP' evidence code
+  
   homologous gene annotations to searchable species are made with 'ISO' evidence code
+  
+  report of duplicate synonyms is sent by email (1-, 2- or 3-char long, all capitals synonyms are not reported)
+  

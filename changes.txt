@@ -1,3 +1,6 @@
+Sep 06, 2022
+  qc: added handling of clinical significance: 'established risk allele'
+
 Jul 05, 2022
   annotator: no longer reports up to 3-char long duplicate synonyms (majority of them is legit)
 

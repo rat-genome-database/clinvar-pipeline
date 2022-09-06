@@ -161,6 +161,7 @@ public class QC {
                         case "likely pathogenic": return 10;
                         case "risk factor": return 20;
                         case "association": return 30;
+                        case "established risk allele": return 31;
                         case "likely risk allele": return 32;
                         case "affects": return 35;
                         case "benign": return 40;

@@ -1,3 +1,6 @@
+Sep 23, 2022
+  GlobalCounters: rewritten to take advantage of CounterPool from rgdcore
+
 Sep 06, 2022
   qc: added handling of clinical significance: 'established risk allele'
 

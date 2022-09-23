@@ -1,7 +1,6 @@
 package edu.mcw.rgd.dataload.clinvar;
 
-import java.util.Map;
-import java.util.TreeMap;
+import edu.mcw.rgd.process.CounterPool;
 
 /**
  * @author mtutaj
@@ -9,9 +8,10 @@ import java.util.TreeMap;
  * global flags
  */
 public class GlobalCounters {
+
     private static GlobalCounters ourInstance = new GlobalCounters();
 
-    private Map<String, Integer> counters = new TreeMap<String, Integer>();
+    private CounterPool counters = new CounterPool();
 
     public static GlobalCounters getInstance() {
         return ourInstance;
@@ -20,26 +20,11 @@ public class GlobalCounters {
     private GlobalCounters() {
     }
 
-    synchronized public int incrementCounter(String counterName, int inc) {
-
-        Integer val = counters.get(counterName);
-        if( val==null )
-            val = inc;
-        else
-            val += inc;
-        counters.put(counterName, val);
-        return val;
+    synchronized public void incrementCounter(String counterName, int inc) {
+        counters.add(counterName, inc);
     }
 
     public String dump() {
-        StringBuilder buf = new StringBuilder("COUNTERS:\n========\n");
-        for( Map.Entry<String, Integer> entry: counters.entrySet() ) {
-            buf.append(entry.getKey())
-                    .append(" : ")
-                    .append(entry.getValue())
-                    .append("\n");
-        }
-        buf.append("=========\n");
-        return buf.toString();
+        return counters.dumpAlphabetically();
     }
 }

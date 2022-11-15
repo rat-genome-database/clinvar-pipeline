@@ -2,7 +2,7 @@
 
 <beans>
 	<bean id="manager" class="edu.mcw.rgd.dataload.clinvar.Manager">
-        <property name="version" value="ClinVar Pipeline  -- build Sep 23, 2022" />
+        <property name="version" value="ClinVar Pipeline  -- build Nov 15, 2022" />
         <property name="dao" ref="dao" />
         <property name="qc" ref="qc" />
         <property name="loader" ref="loader" />
@@ -24,7 +24,7 @@
 
     <bean id="parseGroup" class="edu.mcw.rgd.dataload.clinvar.ParseGroup" >
         <property name="chunkDir" value="/tmp/"/>
-        <property name="chunkSize" value="200000000"/>
+        <property name="chunkSize" value="250000000"/>
         <property name="recordEnd" value="&lt;/ClinVarSet>"/>
         <property name="chunkHeader" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;yes&quot;?>&#10;&lt;ReleaseSet>&#10;"/>
         <property name="chunkTrailer" value="&lt;/ReleaseSet>"/>

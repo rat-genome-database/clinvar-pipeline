@@ -1,3 +1,6 @@
+Jan 20, 2023
+  updated build.gradle to be gradle 6.x + compatible
+
 Nov 15, 2022
   loader: increased chink size from 200 MB to 250 MB to reduce the number of chunks being created
 

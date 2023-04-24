@@ -59,7 +59,7 @@ public class AnnotCache {
                         if( !Utils.stringsAreEqual(annotInRgd.getNotes(), a.getNotes()) ) {
                             msg += "\n   NOTES  OLD["+Utils.NVL(annotInRgd.getNotes(),"")+"]  NEW["+a.getNotes()+"]";
                         }
-                        logUpdated.info(msg);
+                        logUpdated.debug(msg);
 
                         a.setKey(fullAnnotKey);
                         dao.updateAnnotation(a);

@@ -1,6 +1,6 @@
 # script to run the annotations pipeline for variants
 #
-APPDIR=/home/rgddata/pipelines/ClinVarPipeline
+APPDIR=/home/rgddata/pipelines/"clinvar-pipeline"
 SERVER=`hostname -s | tr '[a-z]' '[A-Z]'`
 EMAIL_LIST=mtutaj@mcw.edu
 

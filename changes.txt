@@ -1,3 +1,6 @@
+May 02, 2023
+  renamed distro to 'clinvar-pipeline'
+
 Apr 24, 2023
   tuned up logging
 

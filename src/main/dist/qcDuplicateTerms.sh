@@ -1,5 +1,5 @@
 # script to qc duplicate terms
-APPDIR=/home/rgddata/pipelines/ClinVarPipeline
+APPDIR=/home/rgddata/pipelines/"clinvar-pipeline"
 SERVER=`hostname -s | tr '[a-z]' '[A-Z]'`
 EMAIL_LIST=mtutaj@mcw.edu
 if [ "$SERVER" == "REED" ]; then

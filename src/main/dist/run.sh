@@ -3,7 +3,7 @@
 # ClinVar loading pipeline - wrapper script
 #
 . /etc/profile
-APPNAME=ClinVarPipeline
+APPNAME="clinvar-pipeline"
 
 APPDIR=/home/rgddata/pipelines/$APPNAME
 cd $APPDIR

@@ -1,3 +1,6 @@
+May 09, 2023
+  added script load_and_annotate.sh
+
 May 02, 2023
   renamed distro to 'clinvar-pipeline'
 

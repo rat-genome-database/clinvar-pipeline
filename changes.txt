@@ -1,3 +1,6 @@
+Dec 12, 2023
+  qc: added handling of clinical significance: 'no classifications from unflagged records'
+
 May 09, 2023
   added script load_and_annotate.sh
 

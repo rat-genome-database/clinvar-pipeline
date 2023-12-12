@@ -175,6 +175,7 @@ public class QC {
                         case "low penetrance": return 95;
                         case "conflicting data from submitters": return 100;
                         case "association not found": return 110;
+                        case "no classifications from unflagged records": return 115;
                         case "other": return 120;
                         case "not provided": return 2000;
                         default:

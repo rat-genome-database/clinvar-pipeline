@@ -713,10 +713,6 @@ public class VariantAnnotator {
     }
 
     void dumpUnmatchableConditions() throws Exception {
-        BufferedWriter writer = new BufferedWriter(new FileWriter("data/unmatchable_conditions.txt"));
-
-        String msg = "Unmatchable conditions: "+unmatchableConditions.size()+"\n";
-        writer.write(msg);
 
         // build inverse map
         Map<Integer, Set<String>> imap = new TreeMap<>();
@@ -728,16 +724,50 @@ public class VariantAnnotator {
             }
             names.add(entry.getKey());
         }
+
+        BufferedWriter writer1 = new BufferedWriter(new FileWriter("data/unmatchable_conditions.txt"));
+        BufferedWriter writer2 = new BufferedWriter(new FileWriter("data/unmatchable_related_conditions.txt"));
+
+        // dump unmatchable conditions with name ending "-RELATED CONDITION" or "-RELATED DISORDER"
+        //    to 'unmatchable_related_conditions.txt' file
+        // and dump the remaining conditions
+        //    to 'unmatchable_conditions.txt' file
+        String[] related = {"-RELATED CONDITION", "-RELATED CONDITIONS", "-RELATED DISORDER", "-RELATED DISORDERS"};
+
         for( Map.Entry<Integer, Set<String>> entry: imap.entrySet() ) {
-            msg = "  ["+entry.getKey()+"] \n";
-            writer.write(msg);
+
+            String msg1 = "";
+            String msg2 = "";
 
             for( String name: entry.getValue() ) {
-                msg = "    "+name+"\n";
-                writer.write(msg);
+
+                boolean isRelatedCondition = false;
+                for( String rel: related ) {
+                    if( name.endsWith(rel) ) {
+                        isRelatedCondition = true;
+                        break;
+                    }
+                }
+
+                if( isRelatedCondition ) {
+                    msg2 += "    " + name + "\n";
+                } else {
+                    msg1 += "    " + name + "\n";
+                }
+            }
+
+            if( msg1.length()>0 ) {
+                writer1.write("  ["+entry.getKey()+"] \n");
+                writer1.write(msg1);
+            }
+
+            if( msg2.length()>0 ) {
+                writer2.write("  ["+entry.getKey()+"] \n");
+                writer2.write(msg2);
             }
         }
-        writer.close();
+        writer1.close();
+        writer2.close();
     }
 
     List<Term> getDiseaseTermsBySemiExactTermNameMatch(String termName) throws Exception {

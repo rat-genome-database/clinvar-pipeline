@@ -1,3 +1,6 @@
+Jan 12, 2024
+  annotator: added counts to files with unmapped conditions
+
 Jan 02, 2024
   annotator: unmapped conditions with names ending with '-RELATED CONDITION' or '-RELATED DISORDER'
      are written into the file 'unmapped_related_conditions.txt';

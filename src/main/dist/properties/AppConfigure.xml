@@ -2,7 +2,7 @@
 
 <beans>
 	<bean id="manager" class="edu.mcw.rgd.dataload.clinvar.Manager">
-        <property name="version" value="ClinVar Pipeline  -- build Jan 02, 2024" />
+        <property name="version" value="ClinVar Pipeline  -- build Feb 02, 2024" />
         <property name="dao" ref="dao" />
         <property name="qc" ref="qc" />
         <property name="loader" ref="loader" />
@@ -19,7 +19,8 @@
     <bean id="loader" class="edu.mcw.rgd.dataload.clinvar.Loader" />
 
     <bean id="downloader" class="edu.mcw.rgd.dataload.clinvar.Downloader" >
-        <property name="variantDataFile" value="ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarFullRelease_00-latest.xml.gz" />
+        <!-- ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarFullRelease_00-latest.xml.gz" -->
+        <property name="variantDataFile" value="https://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/RCV_xml_old_format/ClinVarFullRelease_00-latest.xml.gz" />
     </bean>
 
     <bean id="parseGroup" class="edu.mcw.rgd.dataload.clinvar.ParseGroup" >

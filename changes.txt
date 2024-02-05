@@ -1,3 +1,6 @@
+Feb 05, 2024
+  annotator: added merging by WITH_INFO field
+
 Feb 02, 2024
   loader: updated the data source url
 

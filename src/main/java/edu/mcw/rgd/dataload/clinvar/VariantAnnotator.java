@@ -464,7 +464,7 @@ public class VariantAnnotator {
 
             // filter out junk words, like 'not specified'
             if( getExcludedConditionNames().contains(condition) ) {
-                logDebug.info("  excluded condition name: "+condition);
+                //logDebug.info("  excluded condition name: "+condition);
                 continue;
             }
 
@@ -551,7 +551,7 @@ public class VariantAnnotator {
 
             // filter out junk words, like 'not specified'
             if( getExcludedConditionNames().contains(condition) ) {
-                logDebug.info("  excluded condition name: "+condition);
+                //logDebug.info("  excluded condition name: "+condition);
                 continue;
             }
 

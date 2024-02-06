@@ -58,6 +58,7 @@ public class VariantAnnotator {
     private boolean skipDrugResponseUnmatchableConditions;
     private String staleAnnotDeleteThreshold;
     private AnnotCache annotCache = new AnnotCache(); // annot cache for orthologous annotations
+    private AnnotCache annotCacheHumanGenes = new AnnotCache(); // annot cache for human gene annotations
 
     public void run(Dao dao) throws Exception {
 
@@ -132,6 +133,25 @@ public class VariantAnnotator {
         annotCache.clear();
         annotCache = null;
 
+
+        // qc incoming annots to determine annots for insertion / deletion
+        annotCacheHumanGenes.qcAndLoadAnnots(dao);
+
+        count = annotCacheHumanGenes.insertedAnnots.get();
+        if( count!=0 ) {
+            log.info("human gene annotations inserted: " + Utils.formatThousands(count));
+        }
+
+        count = annotCacheHumanGenes.updatedFullAnnotKeys.size();
+        if( count!=0 ) {
+            log.info("human gene annotations updated: " + Utils.formatThousands(count));
+        }
+
+        // update last modified date for matching annots in batches
+        updateLastModified(annotCacheHumanGenes);
+
+        annotCacheHumanGenes.clear();
+        annotCacheHumanGenes = null;
 
 
         dumpUnmatchableConditions();
@@ -259,7 +279,7 @@ public class VariantAnnotator {
         generateGenePhenotypeAnnotations(ge.getRgdId(), associatedGenes, pubMedIds, ge.getTraitName());
     }
 
-    boolean variantIsCarpeCompliant(VariantInfo vi) throws Exception {
+    boolean variantIsCarpeCompliant(VariantInfo vi) {
 
         // variant must be one of the following types:
         //deletion, duplication, insertion, single nucleotide variant
@@ -310,61 +330,37 @@ public class VariantAnnotator {
                 humanGeneAnnot.setTerm(term.getTerm());
                 humanGeneAnnot.setNotes("ClinVar Annotator: match by "+term.getComment());
 
-                // does incoming annotation match rgd?
-                int inRgdAnnotKey = dao.getAnnotationKey(humanGeneAnnot);
-                if( inRgdAnnotKey!=0 ) {
-                    dao.updateLastModifiedDateForAnnotation(inRgdAnnotKey, getCreatedBy());
-                    counters.increment("RDO annotations - gene - "+species+" - matching");
-                    counters.increment("RDO annotations - gene - ALL SPECIES - matching");
+                if(false) {
+                    // does incoming annotation match rgd?
+                    int inRgdAnnotKey = dao.getAnnotationKey(humanGeneAnnot);
+                    if (inRgdAnnotKey != 0) {
+                        dao.updateLastModifiedDateForAnnotation(inRgdAnnotKey, getCreatedBy());
+                        counters.increment("RDO annotations - gene - " + species + " - matching");
+                        counters.increment("RDO annotations - gene - ALL SPECIES - matching");
+                    } else {
+                        dao.insertAnnotation(humanGeneAnnot);
+                        counters.increment("RDO annotations - gene - " + species + " - inserted");
+                        counters.increment("RDO annotations - gene - ALL SPECIES - inserted");
+                    }
                 } else {
-                    dao.insertAnnotation(humanGeneAnnot);
-                    counters.increment("RDO annotations - gene - "+species+" - inserted");
-                    counters.increment("RDO annotations - gene - ALL SPECIES - inserted");
+                    annotCacheHumanGenes.addIncomingAnnot(humanGeneAnnot);
                 }
 
-                // create homologous rat/mouse annotations -- discontinued
-                // we would rely on transitive-annotations-pipeline to create these
-                if( false ) {
-                    for (Gene homolog : dao.getHomologs(gene.getRgdId())) {
-                        if (homolog.getSpeciesTypeKey() != SpeciesType.RAT && homolog.getSpeciesTypeKey() != SpeciesType.MOUSE)
-                            continue;
-                        species = getSpeciesName(homolog.getSpeciesTypeKey());
-
-                        Annotation homologAnnot = (Annotation) humanGeneAnnot.clone();
-                        homologAnnot.setSpeciesTypeKey(homolog.getSpeciesTypeKey());
-                        homologAnnot.setAnnotatedObjectRgdId(homolog.getRgdId());
-                        homologAnnot.setObjectName(homolog.getName());
-                        homologAnnot.setObjectSymbol(homolog.getSymbol());
-                        homologAnnot.setWithInfo("RGD:" + gene.getRgdId());
-                        homologAnnot.setEvidence("ISO");
-
-                        int inRgdAnnotKey2 = dao.getAnnotationKey(homologAnnot);
-                        if (inRgdAnnotKey2 != 0) {
-                            dao.updateLastModifiedDateForAnnotation(inRgdAnnotKey2, getCreatedBy());
-                            counters.increment("RDO annotations - gene - " + species + " - matching");
-                            counters.increment("RDO annotations - gene - ALL SPECIES - matching");
-                        } else {
-                            dao.insertAnnotation(homologAnnot);
-                            counters.increment("RDO annotations - gene - " + species + " - inserted");
-                            counters.increment("RDO annotations - gene - ALL SPECIES - inserted");
-                        }
+                // create homologous annotations
+                for (Gene homolog : dao.getHomologs(gene.getRgdId())) {
+                    if( !SpeciesType.isSearchable(homolog.getSpeciesTypeKey()) ) {
+                        continue;
                     }
-                } else {
-                    for (Gene homolog : dao.getHomologs(gene.getRgdId())) {
-                        if( !SpeciesType.isSearchable(homolog.getSpeciesTypeKey()) ) {
-                            continue;
-                        }
 
-                        Annotation homologAnnot = (Annotation) humanGeneAnnot.clone();
-                        homologAnnot.setSpeciesTypeKey(homolog.getSpeciesTypeKey());
-                        homologAnnot.setAnnotatedObjectRgdId(homolog.getRgdId());
-                        homologAnnot.setObjectName(homolog.getName());
-                        homologAnnot.setObjectSymbol(homolog.getSymbol());
-                        homologAnnot.setWithInfo("RGD:" + gene.getRgdId());
-                        homologAnnot.setEvidence("ISO");
+                    Annotation homologAnnot = (Annotation) humanGeneAnnot.clone();
+                    homologAnnot.setSpeciesTypeKey(homolog.getSpeciesTypeKey());
+                    homologAnnot.setAnnotatedObjectRgdId(homolog.getRgdId());
+                    homologAnnot.setObjectName(homolog.getName());
+                    homologAnnot.setObjectSymbol(homolog.getSymbol());
+                    homologAnnot.setWithInfo("RGD:" + gene.getRgdId());
+                    homologAnnot.setEvidence("ISO");
 
-                        annotCache.addIncomingAnnot(homologAnnot);
-                    }
+                    annotCache.addIncomingAnnot(homologAnnot);
                 }
             }
         }

@@ -14,10 +14,10 @@ public class AnnotCache {
     Logger log = LogManager.getLogger("annotator");
     Logger logUpdated = LogManager.getLogger("annotationsUpdated");
 
-    public AtomicInteger insertedAnnots = new AtomicInteger(0);
+    private AtomicInteger insertedAnnots = new AtomicInteger(0);
     // we store them in a map to avoid multiple updates
-    public ConcurrentHashMap<Integer, Object> upToDateFullAnnotKeys = new ConcurrentHashMap<Integer, Object>();
-    public ConcurrentHashMap<Integer, Object> updatedFullAnnotKeys = new ConcurrentHashMap<Integer, Object>();
+    private ConcurrentHashMap<Integer, Object> upToDateFullAnnotKeys = new ConcurrentHashMap<Integer, Object>();
+    private ConcurrentHashMap<Integer, Object> updatedFullAnnotKeys = new ConcurrentHashMap<Integer, Object>();
 
     private List<Annotation> incomingAnnots = new ArrayList<>();
 
@@ -25,7 +25,7 @@ public class AnnotCache {
         incomingAnnots.add(a);
     }
 
-    public void qcAndLoadAnnots(Dao dao) throws Exception {
+    void qcAndLoadAnnots(Dao dao) throws Exception {
 
         List<Annotation> mergedAnnots = mergeIncomingAnnots();
 
@@ -262,5 +262,41 @@ public class AnnotCache {
         upToDateFullAnnotKeys.clear();
         updatedFullAnnotKeys.clear();
         incomingAnnots.clear();
+    }
+
+    public void syncWithDb( Dao dao, String category ) throws Exception {
+        // qc incoming annots to determine annots for insertion / deletion
+        qcAndLoadAnnots(dao);
+
+        int count = insertedAnnots.get();
+        if (count != 0) {
+            log.info(category + " annotations inserted: " + Utils.formatThousands(count));
+        }
+
+        count = updatedFullAnnotKeys.size();
+        if (count != 0) {
+            log.info(category + " annotations updated: " + Utils.formatThousands(count));
+        }
+
+        // update last modified date for matching annots in batches
+        updateLastModified(dao);
+    }
+
+    int updateLastModified( Dao dao ) throws Exception {
+
+        int rowsUpdated = 0;
+
+        // do the updates in batches of 999, because Oracle has an internal limit of 1000
+        List<Integer> fullAnnotKeys = new ArrayList<>(upToDateFullAnnotKeys.keySet());
+        for( int i=0; i<fullAnnotKeys.size(); i+= 999 ) {
+            int j = i + 999;
+            if( j > fullAnnotKeys.size() ) {
+                j = fullAnnotKeys.size();
+            }
+            List<Integer> fullAnnotKeysSubset = fullAnnotKeys.subList(i, j);
+            rowsUpdated += dao.updateLastModified(fullAnnotKeysSubset);
+        }
+
+        return rowsUpdated;
     }
 }

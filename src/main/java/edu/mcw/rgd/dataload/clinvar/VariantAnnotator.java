@@ -114,42 +114,14 @@ public class VariantAnnotator {
         });
 
 
-        // qc incoming annots to determine annots for insertion / deletion
-        annotCache.qcAndLoadAnnots(dao);
-
-        int count = annotCache.insertedAnnots.get();
-        if( count!=0 ) {
-            log.info("ISO orthologous annotations inserted: " + Utils.formatThousands(count));
-        }
-
-        count = annotCache.updatedFullAnnotKeys.size();
-        if( count!=0 ) {
-            log.info("ISO orthologous annotations updated: " + Utils.formatThousands(count));
-        }
-
-        // update last modified date for matching annots in batches
-        updateLastModified(annotCache);
-
+        // qc ISO annots
+        annotCache.syncWithDb(dao, "ISO ortholog");
         annotCache.clear();
         annotCache = null;
 
 
-        // qc incoming annots to determine annots for insertion / deletion
-        annotCacheHumanGenes.qcAndLoadAnnots(dao);
-
-        count = annotCacheHumanGenes.insertedAnnots.get();
-        if( count!=0 ) {
-            log.info("human gene annotations inserted: " + Utils.formatThousands(count));
-        }
-
-        count = annotCacheHumanGenes.updatedFullAnnotKeys.size();
-        if( count!=0 ) {
-            log.info("human gene annotations updated: " + Utils.formatThousands(count));
-        }
-
-        // update last modified date for matching annots in batches
-        updateLastModified(annotCacheHumanGenes);
-
+        // qc human gene annots
+        annotCacheHumanGenes.syncWithDb(dao, "human gene");
         annotCacheHumanGenes.clear();
         annotCacheHumanGenes = null;
 
@@ -171,24 +143,6 @@ public class VariantAnnotator {
         log.info(counters.dumpAlphabetically());
 
         log.info("STOP annot pipeline;   elapsed "+Utils.formatElapsedTime(System.currentTimeMillis(), time0));
-    }
-
-    int updateLastModified(AnnotCache info) throws Exception {
-
-        int rowsUpdated = 0;
-
-        // do the updates in batches of 999, because Oracle has an internal limit of 1000
-        List<Integer> fullAnnotKeys = new ArrayList<>(info.upToDateFullAnnotKeys.keySet());
-        for( int i=0; i<fullAnnotKeys.size(); i+= 999 ) {
-            int j = i + 999;
-            if( j > fullAnnotKeys.size() ) {
-                j = fullAnnotKeys.size();
-            }
-            List<Integer> fullAnnotKeysSubset = fullAnnotKeys.subList(i, j);
-            rowsUpdated += dao.updateLastModified(fullAnnotKeysSubset);
-        }
-
-        return rowsUpdated;
     }
 
     void generateDiseaseAnnotations(VariantInfo ge, List<Integer> associatedGenes, String pubMedIds, Dao dao) throws Exception {

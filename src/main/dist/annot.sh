@@ -9,7 +9,7 @@ $APPDIR/run.sh --annotate
 mailx -s "[$SERVER] ClinVar Annot Pipeline OK" $EMAIL_LIST < $APPDIR/logs/annotator.log
 
 if [ "$SERVER" == "REED" ]; then
-    mailx -s "[$SERVER] ClinVar unmatchable conditions" slaulederkind@mcw.edu,mtutaj@mcw.edu < $APPDIR/data/unmatchable_conditions.txt
-    mailx -s "[$SERVER] ClinVar unmatchable related conditions" slaulederkind@mcw.edu,mtutaj@mcw.edu < $APPDIR/data/unmatchable_related_conditions.txt
+    mailx -s "[$SERVER] ClinVar unmatchable conditions" slaulederkind@mcw.edu,mvedi@mcw.edu,mtutaj@mcw.edu < $APPDIR/data/unmatchable_conditions.txt
+    mailx -s "[$SERVER] ClinVar unmatchable related conditions" slaulederkind@mcw.edu,mvedi@mcw.edu,mtutaj@mcw.edu < $APPDIR/data/unmatchable_related_conditions.txt
     mailx -s "[$SERVER] ClinVar duplicates" mtutaj@mcw.edu < $APPDIR/logs/duplicates.log
 fi

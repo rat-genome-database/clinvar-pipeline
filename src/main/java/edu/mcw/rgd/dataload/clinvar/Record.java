@@ -87,15 +87,12 @@ public class Record {
         int r = 0;
         if( !notes.isEmpty() ) {
 
-            // replaces minus sign 0xE28892 with 0x2D
-            String notes2 = notes.replace("−", "-");
-
             if( getVarIncoming().getNotes() == null ) {
-                getVarIncoming().setNotes(notes2);
+                getVarIncoming().setNotes(notes);
             } else {
                 // merging notes -- only if new
-                if( !getVarIncoming().getNotes().contains(notes2) ) {
-                    getVarIncoming().setNotes( getVarIncoming().getNotes() + "; " + notes2);
+                if( !getVarIncoming().getNotes().contains(notes) ) {
+                    getVarIncoming().setNotes( getVarIncoming().getNotes() + "; " + notes);
 
                 }
             }

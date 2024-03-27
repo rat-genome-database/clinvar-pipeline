@@ -34,15 +34,24 @@ public class QC {
         if( var!=null ) {
 
             VariantInfo var2 = rec.getVarIncoming();
-            var2.setNotes(merge(var2.getNotes(), var.getNotes(), rec));
-            int notesMergeCount = rec.handleNotes4000LimitForVarIncoming();
+
+            String oldNotes = var2.getNotes();
+            int notesMergeCount = rec.mergeNotesForVarIncoming(var.getNotes());
             if( notesMergeCount>0 ) {
                 GlobalCounters.getInstance().incrementCounter("NOTES_MERGED_DUE_TO_4000_ORACLE_LIMIT", notesMergeCount);
+            }
+            String newNotes = var2.getNotes();
+            if( !oldNotes.equals(newNotes) ) {
+                GlobalCounters.getInstance().incrementCounter("NOTES_MERGED", 1);
+                if( newNotes.length()>4000 ) {
+                    System.out.println("*** NOTES length problem");
+                }
             }
 
             // check if object type, name, source or so_acc_id changed
             if( !Utils.stringsAreEqual(var.getObjectType(), var2.getObjectType()) ||
                 !Utils.stringsAreEqual(var.getName(), var2.getName()) ||
+                !Utils.stringsAreEqual(var.getNotes(), var2.getNotes()) ||
                 !Utils.stringsAreEqual(var.getSoAccId(), var2.getSoAccId()) ||
 
                 !Utils.stringsAreEqual(var.getNucleotideChange(), var2.getNucleotideChange()) ) {

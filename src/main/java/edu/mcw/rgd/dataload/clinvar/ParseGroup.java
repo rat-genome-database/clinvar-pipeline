@@ -76,7 +76,8 @@ public class ParseGroup {
         BufferedWriter out = startNewChunk();
 
         String line;
-        while( (line=reader.readLine())!=null ) {
+        while( (line=readLine(reader))!=null ) {
+
             chunkSize += line.length() + 1;
 
             if( chunkSize < getChunkSize() ) {
@@ -86,7 +87,7 @@ public class ParseGroup {
                 String line2 = line.trim();
                 while( !line2.startsWith(getRecordEnd()) ) {
                     writeLine(line, out);
-                    line = reader.readLine();
+                    line = readLine(reader);
                     line2 = line.trim();
                     chunkSize += line.length() + 1;
                 }
@@ -116,6 +117,19 @@ public class ParseGroup {
 
         // randomize chunks
         Collections.shuffle(chunks);
+    }
+
+    String readLine( BufferedReader reader ) throws IOException {
+
+        String line = reader.readLine();
+        if( line != null ) {
+
+            // replaces minus sign 0xE28892 with 0x2D
+            String line2 = line.replace("−", "-");
+
+            line = line2;
+        }
+        return line;
     }
 
     void writeLine(String line, BufferedWriter out) throws IOException {

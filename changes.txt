@@ -1,6 +1,9 @@
 Feb 05, 2024
   annotator: added merging by WITH_INFO field
 
+Mar 27, 2024
+  loader: tuned up handling of notes
+
 Feb 05, 2024
   annotator: added merging by WITH_INFO field
 

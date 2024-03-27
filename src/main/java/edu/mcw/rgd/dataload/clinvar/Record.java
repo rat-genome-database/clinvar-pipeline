@@ -86,10 +86,16 @@ public class Record {
 
         int r = 0;
         if( !notes.isEmpty() ) {
-            getVarIncoming().setNotes(getVarIncoming().getNotes()!=null
-                    ? getVarIncoming().getNotes() + "; " + notes
-                    : notes
-            );
+
+            if( getVarIncoming().getNotes() == null ) {
+                getVarIncoming().setNotes(notes);
+            } else {
+                // merging notes -- only if new
+                if( !getVarIncoming().getNotes().contains(notes) ) {
+                    getVarIncoming().setNotes( getVarIncoming().getNotes() + "; " + notes);
+
+                }
+            }
 
             r = handleNotes4000LimitForVarIncoming();
         }

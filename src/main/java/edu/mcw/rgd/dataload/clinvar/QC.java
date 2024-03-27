@@ -41,7 +41,7 @@ public class QC {
                 GlobalCounters.getInstance().incrementCounter("NOTES_MERGED_DUE_TO_4000_ORACLE_LIMIT", notesMergeCount);
             }
             String newNotes = var2.getNotes();
-            if( !oldNotes.equals(newNotes) ) {
+            if( !Utils.stringsAreEqualIgnoreCase(oldNotes, newNotes) ) {
                 GlobalCounters.getInstance().incrementCounter("NOTES_MERGED", 1);
                 if( newNotes.length()>4000 ) {
                     System.out.println("*** NOTES length problem");

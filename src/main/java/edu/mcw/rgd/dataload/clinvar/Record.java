@@ -85,7 +85,7 @@ public class Record {
     public int mergeNotesForVarIncoming(String notes) {
 
         int r = 0;
-        if( !notes.isEmpty() ) {
+        if( notes!=null && !notes.isEmpty() ) {
 
             if( getVarIncoming().getNotes() == null ) {
                 getVarIncoming().setNotes(notes);

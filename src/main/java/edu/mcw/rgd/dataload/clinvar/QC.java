@@ -34,11 +34,6 @@ public class QC {
         if( var!=null ) {
 
             VariantInfo var2 = rec.getVarIncoming();
-            var2.setNotes(merge(var2.getNotes(), var.getNotes(), rec));
-            int notesMergeCount = rec.handleNotes4000LimitForVarIncoming();
-            if( notesMergeCount>0 ) {
-                GlobalCounters.getInstance().incrementCounter("NOTES_MERGED_DUE_TO_4000_ORACLE_LIMIT", notesMergeCount);
-            }
 
             // check if object type, name, source or so_acc_id changed
             if( !Utils.stringsAreEqual(var.getObjectType(), var2.getObjectType()) ||
@@ -72,6 +67,7 @@ public class QC {
             // review-status could be combined from multiple RCV entries
             var2.setReviewStatus(merge(var2.getReviewStatus(), var.getReviewStatus(), rec));
 
+            NotesCollection.getInstance().add(var.getRgdId(), var2.getNotes(), var.getNotes());
             TraitNameCollection.getInstance().add(var.getRgdId(), var2.getTraitName(), var.getTraitName());
             SubmitterCollection.getInstance().add(var.getRgdId(), var2.getSubmitter(), var.getSubmitter());
 

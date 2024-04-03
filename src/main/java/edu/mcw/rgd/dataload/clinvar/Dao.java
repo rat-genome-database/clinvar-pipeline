@@ -35,11 +35,13 @@ public class Dao {
     Logger logAnnotator = LogManager.getLogger("annotator");
     Logger logTraitNames = LogManager.getLogger("traitNameUpdates");
     Logger logSubmitters = LogManager.getLogger("submitterUpdates");
+    Logger logNotes = LogManager.getLogger("notesUpdates");
 
     private AliasDAO aliasDAO = new AliasDAO();
     private AnnotationDAO annotationDAO = new AnnotationDAO();
     private AssociationDAO associationDAO = new AssociationDAO();
     private GeneDAO geneDAO = associationDAO.getGeneDAO();
+    private GenomicElementDAO geDAO = new GenomicElementDAO();
     private MapDAO mapDAO = new MapDAO();
     private OntologyXDAO ontologyDAO = new OntologyXDAO();
     private RGDManagementDAO rgdIdDAO = new RGDManagementDAO();
@@ -83,6 +85,8 @@ public class Dao {
      * @throws Exception when unexpected error in spring framework occurs
      */
     synchronized public int insertVariant(VariantInfo var) throws Exception{
+        notesFixup(var);
+
         RgdId rgdId = rgdIdDAO.createRgdId(RgdId.OBJECT_KEY_VARIANTS, "ACTIVE", Manager.SOURCE, SpeciesType.HUMAN);
         var.setRgdId(rgdId.getRgdId());
         var.setObjectKey(rgdId.getObjectKey());
@@ -90,6 +94,17 @@ public class Dao {
         int rowsAffected = 1 + variantInfoDAO.insertVariantInfo(var);
         logInsertedVariants.debug(var.dump("|"));
         return rowsAffected;
+    }
+
+    void notesFixup( VariantInfo info ) {
+        String newNotes1 = info.getNotes();
+        if( newNotes1 != null ) {
+            if( newNotes1.length() > 3900 ) {
+                String newNotes2 = newNotes1.substring(0, 3900)+" ...";
+                logNotes.debug("### NOTES FIXUP  RGD:" + info.getRgdId());
+                info.setNotes(newNotes2);
+            }
+        }
     }
 
     /**
@@ -105,6 +120,8 @@ public class Dao {
 
         // trait names should stay unchanged: it will be updated by TraitNameCollection
         varNew.setTraitName(varOld.getTraitName());
+
+        notesFixup(varNew);
 
         String varOldDump = varOld.dump("|");
         String varNewDump = varNew.dump("|");
@@ -151,6 +168,24 @@ public class Dao {
         variantInfoDAO.update(sql, newSubmitter, rgdId);
 
         updateVariantLastModifiedDate(rgdId);
+    }
+
+    public void updateNotes(int rgdId, String oldNotes, String newNotes) throws Exception{
+
+        String sql = "UPDATE genomic_elements SET notes=? WHERE rgd_id=?";
+
+        logNotes.debug(rgdId
+                + "\n    OLD " + oldNotes
+                + "\n    NEW " + newNotes);
+
+        geDAO.update(sql, newNotes, rgdId);
+
+        updateVariantLastModifiedDate(rgdId);
+    }
+
+    public int getTotalNotesLength() throws Exception {
+        String sql = "SELECT SUM(LENGTH(notes)) FROM genomic_elements WHERE source='CLINVAR'";
+        return geDAO.getCount(sql);
     }
 
     /**

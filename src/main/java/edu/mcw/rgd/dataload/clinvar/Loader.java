@@ -1,5 +1,8 @@
 package edu.mcw.rgd.dataload.clinvar;
 
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
+
 /**
  * @author mtutaj
  * @since 2/11/14
@@ -16,6 +19,8 @@ public class Loader {
     public void setDao(Dao dao) {
         this.dao = dao;
     }
+
+    private AtomicInteger processed = new AtomicInteger();
 
     public void run(Record rec) throws Exception {
 
@@ -71,5 +76,13 @@ public class Loader {
         if( updateVariantLastModifiedDate ) {
             dao.updateVariantLastModifiedDate(rec.getVarInRgd().getRgdId());
         }
+
+        int processedVariants = processed.incrementAndGet();
+        if( processedVariants % 10000 == 0 ) {
+            Logger log2 = Logger.getLogger("dbg2");
+            log2.info("==== "+processedVariants);
+            log2.info( GlobalCounters.getInstance().dump() );
+        }
+
     }
 }

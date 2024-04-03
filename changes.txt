@@ -1,5 +1,11 @@
+Apr 03, 2024
+  loader: rewrote notes handling
+
 Feb 27, 2024
   added Mahima to email list of people receiving files with unmapped conditions
+
+Feb 05, 2024
+  annotator: added merging by WITH_INFO field
 
 Feb 02, 2024
   loader: updated the data source url

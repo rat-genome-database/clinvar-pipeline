@@ -5,9 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.zip.GZIPOutputStream;
 
 /**
@@ -33,9 +31,27 @@ public class ParseGroup {
     private Logger logDebug = LogManager.getLogger("dbg");
     private Logger log = LogManager.getLogger("loader");
 
+    private boolean dbg = false;
+
+    public void dbgSetup() {
+
+        chunks.clear();
+        for( int i=0; i<=208; i++ ) {
+            String fname = "/tmp/clinvar/chunk" + i + ".xml.gz";
+            chunks.add(fname);
+        }
+        Collections.shuffle(chunks);
+
+        System.out.println(" CHUNKS TO BE PROCESSED: "+chunks.size());
+    }
+
     public void parse(String fileName) throws IOException {
 
-        splitInputFileIntoChunks(fileName);
+        if( dbg == false ) {
+            splitInputFileIntoChunks(fileName);
+        } else {
+            dbgSetup();
+        }
 
         // process in parallel all of the chunks
 

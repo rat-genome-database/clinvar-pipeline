@@ -1,3 +1,6 @@
+Apr 03, 2024
+  loader: rewrote notes handling
+
 Feb 05, 2024
   annotator: added merging by WITH_INFO field
 

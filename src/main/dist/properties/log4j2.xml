@@ -13,6 +13,7 @@
             </Policies>
         </RollingFile>
 
+
         <RollingFile name="loader" append="true" fileName="logs/loader.log" filePattern="logs/loader.log.%d{yyyy-MM}">
             <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
             <Policies>
@@ -100,6 +101,12 @@
                 <TimeBasedTriggeringPolicy interval="1"/>
             </Policies>
         </RollingFile>
+        <RollingFile name="notesUpdates" append="true" fileName="logs/notesUpdates.log" filePattern="logs/notesUpdates.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
 
         <RollingFile name="annotations" append="true" fileName="logs/annotations.log" filePattern="logs/annotations.log.%d{yyyy-MM}">
             <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
@@ -169,6 +176,10 @@
         </Logger>
         <Logger name="submitterUpdates" level="debug" additivity="false">
             <AppenderRef ref="submitterUpdates"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="notesUpdates" level="debug" additivity="false">
+            <AppenderRef ref="notesUpdates"/>
             <AppenderRef ref="Console" level="info"/>
         </Logger>
 

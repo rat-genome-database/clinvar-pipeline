@@ -80,6 +80,9 @@ public class Manager {
 
         long time0 = System.currentTimeMillis();
 
+        int originalNotesLength = dao.getTotalNotesLength();
+        GlobalCounters.getInstance().incrementCounter("NOTES_LENGTH__INITIAL", originalNotesLength);
+
         int originalXdbIdCount = getDao().getXdbIdCount();
         GlobalCounters.getInstance().incrementCounter("XDB_IDS_COUNT_INITIAL", originalXdbIdCount);
 
@@ -101,8 +104,12 @@ public class Manager {
         int lastXdbIdCount = getDao().getXdbIdCount();
         GlobalCounters.getInstance().incrementCounter("XDB_IDS_ZCOUNT_FINAL", lastXdbIdCount);
 
+        NotesCollection.getInstance().qcAndLoad(getDao());
         TraitNameCollection.getInstance().qcAndLoad(getDao());
         SubmitterCollection.getInstance().qcAndLoad(getDao());
+
+        int finalNotesLength = dao.getTotalNotesLength();
+        GlobalCounters.getInstance().incrementCounter("NOTES_LENGTH_FINAL", finalNotesLength);
 
         log.info(GlobalCounters.getInstance().dump());
         log.info("TOTAL ELAPSED TIME "+Utils.formatElapsedTime(time0, System.currentTimeMillis()));

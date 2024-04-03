@@ -2,9 +2,7 @@ package edu.mcw.rgd.dataload.clinvar;
 
 import edu.mcw.rgd.datamodel.VariantInfo;
 import edu.mcw.rgd.process.Utils;
-import org.apache.logging.log4j.LogManager;
 
-import java.io.UnsupportedEncodingException;
 import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
@@ -82,58 +80,17 @@ public class Record {
         this.variantAltName = variantAltName;
     }
 
-    public int mergeNotesForVarIncoming(String notes) {
+    public void mergeNotesForVarIncoming(String notes) {
 
-        int r = 0;
         if( notes!=null && !notes.isEmpty() ) {
 
             if( getVarIncoming().getNotes() == null ) {
                 getVarIncoming().setNotes(notes);
             } else {
                 // merging notes -- only if new
-                if( !getVarIncoming().getNotes().contains(notes) ) {
-                    getVarIncoming().setNotes( getVarIncoming().getNotes() + "; " + notes);
-
-                }
-            }
-
-            r = handleNotes4000LimitForVarIncoming();
-        }
-        return r;
-    }
-
-    public int handleNotes4000LimitForVarIncoming() {
-
-        int combinedNotesTooLong = 0;
-
-        // ensure that the notes are no longer than 4000 characters
-        String notes = getVarIncoming().getNotes();
-        if( notes!=null && notes.length() > 3980 ) {
-            // take into account UTF8 encoding
-            try {
-                String notes2;
-                int len = notes.length();
-                if( len > 4000 ) {
-                    len = 4000;
-                }
-                int utf8Len = 0;
-                do {
-                    notes2 = notes.substring(0, len);
-                    len--;
-                    utf8Len = notes2.getBytes("UTF-8").length;
-                } while (utf8Len > 3996);
-
-                String msg = "  combined notes too long for " + getVarIncoming().getSymbol() + "! UTF8 str len:" + (4+utf8Len);
-                LogManager.getLogger("dbg").debug(msg);
-                combinedNotesTooLong++;
-
-                getVarIncoming().setNotes(notes2 + " ...");
-            } catch (UnsupportedEncodingException e) {
-                // totally unexpected
-                throw new RuntimeException(e);
+                getVarIncoming().setNotes( getVarIncoming().getNotes() + "|" + notes );
             }
         }
-        return combinedNotesTooLong;
     }
 
     public void mergeSubmitterForVarIncoming(String submitter) {

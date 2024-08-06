@@ -48,6 +48,10 @@ public class Manager {
                 case "--qcDuplicateTerms":
                     qcDuplicateTerms = true;
                     break;
+                case "--addRsIds":
+                    VariantRsId rsId = (VariantRsId) (bf.getBean("variantRsId"));
+                    rsId.run();
+                    return;
             }
         }
 

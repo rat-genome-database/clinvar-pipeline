@@ -1,16 +1,20 @@
 package edu.mcw.rgd.dataload.clinvar;
 
 import edu.mcw.rgd.dao.impl.*;
+import edu.mcw.rgd.dao.impl.variants.VariantDAO;
 import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.datamodel.ontology.Annotation;
 import edu.mcw.rgd.datamodel.ontologyx.Term;
 import edu.mcw.rgd.datamodel.ontologyx.TermSynonym;
 import edu.mcw.rgd.datamodel.ontologyx.TermWithStats;
+import edu.mcw.rgd.datamodel.variants.VariantMapData;
 import edu.mcw.rgd.process.CounterPool;
 import edu.mcw.rgd.process.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.jdbc.object.BatchSqlUpdate;
 
+import java.sql.Types;
 import java.util.*;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,6 +51,7 @@ public class Dao {
     private RGDManagementDAO rgdIdDAO = new RGDManagementDAO();
     private VariantInfoDAO variantInfoDAO = new VariantInfoDAO();
     private XdbIdDAO xdbIdDAO = new XdbIdDAO();
+    private VariantDAO vdao = new VariantDAO();
     private String deleteThresholdForStaleXdbIds;
 
 
@@ -624,6 +629,22 @@ public class Dao {
             }
         }
         return annotationDAO.deleteAnnotations(staleAnnotKeys);
+    }
+
+    public List<VariantMapData> getVariantByRgdId(int rgdId) throws Exception{
+        return vdao.getVariantsByRgdId(rgdId);
+    }
+
+    public void updateVariantRsID(List<VariantMapData> mapsData) throws Exception {
+        BatchSqlUpdate sql2 = new BatchSqlUpdate(this.vdao.getDataSource(),
+                "update variant set RS_ID=? where RGD_ID=?",
+                new int[]{Types.VARCHAR,Types.INTEGER});
+        sql2.compile();
+        for( VariantMapData v: mapsData) {
+            long id = v.getId();
+            sql2.update(v.getRsId(),id);
+        }
+        sql2.flush();
     }
 
     public void setDeleteThresholdForStaleXdbIds(String deleteThresholdForStaleXdbIds) {

@@ -25,6 +25,17 @@
             <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
         </File>
 
+        <RollingFile name="rsStatus" append="true" fileName="logs/rsStatus.log" filePattern="logs/rsStatus.log.%d{yyyy-MM}">
+            <PatternLayout pattern="%d %p [%c] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <File name="rsSummary" append="false" fileName="logs/rsSummary.log">
+            <PatternLayout pattern="%m%n"/>
+            <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
+        </File>
+
         <RollingFile name="annotator_monthly" append="true" fileName="logs/annotator_monthly.log" filePattern="logs/annotator_monthly.log.%d{yyyy-MM}">
             <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] - %m%n"/>
             <Policies>
@@ -194,6 +205,11 @@
         </Logger>
         <Logger name="annotationsUpdated" level="debug" additivity="false">
             <AppenderRef ref="annotationsUpdated"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="rsStatus" level="info" additivity="false">
+            <AppenderRef ref="rsStatus"/>
+            <AppenderRef ref="rsSummary"/><!-- human readable -->
             <AppenderRef ref="Console" level="info"/>
         </Logger>
     </Loggers>

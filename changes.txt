@@ -1,3 +1,6 @@
+August 5, 2024
+  create new script to assign variant rsId to variants in the RATCN schema
+
 Apr 03, 2024
   loader: rewrote notes handling
 

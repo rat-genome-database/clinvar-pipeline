@@ -1,3 +1,6 @@
+Sep 10, 2024
+  loader: limit submitters to 4000 characters (internal Oracle db limit)
+
 August 5, 2024
   create new script to assign variant rsId to variants in the RATCN schema
 

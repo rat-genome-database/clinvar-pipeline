@@ -67,7 +67,7 @@ public class NotesCollection {
                 }
                 String notes = Utils.concatenate(parts, "; ");
 
-                notesIncoming = handleNotes4000LimitForVarIncoming(notes, rgdId);
+                notesIncoming = Manager.trimTo4000(notes, rgdId, "NOTES");
             }
 
             if( Utils.stringsAreEqual(notesIncoming, info.notesInRgd) ) {
@@ -82,44 +82,6 @@ public class NotesCollection {
             }
         });
     }
-
-    static public String handleNotes4000LimitForVarIncoming( String notes, int rgdId ) {
-
-        String newNotes = notes;
-        int combinedNotesTooLong = 0;
-
-        // ensure that the notes are no longer than 4000 characters
-        if( notes!=null && notes.length() > 3980 ) {
-            // take into account UTF8 encoding
-            try {
-                String notes2;
-                int len = notes.length();
-                if( len > 4000 ) {
-                    len = 4000;
-                }
-                int utf8Len = 0;
-                do {
-                    notes2 = notes.substring(0, len);
-                    len--;
-                    utf8Len = notes2.getBytes("UTF-8").length;
-                } while (utf8Len > 3996);
-
-                String msg = "  combined notes too long for RGD:" + rgdId + "! UTF8 str len:" + (4+utf8Len);
-                LogManager.getLogger("dbg").debug(msg);
-                combinedNotesTooLong++;
-
-                newNotes = (notes2 + " ...");
-            } catch (UnsupportedEncodingException e) {
-                // totally unexpected
-                throw new RuntimeException(e);
-            }
-        }
-        if( combinedNotesTooLong > 0 ) {
-            GlobalCounters.getInstance().incrementCounter("NOTES_MERGED_DUE_TO_4000_ORACLE_LIMIT", 1);
-        }
-        return newNotes;
-    }
-
 
     class NotesInfo {
         public String notesInRgd;

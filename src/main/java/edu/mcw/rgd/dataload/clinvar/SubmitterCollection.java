@@ -57,7 +57,8 @@ public class SubmitterCollection {
             for( String incoming: info.submittersIncoming ) {
                 Collections.addAll(parts, incoming.split("[\\|]"));
             }
-            String submitterIncoming = Utils.concatenate(parts, "|");
+            String submitter = Utils.concatenate(parts, "|");
+            String submitterIncoming = Manager.trimTo4000(submitter, rgdId, "SUBMITTERS");
 
             if( Utils.stringsAreEqual(submitterIncoming, info.submitterInRgd) ) {
                 GlobalCounters.getInstance().incrementCounter("SUBMITTERS_UNCHANGED", 1);

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.FileSystemResource;
 
+import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 /**
@@ -127,6 +128,44 @@ public class Manager {
     String downloadVariantFile() throws Exception {
         return downloader.run();
     }
+
+    static public String trimTo4000( String text, int rgdId, String label ) {
+
+        String newText = text;
+        int combinedTextTooLong = 0;
+
+        // ensure that the text is no longer than 4000 characters
+        if( text!=null && text.length() > 3980 ) {
+            // take into account UTF8 encoding
+            try {
+                String text2;
+                int len = text.length();
+                if( len > 4000 ) {
+                    len = 4000;
+                }
+                int utf8Len = 0;
+                do {
+                    text2 = text.substring(0, len);
+                    len--;
+                    utf8Len = text2.getBytes("UTF-8").length;
+                } while (utf8Len > 3996);
+
+                String msg = "  combined "+label+" too long for RGD:" + rgdId + "! UTF8 str len:" + (4+utf8Len);
+                LogManager.getLogger("dbg").debug(msg);
+                combinedTextTooLong++;
+
+                newText = (text2 + " ...");
+            } catch (UnsupportedEncodingException e) {
+                // totally unexpected
+                throw new RuntimeException(e);
+            }
+        }
+        if( combinedTextTooLong > 0 ) {
+            GlobalCounters.getInstance().incrementCounter(label+"_TRIMMED_DUE_TO_4000_ORACLE_LIMIT", 1);
+        }
+        return newText;
+    }
+
 
     public void setVersion(String version) {
         this.version = version;

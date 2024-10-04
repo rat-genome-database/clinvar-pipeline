@@ -2,7 +2,7 @@
 
 <beans>
 	<bean id="manager" class="edu.mcw.rgd.dataload.clinvar.Manager">
-        <property name="version" value="ClinVar Pipeline  -- build Sep 10, 2024" />
+        <property name="version" value="ClinVar Pipeline  -- build Oct 04, 2024" />
         <property name="dao" ref="dao" />
         <property name="qc" ref="qc" />
         <property name="loader" ref="loader" />
@@ -76,5 +76,7 @@
     <bean id="variantRsId" class="edu.mcw.rgd.dataload.clinvar.VariantRsId">
         <property name="version" value="ClinVar rs ID Assign  -- build August 5, 2024" />
     </bean>
+
+    <bean id="clinvar2vcf" class="edu.mcw.rgd.dataload.clinvar.Clinvar2Vcf" />
 
 </beans>

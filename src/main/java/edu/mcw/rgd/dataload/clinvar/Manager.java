@@ -53,6 +53,10 @@ public class Manager {
                     VariantRsId rsId = (VariantRsId) (bf.getBean("variantRsId"));
                     rsId.run();
                     return;
+                case "--clinvar2vcf":
+                    Clinvar2Vcf clinvar2Vcf = (Clinvar2Vcf) (bf.getBean("clinvar2vcf"));
+                    clinvar2Vcf.run();
+                    return;
             }
         }
 

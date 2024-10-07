@@ -40,6 +40,8 @@ public class QC {
                 !Utils.stringsAreEqual(var.getName(), var2.getName()) ||
                 !Utils.stringsAreEqual(var.getSoAccId(), var2.getSoAccId()) ||
 
+                !Utils.stringsAreEqual(var.getRefNuc(), var2.getRefNuc()) ||
+                !Utils.stringsAreEqual(var.getVarNuc(), var2.getVarNuc()) ||
                 !Utils.stringsAreEqual(var.getNucleotideChange(), var2.getNucleotideChange()) ) {
 
                 rec.setUpdateRecordFlag(true);

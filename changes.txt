@@ -1,3 +1,6 @@
+Oct 07, 2024
+  added loading of REF_NUC and VAR_NUC to CLINVAR table
+
 Oct 04, 2024
   added clinvar2vcf: to export clinvar variants in RGD for submission to the Alliance
 

@@ -291,6 +291,16 @@ public class Parser extends XomAnalyzer {
                         strand
                         );
             }
+
+            String refNuc = loc.getAttributeValue("referenceAlleleVCF");
+            if( refNuc!=null && refNuc.length()>0 ) {
+                rec.getVarIncoming().setRefNuc(refNuc);
+            }
+
+            String varNuc = loc.getAttributeValue("alternateAlleleVCF");
+            if( varNuc!=null && varNuc.length()>0 ) {
+                rec.getVarIncoming().setVarNuc(varNuc);
+            }
         }
 
         elements = measure.getChildElements("CytogeneticLocation");
@@ -456,7 +466,7 @@ public class Parser extends XomAnalyzer {
     static XPath xpClinicalSignificance, xpReviewStatus, xpDateLastEvaluated, xpSnomedCt;
     static XPath xpClinVarAcc, xpPubmedId, xpAgeOfOnset, xpPrevalence, xpMethodType, xpOmim;
     static XPath xpVariantName, xpVariantAltName, xpSoAccId, xpRsId, xpOmimAllele, xpRefSeqId, xpMolConsequence;
-    static XPath xpMedGen, xpHgvsName, xpPreferredTrait, xpAlternateTrait, xpNucChange;
+    static XPath xpMedGen, xpHgvsName, xpPreferredTrait, xpAlternateTrait, xpNucChange, xpRefAllele, xpAltAllele;
 
     static {
         try {

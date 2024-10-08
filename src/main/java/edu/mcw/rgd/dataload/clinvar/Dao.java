@@ -91,6 +91,8 @@ public class Dao {
      */
     synchronized public int insertVariant(VariantInfo var) throws Exception{
         notesFixup(var);
+        var.setRefNuc( truncateUpTo4000(var.getRefNuc()) );
+        var.setVarNuc( truncateUpTo4000(var.getVarNuc()) );
 
         RgdId rgdId = rgdIdDAO.createRgdId(RgdId.OBJECT_KEY_VARIANTS, "ACTIVE", Manager.SOURCE, SpeciesType.HUMAN);
         var.setRgdId(rgdId.getRgdId());
@@ -112,6 +114,17 @@ public class Dao {
         }
     }
 
+    String truncateUpTo4000( String value ) {
+        String newValue = value;
+        if( value != null ) {
+            if( value.length() > 3996 ) {
+                newValue = value.substring(0, 3996)+" ...";
+                LogManager.getLogger("dbg").warn("truncated to 4000: ["+value+"] ==> ["+newValue+"]");
+            }
+        }
+        return newValue;
+    }
+
     /**
      * Update variant in tables GENOMIC_ELEMENTS,CLINVAR given rgdID
      *
@@ -127,6 +140,8 @@ public class Dao {
         varNew.setTraitName(varOld.getTraitName());
 
         notesFixup(varNew);
+        varNew.setRefNuc( truncateUpTo4000(varNew.getRefNuc()) );
+        varNew.setVarNuc( truncateUpTo4000(varNew.getVarNuc()) );
 
         String varOldDump = varOld.dump("|");
         String varNewDump = varNew.dump("|");

@@ -177,11 +177,7 @@ public class QC {
                         case "other": return 120;
                         case "not provided": return 2000;
                         default:
-                            log.warn("unhandled clinical significance: "+clinicalSignificance);
-
-                            Logger dbg = LogManager.getLogger("dbg");
-                            dbg.debug("unhandled clinical significance: "+clinicalSignificance);
-                            dbg.debug("mergeCS INCOMING={"+incoming+"}  INRGD={"+inRgd+"}");
+                            GlobalCounters.getInstance().incrementCounter("*** WARNING: unhandled clinical significance: "+clinicalSignificance, 1);
                             return 999;
                     }
                 }

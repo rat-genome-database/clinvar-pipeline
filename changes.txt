@@ -1,3 +1,6 @@
+Nov 19, 2024
+  improved reporting of unhandled 'clinical significance'
+
 Oct 07, 2024
   added loading of REF_NUC and VAR_NUC to CLINVAR table
 

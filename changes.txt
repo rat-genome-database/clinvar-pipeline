@@ -1,3 +1,6 @@
+May 09, 2025
+  added cmdline param and script to report duplicate terms and synonyms for RDO ontology
+
 Apr 22, 2025
   added cpark@mcw.edu to recipients of lists with unmatchable conditions
 

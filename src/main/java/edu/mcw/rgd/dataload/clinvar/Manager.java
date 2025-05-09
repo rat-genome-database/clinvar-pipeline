@@ -37,6 +37,7 @@ public class Manager {
         VariantAnnotator annotator = null;
         boolean runLoader = false;
         boolean qcDuplicateTerms = false;
+        boolean qcDuplicateTermsAndSynonyms = false;
 
         for( String arg: args ) {
             switch (arg) {
@@ -48,6 +49,9 @@ public class Manager {
                     break;
                 case "--qcDuplicateTerms":
                     qcDuplicateTerms = true;
+                    break;
+                case "--qcDuplicateTermsAndSynonyms":
+                    qcDuplicateTermsAndSynonyms = true;
                     break;
                 case "--addRsIds":
                     VariantRsId rsId = (VariantRsId) (bf.getBean("variantRsId"));
@@ -64,6 +68,11 @@ public class Manager {
             if( qcDuplicateTerms ) {
                 TermNameMatcher matcher = new TermNameMatcher("RDO");
                 matcher.indexTerms(manager.getDao());
+            }
+
+            if( qcDuplicateTermsAndSynonyms ) {
+                TermNameMatcher matcher = new TermNameMatcher("RDO");
+                matcher.indexTermsAndSynonyms(manager.getDao());
             }
 
             if( runLoader ) {

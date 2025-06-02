@@ -1,3 +1,6 @@
+Jun 02, 2025
+  scripts: updated due to new email program on the server
+
 May 09, 2025
   added cmdline param and script to report duplicate terms and synonyms for RDO ontology
 

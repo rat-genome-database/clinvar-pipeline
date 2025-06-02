@@ -3,7 +3,7 @@ APPDIR=/home/rgddata/pipelines/"clinvar-pipeline"
 SERVER=`hostname -s | tr '[a-z]' '[A-Z]'`
 EMAIL_LIST=mtutaj@mcw.edu
 if [ "$SERVER" == "REED" ]; then
-  EMAIL_LIST="mtutaj@mcw.edu,slaulederkind@mcw.edu"
+  EMAIL_LIST="mtutaj@mcw.edu slaulederkind@mcw.edu"
 fi
 
 $APPDIR/run.sh --qcDuplicateTerms | tee $APPDIR/qcDuplicateTerms.log

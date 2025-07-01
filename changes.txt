@@ -1,3 +1,6 @@
+Jul 01, 2025
+  renamed 'master' to 'main'
+
 Jun 02, 2025
   scripts: updated due to new email program on the server
 

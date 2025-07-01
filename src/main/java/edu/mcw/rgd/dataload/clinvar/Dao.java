@@ -393,8 +393,7 @@ public class Dao {
         }
     }
 
-    // must be synchronized unless MAPS_DATA table will start using sequences to insert new data
-    synchronized public void insertMapData(List<MapData> mds) throws Exception {
+    public void insertMapData(List<MapData> mds) throws Exception {
 
         mapDAO.insertMapData(mds);
 

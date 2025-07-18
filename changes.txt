@@ -1,3 +1,9 @@
+Jul 18, 2025
+  annotator: orthologous disease annotations will be made only if a clinvar variant is associated with a single gene
+  story: RGDD-2827
+    "if a variant overlaps more than one gene, the disease or phenotype annotation should be made to the variant
+     but should not be propagated to any of the genes in the overlap region."
+
 Jul 01, 2025
   renamed 'master' to 'main'
 

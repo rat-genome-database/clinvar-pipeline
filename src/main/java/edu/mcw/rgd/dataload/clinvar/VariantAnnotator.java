@@ -300,7 +300,12 @@ public class VariantAnnotator {
                     annotCacheHumanGenes.addIncomingAnnot(humanGeneAnnot);
                 }
 
-                // create homologous annotations
+                // RGDD-2827: create homologous annotations
+                //   if and only if the variant is associated with one gene
+                if( associatedGenes.size()>1 ) {
+                    continue;
+                }
+
                 for (Gene homolog : dao.getHomologs(gene.getRgdId())) {
                     if( !SpeciesType.isSearchable(homolog.getSpeciesTypeKey()) ) {
                         continue;

@@ -1,5 +1,6 @@
 package edu.mcw.rgd.dataload.clinvar;
 
+import edu.mcw.rgd.dao.impl.GeneDAO;
 import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.datamodel.ontology.Annotation;
 import edu.mcw.rgd.datamodel.ontologyx.Term;
@@ -271,7 +272,16 @@ public class VariantAnnotator {
         for( Integer geneRgdId: associatedGenes ) {
 
             for( Term term: getDiseaseTerms(varRgdId, geneRgdId, conditions) ) {
-                Gene gene = dao.getGene(geneRgdId);
+                Gene gene = null;
+                try {
+                    gene = dao.getGene(geneRgdId);
+                } catch( GeneDAO.GeneDAOException e ) {
+                    // could happen
+                }
+                if( gene==null ) {
+                    continue;
+                }
+
                 String species = getSpeciesName(gene.getSpeciesTypeKey());
 
                 Annotation humanGeneAnnot = (Annotation) annot.clone();

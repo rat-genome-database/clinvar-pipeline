@@ -350,7 +350,15 @@ public class VariantAnnotator {
         for( Integer geneRgdId: associatedGenes ) {
 
             for( Term term: getPhenotypeTerms(varRgdId, geneRgdId, conditions) ) {
-                Gene gene = dao.getGene(geneRgdId);
+                Gene gene = null;
+                try {
+                    gene = dao.getGene(geneRgdId);
+                } catch( GeneDAO.GeneDAOException e ) {
+                    // could happen
+                }
+                if( gene==null ) {
+                    continue;
+                }
                 String species = getSpeciesName(gene.getSpeciesTypeKey());
 
                 Annotation humanGeneAnnot = (Annotation) annot.clone();

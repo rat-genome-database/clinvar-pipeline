@@ -187,7 +187,11 @@ public class VariantAnnotator {
             }
         }
 
-        generateGeneDiseaseAnnotations(ge.getRgdId(), associatedGenes, pubMedIds, ge.getTraitName());
+        // RGDD-2827: create gene annotations
+        //   if and only if the variant is associated with one gene
+        if( associatedGenes.size()==1 ) {
+            generateGeneDiseaseAnnotations(ge.getRgdId(), associatedGenes, pubMedIds, ge.getTraitName());
+        }
     }
 
     void generatePhenotypeAnnotations(VariantInfo ge, List<Integer> associatedGenes, String pubMedIds, Dao dao) throws Exception {
@@ -231,7 +235,11 @@ public class VariantAnnotator {
             }
         }
 
-        generateGenePhenotypeAnnotations(ge.getRgdId(), associatedGenes, pubMedIds, ge.getTraitName());
+        // RGDD-2827: create gene annotations
+        //   if and only if the variant is associated with one gene
+        if( associatedGenes.size()==1 ) {
+            generateGenePhenotypeAnnotations(ge.getRgdId(), associatedGenes, pubMedIds, ge.getTraitName());
+        }
     }
 
     boolean variantIsCarpeCompliant(VariantInfo vi) {
@@ -308,12 +316,6 @@ public class VariantAnnotator {
                     }
                 } else {
                     annotCacheHumanGenes.addIncomingAnnot(humanGeneAnnot);
-                }
-
-                // RGDD-2827: create homologous annotations
-                //   if and only if the variant is associated with one gene
-                if( associatedGenes.size()>1 ) {
-                    continue;
                 }
 
                 for (Gene homolog : dao.getHomologs(gene.getRgdId())) {

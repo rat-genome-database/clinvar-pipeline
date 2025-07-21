@@ -1,3 +1,6 @@
+Jul 21, 2025
+  annotator: fix for RGDD-2827 (if multiple genes are associated with a variant, no gene associations must be made)
+
 Jul 18, 2025
   annotator: orthologous disease annotations will be made only if a clinvar variant is associated with a single gene
   story: RGDD-2827

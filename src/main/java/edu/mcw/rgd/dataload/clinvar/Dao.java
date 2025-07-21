@@ -614,9 +614,9 @@ public class Dao {
 
         List<Annotation> staleAnnots = annotationDAO.getAnnotationsModifiedBeforeTimestamp(createdBy, dt, aspect);
 
-        logAnnotator.info(aspect+" total annotation count: "+annotCount);
-        logAnnotator.info(aspect+" stale annotation delete limit ("+staleAnnotDeleteThresholdStr+"): "+staleAnnotDeleteLimit);
-        logAnnotator.info(aspect+"stale annotations to be deleted: "+staleAnnots.size());
+        logAnnotator.info(aspect+" total annotation count: "+Utils.formatThousands(annotCount));
+        logAnnotator.info(aspect+" stale annotation delete limit ("+staleAnnotDeleteThresholdStr+"): "+Utils.formatThousands(staleAnnotDeleteLimit));
+        logAnnotator.info(aspect+" stale annotations to be deleted: "+Utils.formatThousands(staleAnnots.size()));
 
         int newAnnotCount = annotCount - staleAnnots.size();
         int annotDiffCount = newAnnotCount - origAnnotCount;

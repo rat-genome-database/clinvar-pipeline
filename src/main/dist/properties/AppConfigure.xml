@@ -2,7 +2,7 @@
 
 <beans>
 	<bean id="manager" class="edu.mcw.rgd.dataload.clinvar.Manager">
-        <property name="version" value="ClinVar Pipeline  -- build Jul 18, 2025" />
+        <property name="version" value="ClinVar Pipeline  -- build Jul 21, 2025" />
         <property name="dao" ref="dao" />
         <property name="qc" ref="qc" />
         <property name="loader" ref="loader" />
@@ -11,7 +11,7 @@
 	</bean>
 
     <bean id="dao" class="edu.mcw.rgd.dataload.clinvar.Dao" >
-        <property name="deleteThresholdForStaleXdbIds" value="9%" />
+        <property name="deleteThresholdForStaleXdbIds" value="8%" />
     </bean>
 
     <bean id="qc" class="edu.mcw.rgd.dataload.clinvar.QC" />
@@ -25,14 +25,14 @@
 
     <bean id="parseGroup" class="edu.mcw.rgd.dataload.clinvar.ParseGroup" >
         <property name="chunkDir" value="/tmp/"/>
-        <property name="chunkSize" value="250000000"/>
+        <property name="chunkSize" value="260000000"/>
         <property name="recordEnd" value="&lt;/ClinVarSet>"/>
         <property name="chunkHeader" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;yes&quot;?>&#10;&lt;ReleaseSet>&#10;"/>
         <property name="chunkTrailer" value="&lt;/ReleaseSet>"/>
     </bean>
 
     <bean id="annotator" class="edu.mcw.rgd.dataload.clinvar.VariantAnnotator">
-        <property name="version" value="ClinVar Annotator  -- build Feb 05, 2024" />
+        <property name="version" value="ClinVar Annotator  -- build Jul 21, 2025" />
         <property name="createdBy" value="68" /><!-- ClinVar Annotation pipeline -->
         <property name="evidence" value="IAGP" />
         <property name="dataSrc" value="ClinVar" />

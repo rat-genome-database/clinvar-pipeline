@@ -531,7 +531,7 @@ public class Parser extends XomAnalyzer {
         if( this.rec !=null ) {
 
             try {
-                if( this.rec.getVarIncoming().getClinicalSignificance().contains("not provided") ) {
+                if( Utils.defaultString(this.rec.getVarIncoming().getClinicalSignificance()).contains("not provided") ) {
                     GlobalCounters.getInstance().incrementCounter("CLINVAR_ENTRY_CLINICAL_SIGNIFICANCE_NOT_PROVIDED", 1);
                 }
                 else if( this.rec.getVarIncoming().getTraitName()==null ||

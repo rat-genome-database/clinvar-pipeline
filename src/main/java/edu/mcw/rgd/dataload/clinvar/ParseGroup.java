@@ -31,7 +31,7 @@ public class ParseGroup {
     private Logger logDebug = LogManager.getLogger("dbg");
     private Logger log = LogManager.getLogger("loader");
 
-    private boolean dbg = true;
+    private Boolean debug = true;
 
     public void dbgSetup() {
 
@@ -47,7 +47,7 @@ public class ParseGroup {
 
     public void parse(String fileName) throws IOException {
 
-        if( dbg == false ) {
+        if( this.debug == false ) {
             splitInputFileIntoChunks(fileName);
         } else {
             dbgSetup();
@@ -201,5 +201,13 @@ public class ParseGroup {
 
     public String getChunkDir() {
         return chunkDir;
+    }
+
+    public Boolean getDebug() {
+        return debug;
+    }
+
+    public void setDebug(Boolean debug) {
+        this.debug = debug;
     }
 }

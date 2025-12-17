@@ -37,6 +37,7 @@
         <property name="recordEnd" value="&lt;/VariationArchive>"/>
         <property name="chunkHeader" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;yes&quot;?>&#10;&lt;ClinVarVariationRelease>&#10;"/>
         <property name="chunkTrailer" value="&lt;/ClinVarVariationRelease>"/>
+        <property name="debug" value="false"/>
     </bean>
 
     <bean id="annotator" class="edu.mcw.rgd.dataload.clinvar.VariantAnnotator">

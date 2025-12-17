@@ -83,6 +83,7 @@ public class Parser extends XomAnalyzer {
 
                 rec.getVarIncoming().setName( xpName.stringValueOf(simpleAllele));
                 rec.getVarIncoming().setObjectType( xpVarType.stringValueOf(simpleAllele).toLowerCase() );
+                handleSoAccId("");
                 rec.setVariantAltName( xpAltName.stringValueOf(simpleAllele) );
 
                 Element geneList = simpleAllele.getFirstChildElement("GeneList");
@@ -156,12 +157,10 @@ public class Parser extends XomAnalyzer {
                         }
                         Element e3 = hgvs.getFirstChildElement("MolecularConsequence");
                         if( e3!=null ) {
-                            String soAcc = e3.getAttributeValue("ID");
                             String consequence = e3.getAttributeValue("Type");
                             if( !Utils.isStringEmpty(consequence) ) {
                                 rec.getVarIncoming().setMolecularConsequence(consequence);
                             }
-                            handleSoAccId(soAcc);
                         }
                     }
                 }

@@ -2,6 +2,7 @@ package edu.mcw.rgd.dataload.clinvar;
 
 import edu.mcw.rgd.dao.impl.*;
 import edu.mcw.rgd.dao.impl.variants.VariantDAO;
+import edu.mcw.rgd.dao.spring.VariantQuery;
 import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.datamodel.ontology.Annotation;
 import edu.mcw.rgd.datamodel.ontologyx.Term;
@@ -72,6 +73,22 @@ public class Dao {
             return null;
         if( results.size()>1 ) {
             throw new Exception("Unexpected: multiple elements with OBJECT_KEY=7 and symbol="+symbol);
+        }
+        return results.get(0);
+    }
+
+    public VariantInfo getVariantByName(String name) throws Exception {
+
+        String sql = "SELECT v.*,ge.*,r.species_type_key,r.object_status,r.object_key "+
+                "FROM clinvar v,genomic_elements ge, rgd_ids r "+
+                "WHERE ge.name=? AND ge.rgd_id=r.rgd_id AND r.object_key=? AND v.rgd_id=ge.rgd_id";
+        VariantQuery q = new VariantQuery(variantInfoDAO.getDataSource(), sql);
+        List<VariantInfo> results = variantInfoDAO.execute(q, new Object[]{name, 7});
+
+        if( results.isEmpty() )
+            return null;
+        if( results.size()>1 ) {
+            throw new Exception("Unexpected: multiple elements with OBJECT_KEY=7 and name="+name);
         }
         return results.get(0);
     }

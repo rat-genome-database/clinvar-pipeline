@@ -100,21 +100,48 @@ public class Record {
         if( submitter.endsWith(",") ) { // remove trailing ',' from submitter name
             submitter = submitter.substring(0, submitter.length()-1);
         }
-        submitter = submitter.trim();
 
-        if( !submitter.isEmpty() ) {
-            String submitters = getVarIncoming().getSubmitter();
-            if( submitters!=null ) {
+        String submitterList = merge(submitter, getVarIncoming().getSubmitter());
+        getVarIncoming().setSubmitter(submitterList);
+    }
+
+    public void mergeReviewStatusForVarIncoming(String reviewStatus) {
+        String reviewStatusList = merge(reviewStatus, getVarIncoming().getReviewStatus());
+        getVarIncoming().setReviewStatus(reviewStatusList);
+    }
+
+    public void mergeMethodTypeForVarIncoming(String methodType) {
+        String resultList = merge(methodType, getVarIncoming().getMethodType());
+        getVarIncoming().setMethodType(resultList);
+    }
+
+    public void mergeClinicalSignificanceForVarIncoming(String clinicalSignificance) {
+        String resultList = merge(clinicalSignificance, getVarIncoming().getClinicalSignificance());
+        getVarIncoming().setClinicalSignificance(resultList);
+    }
+
+    String merge(String value, String valueList) {
+        if( value.isEmpty() ) {
+            return valueList;
+        }
+        value = value.trim();
+
+        String result = valueList;
+
+        if( !value.isEmpty() ) {
+            if( valueList!=null ) {
                 Set<String> set = new TreeSet<>();
-                set.add(submitter);
+                set.add(value);
 
-                String[] submitterArray = submitters.split("[\\|]");
-                Collections.addAll(set, submitterArray);
+                String[] valueArray = valueList.split("[\\|]");
+                Collections.addAll(set, valueArray);
 
-                getVarIncoming().setSubmitter(Utils.concatenate(set, "|"));
+                result = Utils.concatenate(set, "|");
             } else {
-                getVarIncoming().setSubmitter(submitter);
+                result = value;
             }
         }
+
+        return result;
     }
 }

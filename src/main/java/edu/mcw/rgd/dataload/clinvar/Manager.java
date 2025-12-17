@@ -30,31 +30,6 @@ public class Manager {
     private Downloader downloader;
     private ParseGroup parser;
 
-    static void x() throws IOException {
-
-        String fname = "/git/blackrat.fa.gz";
-        BufferedReader in = Utils.openReader(fname);
-        BufferedWriter out = null;
-        String line;
-        while( (line=in.readLine())!=null ) {
-            if( line.startsWith(">") ) {
-                if( out!=null ) {
-                    out.close();
-                }
-                int spacePos = line.indexOf(" ");
-                String chr = spacePos>0 ? line.substring(1, spacePos) : line.substring(1);
-                String outname = "/git/"+chr+".fa.gz";
-                out = Utils.openWriter(outname);
-            }
-            out.write(line);
-            out.write("\n");
-        }
-
-        if( out!=null ) {
-            out.close();
-        }
-        System.exit(0);
-    }
     public static void main(String[] args) throws Exception {
 
         DefaultListableBeanFactory bf = new DefaultListableBeanFactory();

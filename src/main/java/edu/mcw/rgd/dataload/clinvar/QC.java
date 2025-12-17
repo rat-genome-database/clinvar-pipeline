@@ -28,16 +28,17 @@ public class QC {
 
     public void run(Record rec) throws Exception {
 
-        VariantInfo var = dao.getVariantBySymbol(rec.getVarIncoming().getSymbol());
+        //VariantInfo var = dao.getVariantBySymbol(rec.getVarIncoming().getSymbol());
+        VariantInfo var = dao.getVariantByName(rec.getVarIncoming().getName());
         rec.setVarInRgd(var);
 
         if( var!=null ) {
 
             VariantInfo var2 = rec.getVarIncoming();
 
-            // check if object type, name, source or so_acc_id changed
+            // check if object type, symbol, source or so_acc_id changed
             if( !Utils.stringsAreEqual(var.getObjectType(), var2.getObjectType()) ||
-                !Utils.stringsAreEqual(var.getName(), var2.getName()) ||
+                !Utils.stringsAreEqual(var.getSymbol(), var2.getSymbol()) ||
                 !Utils.stringsAreEqual(var.getSoAccId(), var2.getSoAccId()) ||
 
                 !Utils.stringsAreEqual(var.getRefNuc(), var2.getRefNuc()) ||

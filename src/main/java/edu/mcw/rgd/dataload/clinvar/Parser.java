@@ -11,6 +11,7 @@ import org.jaxen.XPath;
 import org.jaxen.xom.XOMXPath;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -65,86 +66,295 @@ public class Parser extends XomAnalyzer {
     // parse only one element: 'ReferenceClinVarAssertion', skip the others
     public Element parseSubrecord(Element element) {
         try {
-            if( !element.getLocalName().equals("ReferenceClinVarAssertion") ) {
-                if( element.getLocalName().equals("ClinVarAssertion") && rec!=null ) {
-                    // extract ClinVarAssertion/Comment
-                    Element elComment = element.getFirstChildElement("Comment");
-                    if( elComment!=null ) {
-                        rec.mergeNotesForVarIncoming(elComment.getValue());
-                    }
+            String elName = element.getLocalName();;
+            if( elName.equals("ClassifiedRecord") ) {
 
-                    // extract ClinVarAssertion/submitter
-                    Element elSubmission = element.getFirstChildElement("ClinVarSubmissionID");
-                    if( elSubmission!=null ) {
-                        rec.mergeSubmitterForVarIncoming(elSubmission.getAttributeValue("submitter"));
-                    }
-
-                    parsePubMedId(element, rec);
-
-                    List<Attribute> ids = xpOmimAllele.selectNodes(element);
-                    for( Attribute a: ids ) {
-                        rec.getXdbIds().addIncomingXdbId(53, a.getValue(), rec.getClinVarId());
-                    }
-                }
-                else if( element.getLocalName().equals("Title") ) {
-                    title = element.getValue();
-
-                    // the original name [USH2A:c.4440C>T (p.Ser1480=) AND AllHighlyPenetrant]
-                    // we only keep the first part: [USH2A:c.4440C>T (p.Ser1480=)]
-                    int andPos = title.lastIndexOf(" AND ");
-                    if( andPos>0 )
-                        title = title.substring(0, andPos).trim();
-                }
-                return null;
-            }
-
-            String clinVarId = xpClinVarAcc.stringValueOf(element);
-            logDebug.info(clinVarId);
-
-            // parse Measures from MeasureSet
-            Elements measureSets = element.getChildElements("MeasureSet");
-            for( int i=0; i<measureSets.size(); i++ ) {
-                Element measureSet = measureSets.get(i);
-                Elements measures = measureSet.getChildElements("Measure");
-                if( measures.size()>1 ) {
+                Elements simpleAlleles = element.getChildElements("SimpleAllele");
+                if( simpleAlleles.size()>1 ) {
                     GlobalCounters.getInstance().incrementCounter("MULTI_ALLELE_VARIANTS_SKIPPED", 1);
+                    String clinVarId = simpleAlleles.get(0).getAttributeValue("VariationID");
                     logDebug.info("MULTI_ALLELE_VARIANTS_SKIPPED for "+clinVarId);
                     this.rec = null;
-                    break;
+                    return null;
                 }
-                for( int j=0; j<measures.size(); j++ ) {
-                    Element measure = measures.get(j);
-                    createRecord(measure.getAttributeValue("ID"));
-                    rec.getVarIncoming().setObjectType(measure.getAttributeValue("Type").toLowerCase());
+                Element simpleAllele = simpleAlleles.get(0);
+                String clinVarId = simpleAllele.getAttributeValue("VariationID");
+                createRecord(clinVarId);
 
-                    parseElementsForMeasure(measure, rec, clinVarId);
+                rec.getVarIncoming().setName( xpName.stringValueOf(simpleAllele));
+                rec.getVarIncoming().setObjectType( xpVarType.stringValueOf(simpleAllele).toLowerCase() );
+                rec.setVariantAltName( xpAltName.stringValueOf(simpleAllele) );
+
+                Element geneList = simpleAllele.getFirstChildElement("GeneList");
+                if( geneList!=null ) {
+                    Elements genes = geneList.getChildElements();
+                    for (int i = 0; i < genes.size(); i++) {
+                        Element gene = genes.get(i);
+                        String geneSymbol = gene.getAttributeValue("Symbol");
+                        String geneId = gene.getAttributeValue("GeneID");
+                        String hgncId = gene.getAttributeValue("HGNC_ID");
+                        rec.getGeneAssociations().add(geneId, geneSymbol);
+                        rec.getXdbIds().addIncomingXdbId(XdbId.XDB_KEY_NCBI_GENE, geneId);
+                        rec.getXdbIds().addIncomingXdbId(XdbId.XDB_KEY_HGNC, hgncId);
+                    }
+                }
+
+                Element location = simpleAllele.getFirstChildElement("Location");
+                if( location!=null ) {
+                    Elements elements = location.getChildElements("CytogeneticLocation");
+                    for (int i = 0; i < elements.size(); i++) {
+                        Element cyto = elements.get(i);
+                        rec.getMapPositions().addCytoPos(cyto.getValue());
+                    }
+                    elements = location.getChildElements("SequenceLocation");
+                    for (int i = 0; i < elements.size(); i++) {
+                        Element el = elements.get(i);
+                        String assembly = el.getAttributeValue("Assembly");
+                        String accession = el.getAttributeValue("Accession");
+                        String chr = el.getAttributeValue("Chr");
+                        String startPos = el.getAttributeValue("start");
+                        String stopPos = el.getAttributeValue("stop");
+                        String strand = null;
+                        rec.getMapPositions().addPos(assembly, chr, accession, startPos, stopPos, strand);
+
+                        String positionVCF = el.getAttributeValue("positionVCF");
+                        String refNuc = el.getAttributeValue("referenceAlleleVCF");
+                        if (refNuc != null && refNuc.length() > 0) {
+                            rec.getVarIncoming().setRefNuc(refNuc);
+                        }
+
+                        String varNuc = el.getAttributeValue("alternateAlleleVCF");
+                        if (varNuc != null && varNuc.length() > 0) {
+                            rec.getVarIncoming().setVarNuc(varNuc);
+                        }
+                    }
+                }
+
+                Element hgvsList = simpleAllele.getFirstChildElement("HGVSlist");
+                if( hgvsList!=null ) {
+                    Elements hgvss = hgvsList.getChildElements();
+                    for( int i=0; i< hgvss.size(); i++ ) {
+                        Element hgvs = hgvss.get(i);
+                        String hgvsType = hgvs.getAttributeValue("Type");
+                        hgvsType = hgvsType.replace(", ", "_").replace(" ","").toLowerCase().replace("hgvs_","");
+
+                        Element e1 = hgvs.getFirstChildElement("NucleotideExpression");
+                        if( e1!=null ) {
+                            String val = e1.getFirstChildElement("Expression").getValue();
+                            if( !Utils.isStringEmpty(val) ) {
+                                rec.getHgvsNames().addIncomingHgvsName(hgvsType, val);
+                                addRefSeqXref(hgvsType, val);
+                            }
+                        }
+                        Element e2 = hgvs.getFirstChildElement("ProteinExpression");
+                        if( e2!=null ) {
+                            String val = e2.getFirstChildElement("Expression").getValue();
+                            if( !Utils.isStringEmpty(val) ) {
+                                rec.getHgvsNames().addIncomingHgvsName(hgvsType, val);
+                                addRefSeqXref(hgvsType, val);
+                            }
+                        }
+                        Element e3 = hgvs.getFirstChildElement("MolecularConsequence");
+                        if( e3!=null ) {
+                            String soAcc = e3.getAttributeValue("ID");
+                            String consequence = e3.getAttributeValue("Type");
+                            if( !Utils.isStringEmpty(consequence) ) {
+                                rec.getVarIncoming().setMolecularConsequence(consequence);
+                            }
+                            handleSoAccId(soAcc);
+                        }
+                    }
+                }
+
+                Element xrefList = simpleAllele.getFirstChildElement("XRefList");
+                if( xrefList!=null ) {
+                    parseXRefs(xrefList);
+                }
+
+                String classifiedCondition = null;
+                Elements rcvLists = element.getChildElements( "RCVList" );
+                for( int z=0; z<rcvLists.size(); z++ ) {
+                    Element rcvList = rcvLists.get(z);
+                    Elements rcvAcc = rcvList.getChildElements("RCVAccession");
+                    for( int i=0; i<rcvAcc.size(); i++ ) {
+                        Element el = rcvAcc.get(i);
+                        String rcv = el.getAttributeValue("Accession");
+                        rec.getXdbIds().addIncomingXdbId(52, rcv);
+
+                        Element list = el.getFirstChildElement("ClassifiedConditionList");
+                        Elements classifiedConditions = list.getChildElements("ClassifiedCondition");
+                        for( int f=0; f<classifiedConditions.size(); f++ ) {
+                            Element classifiedConditionEl = classifiedConditions.get(f);
+                            if( classifiedCondition==null ) {
+                                classifiedCondition = classifiedConditionEl.getValue();
+                            }
+                        }
+                    }
+                }
+
+                Elements classifications = element.getFirstChildElement("Classifications").getChildElements();
+                for( int i=0; i<classifications.size(); i++ ) {
+                    Element classification = classifications.get(0);
+                    switch( classification.getLocalName() ) {
+                        case "GermlineClassification", "NoClassification" -> {
+
+                        }
+                        default -> {
+                            System.out.println("todo  unknown classification type");
+                        }
+                    }
+                }
+
+                Elements clinicalAssertionLists = element.getChildElements("ClinicalAssertionList");
+                for( int i=0; i<clinicalAssertionLists.size(); i++ ) {
+                    Element clinicalAssertionList = clinicalAssertionLists.get(i);
+                    Elements clinicalAssertions = clinicalAssertionList.getChildElements();
+                    for( int j=0; j<clinicalAssertions.size(); j++ ) {
+                        Element clinicalAssertion = clinicalAssertions.get(j);
+                        if( !clinicalAssertion.getLocalName().equals("ClinicalAssertion")) {
+                            System.out.println("unexpected");
+                        }
+                        Elements elements = clinicalAssertion.getChildElements();
+                        for( int y=0; y<elements.size(); y++ ) {
+                            Element el = elements.get(y);
+                            switch( el.getLocalName() ) {
+                                case "ClinVarSubmissionID" -> {
+                                    // nothing to do
+                                }
+                                case "ClinVarAccession" -> {
+                                    String submitter = el.getAttributeValue("SubmitterName");
+                                    String orgAbbreviation = el.getAttributeValue("OrgAbbreviation");
+                                    rec.mergeSubmitterForVarIncoming(Utils.NVL(orgAbbreviation, submitter));
+                                }
+                                case "RecordStatus" -> {
+                                    // nothing to do
+                                }
+                                case "Classification" -> {
+                                    String dateLastEvaluated = el.getAttributeValue("DateLastEvaluated");
+                                    if( dateLastEvaluated!=null && !dateLastEvaluated.isEmpty()) {
+                                        Date dt;
+                                        synchronized (SDT_YYYYMMDD) { // Date.parse() must be synchronized among all threads, to avoid data corruption
+                                            dt = SDT_YYYYMMDD.parse(dateLastEvaluated);
+                                        }
+                                        rec.getVarIncoming().setDateLastEvaluated(dt);
+                                    }
+
+                                    Elements elements2 = el.getChildElements();
+                                    for (int u = 0; u < elements2.size(); u++) {
+                                        Element el2 = elements2.get(u);
+                                        switch (el2.getLocalName()) {
+                                            case "ReviewStatus" -> {
+                                                String reviewStatus = el2.getValue().toLowerCase();
+                                                rec.mergeReviewStatusForVarIncoming(reviewStatus);
+                                            }
+                                            case "GermlineClassification", "NoClassification" -> {
+                                                String value = el2.getValue().toLowerCase();
+                                                rec.mergeClinicalSignificanceForVarIncoming(value);
+                                            }
+                                            case "Citation" -> {
+                                                parseCitation(el2);
+                                            }
+                                            case "Comment" -> {
+                                                // skip
+                                            }
+                                            default -> {
+                                                System.out.println("handle it");
+                                            }
+                                        }
+                                    }
+                                }
+                                case "Assertion" -> {
+
+                                }
+                                case "AttributeSet" -> {
+                                    Elements citations = el.getChildElements("Citation");
+                                    for( int c=0; c< citations.size(); c++ ) {
+                                        Element citation = citations.get(c);
+                                        parseCitation(citation);
+                                    }
+                                }
+                                case "ObservedInList" -> {
+                                    Elements observedInList = el.getChildElements();
+                                    for( int h=0; h<observedInList.size(); h++ ) {
+                                        Element observedIn = observedInList.get(h);
+                                        String methodType = observedIn.getFirstChildElement("Method").getFirstChildElement("MethodType").getValue();
+                                        methodType = methodType.toLowerCase();
+                                        rec.mergeMethodTypeForVarIncoming(methodType);
+                                    }
+                                }
+                                case "SimpleAllele", "Citation", "SubmissionNameList", "Comment" -> {
+
+                                }
+                                case "TraitSet" -> {
+                                    Elements traitList = el.getChildElements("Trait");
+                                    for( int h=0; h<traitList.size(); h++ ) {
+                                        Element trait = traitList.get(h);
+                                        parseXRefs(trait);
+                                    }
+                                }
+                                default -> {
+                                    System.out.println("TODO");
+                                }
+                            }
+                        }
+                    }
+                }
+
+                String preferredTrait = null;
+                List<String> traits = new ArrayList<>(); // traits other than preferred
+                Element traitMappingList = element.getFirstChildElement("TraitMappingList");
+                {
+                    Elements traitMappings = traitMappingList.getChildElements();
+                    for( int t=0; t<traitMappings.size(); t++ ) {
+                        Element traitMapping = traitMappings.get(t);
+                        String mappingRef = traitMapping.getAttributeValue("MappingRef");
+                        String mappingValue = traitMapping.getAttributeValue("MappingValue");
+                        if( mappingRef.equals("Preferred") ) {
+                            preferredTrait = mappingValue;
+                        }
+
+                        Elements medGens = traitMapping.getChildElements("MedGen");
+                        for( int m=0; m< medGens.size(); m++ ) {
+                            Element medGen = medGens.get(m);
+                            String medGenCUI = medGen.getAttributeValue("CUI");
+                            String medGenName = medGen.getAttributeValue("Name");
+                            if( !medGenCUI.equals("None") ) {
+                                rec.getXdbIds().addIncomingXdbId(54, medGenCUI); // MedGen xref
+                            }
+                            rec.getAliases().addIncomingAlias(medGenName, clinVarId, classifiedCondition);
+                        }
+                    }
+                }
+
+                // preferred trait or first trait parsed, becomes the trait name
+                if( preferredTrait==null ) {
+                    preferredTrait = classifiedCondition;
+                }
+                if( preferredTrait==null && traits.size()>0 ) {
+                    preferredTrait = traits.remove(0);
+                }
+                if( preferredTrait!=null ) {
+                    rec.getVarIncoming().setTraitName(preferredTrait);
+                }
+
+                // the remaining traits are made aliases
+                for( String trait: traits ) {
+                    rec.getAliases().addIncomingAlias(trait, clinVarId, preferredTrait);
                 }
             }
-
-            if( rec!=null ) {
-                rec.getXdbIds().addIncomingXdbId(52, clinVarId, clinVarId);
-                rec.getXdbIds().addIncomingXdbId(54, xpMedGen.stringValueOf(element), clinVarId);
-                rec.getXdbIds().addIncomingXdbId(55, xpSnomedCt.stringValueOf(element), clinVarId);
-
-                parseClinicalSignificance(element, rec);
-
-                parseTraits(element, clinVarId);
-
-                String ageOfOnset = xpAgeOfOnset.stringValueOf(element);
-                if( !ageOfOnset.isEmpty() )
-                    rec.getVarIncoming().setAgeOfOnset(ageOfOnset.toLowerCase());
-
-                String prevalence = xpPrevalence.stringValueOf(element);
-                if( !prevalence.isEmpty() )
-                    rec.getVarIncoming().setPrevalence(prevalence.toLowerCase());
-
-                String methodType = xpMethodType.stringValueOf(element);
-                if( !methodType.isEmpty() )
-                    rec.getVarIncoming().setMethodType(methodType.toLowerCase());
-
-                parseOmimIds(element, rec, clinVarId);
+            else if( elName.equals("RecordStatus") ) {
+                if( !element.getValue().equals("current") ) {
+                    log.warn("NOT CURRENT RECORD!");
+                }
             }
-
+            else if( elName.equals("Species") ) {
+                if( !element.getValue().equals("Homo sapiens") ) {
+                    log.warn("INVALID SPECIES! 'Homo sapiens' was expected!");
+                }
+            }
+            else {
+                System.out.println("unknown sub");
+            }
         }
         catch(Exception e) {
             throw new RuntimeException(e);
@@ -152,224 +362,78 @@ public class Parser extends XomAnalyzer {
         return null;
     }
 
-    void parseTraits(Element element, String clinVarId) throws JaxenException {
-
-        // 1st preferred trait name is the official trait name for the variant
-        // the other preferred traits and alternate traits are aliases
-        // if there is no preferred trait (very rare), first alternate trait becomes the trait name
-        parseTraits(xpPreferredTrait.selectNodes(element), clinVarId);
-        parseTraits(xpAlternateTrait.selectNodes(element), clinVarId);
-    }
-
-    void parseTraits(List<Element> traits, String clinVarId) {
-        if( !traits.isEmpty() ) {
-
-            // first trait parsed, becomes the trait name
-            int i=0;
-            if ( Utils.isStringEmpty(rec.getVarIncoming().getTraitName()) ) {
-                rec.getVarIncoming().setTraitName(parseTraitName(traits.get(0)) + " [" + clinVarId + "]");
-                i++;
-            }
-
-            // the remaining traits are made aliases
-            for( ; i<traits.size(); i++ ) {
-                rec.getAliases().addIncomingAlias(parseTraitName(traits.get(i)), clinVarId, rec.getVarIncoming().getTraitName());
+    void parseCitation( Element citation ) {
+        Elements ids = citation.getChildElements("ID");
+        for( int x=0; x<ids.size(); x++ ) {
+            Element id = ids.get(x);
+            if( id.getAttributeValue("Source").equals("PubMed") ) {
+                rec.getXdbIds().addIncomingXdbId(XdbId.XDB_KEY_PUBMED, id.getValue());
             }
         }
     }
 
-    String parseTraitName(Element el) {
-        String traitName = el.getValue();
-        String lcTraitName = traitName.toLowerCase();
-        if( lcTraitName.endsWith(" (1 patient)") ) {
-            traitName = traitName.substring(0, traitName.length()-12);
-        } else
-        if( lcTraitName.endsWith(" (1 family)") ) {
-            traitName = traitName.substring(0, traitName.length()-11);
-        }
-        return traitName;
-    }
+    void parseXRefs( Element el ) {
+        Elements xrefs = el.getChildElements("XRef");
+        for( int i=0; i<xrefs.size(); i++ ) {
+            Element xref = xrefs.get(i);
+            String type = xref.getAttributeValue("Type");
+            String id = xref.getAttributeValue("ID");
+            String db = xref.getAttributeValue("DB");
 
-    void parseOmimIds(Element element, Record rec, String clinVarId) throws Exception {
-        List<Attribute> ids = xpOmim.selectNodes(element);
-        for( Attribute a: ids ) {
-            rec.getXdbIds().addIncomingXdbId(XdbId.XDB_KEY_OMIM, a.getValue(), clinVarId);
-        }
-    }
-
-    public Element parseRecord(Element element) {
-
-        if( this.rec !=null ) {
-            try {
-                if( this.rec.getVarIncoming().getClinicalSignificance().contains("not provided") ) {
-                    GlobalCounters.getInstance().incrementCounter("CLINVAR_ENTRY_CLINICAL_SIGNIFICANCE_NOT_PROVIDED", 1);
+            switch (db) {
+                case "OMIM" -> {
+                    if (id.contains(".")) {
+                        rec.getXdbIds().addIncomingXdbId(53, id); // OMIM Allele, f.e. "613665.004"
+                        int dotPos = id.indexOf('.');
+                        rec.getXdbIds().addIncomingXdbId(6, id.substring(0, dotPos)); // OMIM, f.e. "613665"
+                    } else {
+                        rec.getXdbIds().addIncomingXdbId(6, id); // OMIM, f.e. "613665"
+                    }
                 }
-                else if( this.rec.getVarIncoming().getTraitName()==null ||
-                        this.rec.getVarIncoming().getTraitName().contains("not provided") ||
-                        this.rec.getVarIncoming().getTraitName().contains("not specified") ) {
-                    GlobalCounters.getInstance().incrementCounter("CLINVAR_ENTRY_CONDITION_NOT_PROVIDED", 1);
+                case "dbSNP" -> {
+                    if (type.equals("rs")) {
+                        rec.getXdbIds().addIncomingXdbId(48, "rs" + id); //  f.e. "rs587776507"
+                    } else {
+                        System.out.println("unknown dbSNP type");
+                    }
+                }
+                case "MedGen" -> {
+                    rec.getXdbIds().addIncomingXdbId(54, id);
+                }
+                case "ClinGen" -> {
+                    // just ignore it
+                }
+                default -> {
+                    System.out.println("unknown xref type: "+db);
+                }
+            }
+        }
+    }
+
+    void addRefSeqXref( String hgvsType, String hgvsName ) {
+
+        // there could be dozens of transcripts in a gene
+        // we don't want to load accessions for all of those transcripts/proteins
+        if(true) return;
+
+        if( hgvsType.equals("coding") ) {
+            int pos = hgvsName.indexOf(':');
+            if( pos>0 ) {
+                String refSeqAcc = hgvsName.substring(0, pos);
+                if( refSeqAcc.startsWith("NP_") || refSeqAcc.startsWith("XP_") ) {
+                    rec.getXdbIds().addIncomingXdbId(XdbId.XDB_KEY_GENEBANKPROT, refSeqAcc);
+                }
+                else if( refSeqAcc.startsWith("NM_") || refSeqAcc.startsWith("XM_") ) {
+                    rec.getXdbIds().addIncomingXdbId(XdbId.XDB_KEY_GENEBANKNU, refSeqAcc);
                 }
                 else {
-                    GlobalCounters.getInstance().incrementCounter("CLINVAR_ENTRY_OTHER", 1);
-                }
-
-                qc.run(rec);
-                loader.run(rec);
-
-            }catch(Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return null;
-    }
-
-    /**
-     * parse SO_ACC_ID, if available [  AttributeSet/XRef/@ID(@DB='SequenceOntology')  ]
-     * parse variant name            [  Name/ElementValue
-     */
-    void parseElementsForMeasure(Element measure, Record rec, String clinVarId) throws Exception {
-
-        //rec.getVarIncoming().setName(xpVariantName.stringValueOf(measure));
-        rec.setVariantAltName(xpVariantAltName.stringValueOf(measure));
-        rec.getXdbIds().addIncomingXdbId(48, xpRsId.stringValueOf(measure), clinVarId);
-
-        String refSeqId = xpRefSeqId.stringValueOf(measure);
-        int pos = refSeqId.indexOf(':');
-        if( pos>=0 ) // truncate after colon part
-            refSeqId = refSeqId.substring(0, pos);
-        rec.getXdbIds().addIncomingXdbId(XdbId.XDB_KEY_GENEBANKNU, refSeqId, clinVarId);
-
-        // parse hgvs names
-        for( Element el: (List<Element>)xpHgvsName.selectNodes(measure) ) {
-            String hgvsNameType = el.getAttributeValue("Type");
-            hgvsNameType = hgvsNameType.replace(", ", "_").replace(" ","").toLowerCase().replace("hgvs_","");
-            String hgvsName = el.getValue();
-            if( !Utils.isStringEmpty(hgvsName) ) {
-                rec.getHgvsNames().addIncomingHgvsName(hgvsNameType, hgvsName);
-            }
-        }
-
-        String nucleotideChange = xpNucChange.stringValueOf(measure).toLowerCase();
-        if( !nucleotideChange.isEmpty() )
-            rec.getVarIncoming().setNucleotideChange(nucleotideChange);
-
-        String molecularConsequence = xpMolConsequence.stringValueOf(measure).toLowerCase();
-        if( !molecularConsequence.isEmpty() )
-            rec.getVarIncoming().setMolecularConsequence(molecularConsequence);
-
-        Elements elements = measure.getChildElements("SequenceLocation");
-        for( int i=0; i<elements.size(); i++ ) {
-            Element loc = elements.get(i);
-
-            // if there is 'Accession' attribute, it must start with 'NC_'
-            String acc = loc.getAttributeValue("Accession");
-            if( acc!=null && !acc.startsWith("NC_") ) {
-                continue;
-            }
-
-            String start = loc.getAttributeValue("start");
-            if( start==null )
-                start = loc.getAttributeValue("innerStart");
-            if( start==null )
-                start = loc.getAttributeValue("outerStart");
-
-            String stop = loc.getAttributeValue("stop");
-            if( stop==null )
-                stop = loc.getAttributeValue("innerStop");
-            if( stop==null )
-                stop = loc.getAttributeValue("outerStop");
-
-            String strand = loc.getAttributeValue("Strand");
-
-            if( !Utils.isStringEmpty(start) && !Utils.isStringEmpty(stop) ) {
-                rec.getMapPositions().addPos(
-                        loc.getAttributeValue("Assembly"),
-                        loc.getAttributeValue("Chr"),
-                        loc.getAttributeValue("Accession"),
-                        start,
-                        stop,
-                        strand
-                        );
-            }
-
-            String refNuc = loc.getAttributeValue("referenceAlleleVCF");
-            if( refNuc!=null && refNuc.length()>0 ) {
-                rec.getVarIncoming().setRefNuc(refNuc);
-            }
-
-            String varNuc = loc.getAttributeValue("alternateAlleleVCF");
-            if( varNuc!=null && varNuc.length()>0 ) {
-                rec.getVarIncoming().setVarNuc(varNuc);
-            }
-        }
-
-        elements = measure.getChildElements("CytogeneticLocation");
-        for( int i=0; i<elements.size(); i++ ) {
-            Element loc = elements.get(i);
-            rec.getMapPositions().addCytoPos(loc.getValue());
-        }
-
-        elements = measure.getChildElements("MeasureRelationship");
-        for( int i=0; i<elements.size(); i++ ) {
-            Element mrs = elements.get(i);
-            Elements els = mrs.getChildElements();
-            String geneId=null, geneSymbol=null, geneName=null;
-            for( int j=0; j<els.size(); j++ ) {
-                Element el = els.get(j);
-                if( el.getLocalName().equals("Symbol") ) {
-                    Elements symbols = el.getChildElements("ElementValue");
-                    for( int k=0; k<symbols.size(); k++ ) {
-                        Element symbol = symbols.get(k);
-                        if( symbol.getAttributeValue("Type").equals("Preferred") )
-                            geneSymbol = symbol.getValue();
-                    }
-                }
-                else if( el.getLocalName().equals("XRef") ) {
-                    if( el.getAttributeValue("DB").equals("Gene") ) {
-                        geneId = el.getAttributeValue("ID");
-                        rec.getXdbIds().addIncomingXdbId(XdbId.XDB_KEY_NCBI_GENE, geneId, clinVarId);
-                    }
-                }
-                if( el.getLocalName().equals("Name") ) {
-                    Elements names = el.getChildElements("ElementValue");
-                    for( int k=0; k<names.size(); k++ ) {
-                        Element name = names.get(k);
-                        if( name.getAttributeValue("Type").equals("Preferred") )
-                            geneName = name.getValue();
-                    }
+                    System.out.println("*** addRefSeqXref PROBLEM!");
                 }
             }
-            rec.getGeneAssociations().add(geneId, geneSymbol!=null ? geneSymbol : geneName);
-        }
-
-        handleSoAccId(measure, rec);
-    }
-
-    void parseClinicalSignificance(Element element, Record rec) throws Exception {
-
-        rec.getVarIncoming().setClinicalSignificance(xpClinicalSignificance.stringValueOf(element).toLowerCase());
-        rec.getVarIncoming().setReviewStatus(xpReviewStatus.stringValueOf(element));
-        String dateLastEvaluated = xpDateLastEvaluated.stringValueOf(element);
-        if( !dateLastEvaluated.isEmpty() ) {
-            Date dt;
-            synchronized (SDT_YYYYMMDD) { // Date.parse() must be synchronized among all threads, to avoid data corruption
-                dt = SDT_YYYYMMDD.parse(dateLastEvaluated);
-            }
-            rec.getVarIncoming().setDateLastEvaluated(dt);
         }
     }
 
-    void parsePubMedId(Element element, Record rec) throws Exception {
-
-        String clinVarId = rec.getClinVarId();
-        for( Element el: (List<Element>)xpPubmedId.selectNodes(element) ) {
-            rec.getXdbIds().addIncomingXdbId(XdbId.XDB_KEY_PUBMED, el.getValue(), clinVarId);
-        }
-    }
-
-    void handleSoAccId(Element measure, Record rec) throws Exception {
-
-        String soAccId = xpSoAccId.stringValueOf(measure);
+    void handleSoAccId(String soAccId) throws Exception {
 
         // special handling for obsolete SO terms without replacements
         if( soAccId.equals("SO:1000064") ) {
@@ -463,40 +527,40 @@ public class Parser extends XomAnalyzer {
         rec.getVarIncoming().setSoAccId(soAccId);
     }
 
-    static XPath xpClinicalSignificance, xpReviewStatus, xpDateLastEvaluated, xpSnomedCt;
-    static XPath xpClinVarAcc, xpPubmedId, xpAgeOfOnset, xpPrevalence, xpMethodType, xpOmim;
-    static XPath xpVariantName, xpVariantAltName, xpSoAccId, xpRsId, xpOmimAllele, xpRefSeqId, xpMolConsequence;
-    static XPath xpMedGen, xpHgvsName, xpPreferredTrait, xpAlternateTrait, xpNucChange, xpRefAllele, xpAltAllele;
+    public Element parseRecord(Element element) {
+
+        if( this.rec !=null ) {
+
+            try {
+                if( this.rec.getVarIncoming().getClinicalSignificance().contains("not provided") ) {
+                    GlobalCounters.getInstance().incrementCounter("CLINVAR_ENTRY_CLINICAL_SIGNIFICANCE_NOT_PROVIDED", 1);
+                }
+                else if( this.rec.getVarIncoming().getTraitName()==null ||
+                        this.rec.getVarIncoming().getTraitName().contains("not provided") ||
+                        this.rec.getVarIncoming().getTraitName().contains("not specified") ) {
+                    GlobalCounters.getInstance().incrementCounter("CLINVAR_ENTRY_CONDITION_NOT_PROVIDED", 1);
+                }
+                else {
+                    GlobalCounters.getInstance().incrementCounter("CLINVAR_ENTRY_OTHER", 1);
+                }
+
+                qc.run(rec);
+                loader.run(rec);
+
+            }catch(Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return null;
+    }
+
+    static XPath xpName, xpVarType, xpAltName;
 
     static {
         try {
-            xpClinicalSignificance = new XOMXPath("ClinicalSignificance/Description");
-            xpReviewStatus = new XOMXPath("ClinicalSignificance/ReviewStatus");
-            xpDateLastEvaluated = new XOMXPath("ClinicalSignificance/@DateLastEvaluated");
-
-            xpClinVarAcc = new XOMXPath("ClinVarAccession[@Type='RCV']/@Acc");
-            xpPubmedId = new XOMXPath(".//Citation/ID[@Source='PubMed']");
-            xpMethodType = new XOMXPath("ObservedIn/Method/MethodType");
-            xpOmimAllele = new XOMXPath("ExternalID[@DB='OMIM' and @Type='Allelic variant']/@ID");
-
-            // within Measure
-            xpVariantName = new XOMXPath("Name/ElementValue[@Type='preferred name' or @Type='Preferred']");
-            xpVariantAltName = new XOMXPath("Name/ElementValue[@Type='Alternate']");
-            xpSoAccId = new XOMXPath("AttributeSet/XRef[@DB='Sequence Ontology']/@ID");
-            xpRsId = new XOMXPath("XRef[@DB='dbSNP' and @Type='rs']/@ID");
-            xpRefSeqId = new XOMXPath("AttributeSet/XRef[@DB='RefSeq']/@ID");
-            xpHgvsName = new XOMXPath("AttributeSet/Attribute[starts-with(@Type,'HGVS')]");
-            xpNucChange = new XOMXPath("AttributeSet/Attribute[@Type='nucleotide change']");
-            xpMolConsequence = new XOMXPath("AttributeSet/Attribute[@Type='MolecularConsequence']");
-
-            // traits (within ReferenceClinVarAssertion)
-            xpOmim = new XOMXPath(".//XRef[@DB='OMIM' and @Type='MIM']/@ID");
-            xpMedGen = new XOMXPath("TraitSet/Trait/XRef[@DB='MedGen']/@ID");
-            xpSnomedCt = new XOMXPath("TraitSet/Trait/Name/XRef[@DB='SNOMED CT']/@ID");
-            xpPreferredTrait = new XOMXPath("TraitSet/Trait/Name/ElementValue[@Type='Preferred']");
-            xpAlternateTrait = new XOMXPath("TraitSet/Trait/Name/ElementValue[@Type='Alternate']");
-            xpAgeOfOnset = new XOMXPath("TraitSet/Trait/AttributeSet/Attribute[@Type='age of onset']");
-            xpPrevalence = new XOMXPath("TraitSet/Trait/AttributeSet/Attribute[@Type='prevalence']");
+            xpName = new XOMXPath("Name");
+            xpVarType = new XOMXPath("VariantType");
+            xpAltName = new XOMXPath("OtherNameList/Name");
         }
         catch(Exception e) {
             Utils.printStackTrace(e, LogManager.getLogger("loader"));
@@ -504,3 +568,9 @@ public class Parser extends XomAnalyzer {
         }
     }
 }
+
+
+/*
+
+
+ */

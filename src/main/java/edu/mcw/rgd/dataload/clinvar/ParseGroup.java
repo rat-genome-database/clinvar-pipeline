@@ -31,12 +31,12 @@ public class ParseGroup {
     private Logger logDebug = LogManager.getLogger("dbg");
     private Logger log = LogManager.getLogger("loader");
 
-    private boolean dbg = false;
+    private boolean dbg = true;
 
     public void dbgSetup() {
 
         chunks.clear();
-        for( int i=0; i<=208; i++ ) {
+        for( int i=0; i<=230; i++ ) {
             String fname = "/tmp/clinvar/chunk" + i + ".xml.gz";
             chunks.add(fname);
         }
@@ -53,12 +53,14 @@ public class ParseGroup {
             dbgSetup();
         }
 
-        // process in parallel all of the chunks
+        // process in parallel all the chunks
 
         // note: when one worker threads is terminated due to RuntimeException,
         // other threads are still allowed to run :-)
 
-        chunks.parallelStream().forEach( chunk -> {
+        chunks.stream().forEach( chunk -> {
+        //chunks.parallelStream().forEach( chunk -> {
+
             logDebug.info("  processing "+chunk+ " active threads: "+Thread.activeCount());
             File file = new File(chunk);
             Parser parser = new Parser();

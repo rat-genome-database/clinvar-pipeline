@@ -2,7 +2,7 @@
 
 <beans>
 	<bean id="manager" class="edu.mcw.rgd.dataload.clinvar.Manager">
-        <property name="version" value="clinvar-pipeline  -- build Nov 25, 2025" />
+        <property name="version" value="clinvar-pipeline  -- build Dec 17, 2025" />
         <property name="dao" ref="dao" />
         <property name="qc" ref="qc" />
         <property name="loader" ref="loader" />
@@ -19,16 +19,24 @@
     <bean id="loader" class="edu.mcw.rgd.dataload.clinvar.Loader" />
 
     <bean id="downloader" class="edu.mcw.rgd.dataload.clinvar.Downloader" >
-        <!-- ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarFullRelease_00-latest.xml.gz" -->
-        <property name="variantDataFile" value="https://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/RCV_xml_old_format/ClinVarFullRelease_00-latest.xml.gz" />
+        <!-- https://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/RCV_xml_old_format/ClinVarFullRelease_00-latest.xml.gz" -->
+        <property name="variantDataFile" value="https://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarVCVRelease_00-latest.xml.gz" />
     </bean>
-
+<!-- old
     <bean id="parseGroup" class="edu.mcw.rgd.dataload.clinvar.ParseGroup" >
         <property name="chunkDir" value="/tmp/"/>
         <property name="chunkSize" value="260000000"/>
         <property name="recordEnd" value="&lt;/ClinVarSet>"/>
         <property name="chunkHeader" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;yes&quot;?>&#10;&lt;ReleaseSet>&#10;"/>
         <property name="chunkTrailer" value="&lt;/ReleaseSet>"/>
+    </bean>
+-->
+    <bean id="parseGroup" class="edu.mcw.rgd.dataload.clinvar.ParseGroup" >
+        <property name="chunkDir" value="/tmp/clinvar/"/>
+        <property name="chunkSize" value="30000000"/>
+        <property name="recordEnd" value="&lt;/VariationArchive>"/>
+        <property name="chunkHeader" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;yes&quot;?>&#10;&lt;ClinVarVariationRelease>&#10;"/>
+        <property name="chunkTrailer" value="&lt;/ClinVarVariationRelease>"/>
     </bean>
 
     <bean id="annotator" class="edu.mcw.rgd.dataload.clinvar.VariantAnnotator">

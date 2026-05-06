@@ -6,6 +6,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.util.*;
+import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 
 /**
@@ -32,17 +33,23 @@ public class ParseGroup {
     private Logger log = LogManager.getLogger("loader");
 
     private Boolean debug = true;
+    private Boolean parallelProcessing = true;
 
     public void dbgSetup() {
 
         chunks.clear();
-        for( int i=0; i<=230; i++ ) {
-            String fname = "/tmp/clinvar/chunk" + i + ".xml.gz";
-            chunks.add(fname);
+
+        File dir = new File(chunkDir);
+        File[] files = dir.listFiles(
+            (dir1, name) -> name.startsWith("chunk") && name.endsWith(".xml.gz"));
+        if( files != null ) {
+            for( File f : files ) {
+                chunks.add(f.getPath());
+            }
         }
         Collections.shuffle(chunks);
 
-        System.out.println(" CHUNKS TO BE PROCESSED: "+chunks.size());
+        log.info(" CHUNKS TO BE PROCESSED: "+chunks.size());
     }
 
     public void parse(String fileName) throws IOException {
@@ -58,10 +65,18 @@ public class ParseGroup {
         // note: when one worker threads is terminated due to RuntimeException,
         // other threads are still allowed to run :-)
 
-        chunks.stream().forEach( chunk -> {
-        //chunks.parallelStream().forEach( chunk -> {
+        Stream<String> stream;
+        if( this.parallelProcessing ) {
+            stream = chunks.parallelStream();
+        } else {
+            stream = chunks.stream();
+        }
+        stream.forEach( chunk -> {
 
-            logDebug.info("  processing "+chunk+ " active threads: "+Thread.activeCount());
+            String msg = "  processing "+chunk+ " active threads: "+Thread.activeCount();
+            logDebug.info(msg);
+            System.out.println(msg);
+
             File file = new File(chunk);
             Parser parser = new Parser();
             parser.qc = qc;
@@ -209,5 +224,13 @@ public class ParseGroup {
 
     public void setDebug(Boolean debug) {
         this.debug = debug;
+    }
+
+    public Boolean getParallelProcessing() {
+        return parallelProcessing;
+    }
+
+    public void setParallelProcessing(Boolean parallelProcessing) {
+        this.parallelProcessing = parallelProcessing;
     }
 }

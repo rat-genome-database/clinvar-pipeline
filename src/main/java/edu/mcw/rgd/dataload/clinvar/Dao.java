@@ -77,20 +77,38 @@ public class Dao {
         return results.get(0);
     }
 
-    public VariantInfo getVariantByName(String name) throws Exception {
+    public VariantInfo getVariantByRCVandName(String name, String clinvarRCV) throws Exception {
 
-        String sql = "SELECT v.*,ge.*,r.species_type_key,r.object_status,r.object_key "+
-                "FROM clinvar v,genomic_elements ge, rgd_ids r "+
-                "WHERE ge.name=? AND ge.rgd_id=r.rgd_id AND r.object_key=? AND v.rgd_id=ge.rgd_id";
+        String sql = """
+            SELECT v.*,ge.*,r.species_type_key,r.object_status,r.object_key
+            FROM clinvar v,genomic_elements ge, rgd_ids r, rgd_acc_xdb x
+            WHERE ge.rgd_id=r.rgd_id AND r.object_key=? AND v.rgd_id=ge.rgd_id
+              AND x.rgd_id=v.rgd_id AND x.xdb_key=52 AND x.acc_id=?
+            """;
+
+        VariantQuery q2 = new VariantQuery(variantInfoDAO.getDataSource(), sql);
+        List<VariantInfo> results = variantInfoDAO.execute(q2, new Object[]{7, clinvarRCV});
+        if( results.size()==1 ) {
+            return results.get(0);
+        }
+
+        sql = """
+            SELECT v.*,ge.*,r.species_type_key,r.object_status,r.object_key
+            FROM clinvar v,genomic_elements ge, rgd_ids r
+            WHERE ge.name=? AND ge.rgd_id=r.rgd_id AND r.object_key=? AND v.rgd_id=ge.rgd_id
+            """;
         VariantQuery q = new VariantQuery(variantInfoDAO.getDataSource(), sql);
-        List<VariantInfo> results = variantInfoDAO.execute(q, new Object[]{name, 7});
+        results = variantInfoDAO.execute(q, new Object[]{name, 7});
+        if( results.size()==1 ) {
+            return results.get(0);
+        }
 
         if( results.isEmpty() )
             return null;
         if( results.size()>1 ) {
             throw new Exception("Unexpected: multiple elements with OBJECT_KEY=7 and name="+name);
         }
-        return results.get(0);
+        return null;
     }
 
     /**
@@ -165,8 +183,7 @@ public class Dao {
         if( varOldDump.equals(varNewDump) ) {
             return false;
         }
-        logUpdatedVariants.debug("OLD: "+varOldDump);
-        logUpdatedVariants.debug("NEW: "+varNewDump);
+        logUpdatedVariants.debug("\nOLD: "+varOldDump+"\nNEW: "+varNewDump);
         try {
             variantInfoDAO.updateVariant(varNew);
         } catch(Exception e) {

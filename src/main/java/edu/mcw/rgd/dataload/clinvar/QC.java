@@ -29,7 +29,8 @@ public class QC {
     public void run(Record rec) throws Exception {
 
         //VariantInfo var = dao.getVariantBySymbol(rec.getVarIncoming().getSymbol());
-        VariantInfo var = dao.getVariantByName(rec.getVarIncoming().getName());
+        VariantInfo var = dao.getVariantByRCVandName(rec.getVarIncoming().getName(), rec.getXdbIds().getClinVarId());
+
         rec.setVarInRgd(var);
 
         if( var!=null ) {
@@ -162,12 +163,17 @@ public class QC {
                         case "association": return 30;
                         case "established risk allele": return 31;
                         case "likely risk allele": return 32;
+                        case "oncogenic": return 33;
                         case "affects": return 35;
+                        case "likely oncogenic": return 37;
                         case "benign": return 40;
                         case "likely benign": return 50;
                         case "conflicting interpretations of pathogenicity": return 60;
+                        case "somatic clinical impact: tier i - strong": return 61;
+                        case "somatic clinical impact: tier ii - potential": return 62;
                         case "drug response": return 70;
                         case "protective": return 80;
+                        case "evidence_only": return 81;
                         case "confers sensitivity": return 85;
                         case "uncertain risk allele": return 87;
                         case "uncertain significance": return 90;

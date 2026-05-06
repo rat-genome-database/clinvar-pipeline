@@ -2,6 +2,7 @@ package edu.mcw.rgd.dataload.clinvar;
 
 import edu.mcw.rgd.datamodel.MapData;
 import edu.mcw.rgd.process.sync.MapDataSyncer;
+import org.apache.logging.log4j.LogManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,8 +24,9 @@ public class MapPositions {
 
     public void addPos(String assembly, String chr, String accession, String start, String stop, String strand) throws Exception {
 
-        if( chr==null ) {
-            throw new Exception("null chromosome");
+        if( chr==null || start==null || stop==null ) {
+            LogManager.getLogger("dbg").warn("MAP POS problem: assembly="+assembly+", chr="+chr+", accession="+accession+", start="+start+", stop="+stop+", strand="+strand);
+            return;
         }
         int startPos = Integer.parseInt(start);
         int stopPos = Integer.parseInt(stop);

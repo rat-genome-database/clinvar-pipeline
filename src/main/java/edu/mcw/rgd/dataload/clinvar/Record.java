@@ -94,11 +94,8 @@ public class Record {
     }
 
     public void mergeSubmitterForVarIncoming(String submitter) {
-        if( submitter.isEmpty() ) {
+        if( Utils.isStringEmpty(submitter) ) {
             return;
-        }
-        if( submitter.endsWith(",") ) { // remove trailing ',' from submitter name
-            submitter = submitter.substring(0, submitter.length()-1);
         }
 
         String submitterList = merge(submitter, getVarIncoming().getSubmitter());

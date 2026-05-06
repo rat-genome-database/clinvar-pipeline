@@ -1,3 +1,6 @@
+May 06, 2026
+  parser: VCV migration -- closed remaining regressions and added Classification subtype counters
+
 Dec 17, 2025
   new parser
 

@@ -17,7 +17,7 @@ public class XdbIds {
     private List<XdbId> insXdbIds = new ArrayList<>();
     private List<XdbId> updXdbIds = new ArrayList<>();
 
-    boolean addIncomingXdbId(int xdbKey, String accId) {
+    boolean addIncomingXdbId(int xdbKey, String accId, String clinVarId) {
 
         if( Utils.isStringEmpty(accId) )
             return false;
@@ -37,6 +37,7 @@ public class XdbIds {
         xdbId.setAccId(accId);
         xdbId.setXdbKey(xdbKey);
         xdbId.setSrcPipeline(Manager.SOURCE);
+        xdbId.setNotes(clinVarId);
 
         // fixup for some xdb keys
         if( xdbKey==48 ) {

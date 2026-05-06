@@ -34,6 +34,9 @@ public class ParseGroup {
 
     private Boolean debug = true;
     private Boolean parallelProcessing = true;
+    private Boolean reuseChunks = true;
+    private int reuseChunksMinCount = 2000;
+    private int reuseChunksMaxAgeHours = 24;
 
     public void dbgSetup() {
 
@@ -50,6 +53,38 @@ public class ParseGroup {
         Collections.shuffle(chunks);
 
         log.info(" CHUNKS TO BE PROCESSED: "+chunks.size());
+    }
+
+    /** If chunkDir has reuseChunksMinCount+ chunk files modified within the last
+     *  reuseChunksMaxAgeHours hours AND newer than the source file (chronology: source
+     *  must precede the chunks split from it), populate 'chunks' from them and return
+     *  true so the (slow) re-split step is skipped. Disabled when reuseChunks=false. */
+    boolean reuseRecentChunks(String sourceFile) {
+        if( !Boolean.TRUE.equals(reuseChunks) ) return false;
+        File dir = new File(chunkDir);
+        if( !dir.isDirectory() ) return false;
+        File[] files = dir.listFiles(
+            (dir1, name) -> name.startsWith("chunk") && name.endsWith(".xml.gz"));
+        if( files == null || files.length < reuseChunksMinCount ) return false;
+
+        long sourceTs = sourceFile == null ? 0L : new File(sourceFile).lastModified();
+        long cutoff = System.currentTimeMillis() - reuseChunksMaxAgeHours * 60L * 60 * 1000;
+        List<String> recent = new ArrayList<>();
+        for( File f : files ) {
+            long ts = f.lastModified();
+            if( ts >= cutoff && ts > sourceTs ) recent.add(f.getPath());
+        }
+        if( recent.size() < reuseChunksMinCount ) {
+            if( sourceTs > 0 ) {
+                log.info(" reuse-chunks skipped: only "+recent.size()+" chunks newer than source "+sourceFile);
+            }
+            return false;
+        }
+
+        chunks.addAll(recent);
+        Collections.shuffle(chunks);
+        log.info(" REUSING "+chunks.size()+" recent chunks (mtime within "+reuseChunksMaxAgeHours+"h, newer than source) from "+chunkDir);
+        return true;
     }
 
     public void parse(String fileName) throws IOException {
@@ -100,6 +135,11 @@ public class ParseGroup {
         // debug: one big file parsing
         if( getChunkSize()<=0 ) {
             chunks.add(fileName);
+            return;
+        }
+
+        // reuse recently-produced chunks instead of re-splitting (chunk splitting is slow)
+        if( reuseRecentChunks(fileName) ) {
             return;
         }
 
@@ -232,5 +272,29 @@ public class ParseGroup {
 
     public void setParallelProcessing(Boolean parallelProcessing) {
         this.parallelProcessing = parallelProcessing;
+    }
+
+    public Boolean getReuseChunks() {
+        return reuseChunks;
+    }
+
+    public void setReuseChunks(Boolean reuseChunks) {
+        this.reuseChunks = reuseChunks;
+    }
+
+    public int getReuseChunksMinCount() {
+        return reuseChunksMinCount;
+    }
+
+    public void setReuseChunksMinCount(int reuseChunksMinCount) {
+        this.reuseChunksMinCount = reuseChunksMinCount;
+    }
+
+    public int getReuseChunksMaxAgeHours() {
+        return reuseChunksMaxAgeHours;
+    }
+
+    public void setReuseChunksMaxAgeHours(int reuseChunksMaxAgeHours) {
+        this.reuseChunksMaxAgeHours = reuseChunksMaxAgeHours;
     }
 }

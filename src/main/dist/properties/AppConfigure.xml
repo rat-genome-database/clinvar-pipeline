@@ -39,6 +39,9 @@
         <property name="chunkTrailer" value="&lt;/ClinVarVariationRelease>"/>
         <property name="debug" value="false"/>
         <property name="parallelProcessing" value="true"/>
+        <property name="reuseChunks" value="true"/>
+        <property name="reuseChunksMinCount" value="2000"/>
+        <property name="reuseChunksMaxAgeHours" value="24"/>
     </bean>
 
     <bean id="annotator" class="edu.mcw.rgd.dataload.clinvar.VariantAnnotator">

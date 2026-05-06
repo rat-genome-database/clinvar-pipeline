@@ -498,6 +498,15 @@ public class Parser extends XomAnalyzer {
 
             if( db == null || id == null ) continue;
 
+            // submitter-lab / per-gene LOVD / GenomeConnect XRefs are non-standard internal IDs;
+            // ignore them silently rather than enumerating every institution by name
+            if( db.contains(", ")
+                    || db.startsWith("Leiden Muscular Dystrophy (")
+                    || db.contains(" @ LOVD")
+                    || db.startsWith("GenomeConnect") ) {
+                continue;
+            }
+
             switch (db) {
                 case "OMIM" -> {
                     if (id.contains(".")) {
@@ -524,14 +533,23 @@ public class Parser extends XomAnalyzer {
                 case "MONDO" -> {
                     rec.getXdbIds().addIncomingXdbId(145, id, clinVarId);
                 }
-                case "MeSH" -> {
+                case "MeSH", "MSH" -> {
                     rec.getXdbIds().addIncomingXdbId(47, id, clinVarId);
                 }
                 case "MESH" -> {
                     // ignored: entries like 'C04.557.450.795.870' are MeSH tree numbers, not accessions
                 }
-                case "HP", "HPO" -> {
+                case "HP", "HPO", "Human Phenotype Ontology" -> {
                     rec.getXdbIds().addIncomingXdbId(166, id, clinVarId);
+                }
+                case "EFO", "EFO: The Experimental Factor Ontology" -> {
+                    rec.getXdbIds().addIncomingXdbId(93, id, clinVarId);
+                }
+                case "NCI" -> {
+                    rec.getXdbIds().addIncomingXdbId(74, id, clinVarId); // NCI Thesaurus
+                }
+                case "Gene" -> {
+                    rec.getXdbIds().addIncomingXdbId(XdbId.XDB_KEY_NCBI_GENE, id, clinVarId);
                 }
                 case "COSMIC" -> {
                     rec.getXdbIds().addIncomingXdbId(45, id, clinVarId);
@@ -543,14 +561,16 @@ public class Parser extends XomAnalyzer {
                 case "SNOMED CT" -> {
                     rec.getXdbIds().addIncomingXdbId(55, id, clinVarId);
                 }
-                case "BRCA1-HCI", "BTK @ LOVD",
+                case "ADAM", "BRCA1-HCI",
                      "Breast Cancer Information Core (BIC) (BRCA1)",
                      "Breast Cancer Information Core (BIC) (BRCA2)",
-                     "ClinGen", "ClinVar", "dbRBC", "dbVar", "GeneReviews",
+                     "ClinGen", "ClinPGx Clinical Annotation", "ClinVar",
+                     "dbRBC", "dbVar", "Decipher",
+                     "GeneReviews", "Genetic Alliance", "GeneTests",
                      "Genetic Testing Registry (GTR)",
-                     "HBVAR", "LDLR-LOVD, British Heart Foundation",
-                     "Leiden Muscular Dystrophy (CHRNE)", "Leiden Muscular Dystrophy (DAG1)",
-                     "LOVD 3", "MYBPC3 homepage - Leiden Muscular Dystrophy pages",
+                     "HBVAR", "LOVD 3",
+                     "MYBPC3 homepage - Leiden Muscular Dystrophy pages",
+                     "NCBI for submitter", "New Leaf Center",
                      "PharmGKB Clinical Annotation", "RettBASE (CDKL5)",
                      "Tuberous sclerosis database (TSC1)", "Tuberous sclerosis database (TSC2)",
                      "UniProtKB", "UniProtKB/Swiss-Prot" -> {

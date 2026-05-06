@@ -1,6 +1,7 @@
 May 06, 2026
   parser: VCV migration -- closed remaining regressions and added Classification subtype counters
   dao: variant lookup falls through (RCV -> symbol -> name) instead of throwing on duplicate names
+  parser: extract HPO/EFO/NCIt/NCBI Gene xrefs from aggregate trait paths; ignore submitter-lab xrefs
 
 Dec 17, 2025
   new parser

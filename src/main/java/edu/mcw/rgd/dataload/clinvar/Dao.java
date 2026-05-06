@@ -77,37 +77,52 @@ public class Dao {
         return results.get(0);
     }
 
-    public VariantInfo getVariantByRCVandName(String name, String clinvarRCV) throws Exception {
+    public VariantInfo getVariantByRCVandName(String name, String clinvarRCV, String symbol) throws Exception {
 
+        // 1. lookup by ClinVar RCV accession (xdb_key=52) -- the most reliable match
         String sql = """
             SELECT v.*,ge.*,r.species_type_key,r.object_status,r.object_key
             FROM clinvar v,genomic_elements ge, rgd_ids r, rgd_acc_xdb x
             WHERE ge.rgd_id=r.rgd_id AND r.object_key=? AND v.rgd_id=ge.rgd_id
               AND x.rgd_id=v.rgd_id AND x.xdb_key=52 AND x.acc_id=?
             """;
-
-        VariantQuery q2 = new VariantQuery(variantInfoDAO.getDataSource(), sql);
-        List<VariantInfo> results = variantInfoDAO.execute(q2, new Object[]{7, clinvarRCV});
+        VariantQuery q1 = new VariantQuery(variantInfoDAO.getDataSource(), sql);
+        List<VariantInfo> results = variantInfoDAO.execute(q1, new Object[]{7, clinvarRCV});
         if( results.size()==1 ) {
             return results.get(0);
         }
 
+        // 2. lookup by symbol (CV<AlleleID>)
+        sql = """
+            SELECT v.*,ge.*,r.species_type_key,r.object_status,r.object_key
+            FROM clinvar v,genomic_elements ge, rgd_ids r
+            WHERE ge.symbol=? AND ge.rgd_id=r.rgd_id AND r.object_key=? AND v.rgd_id=ge.rgd_id
+            """;
+        VariantQuery q2 = new VariantQuery(variantInfoDAO.getDataSource(), sql);
+        results = variantInfoDAO.execute(q2, new Object[]{symbol, 7});
+        if( results.size()==1 ) {
+            return results.get(0);
+        }
+        if( results.size()>1 ) {
+            LogManager.getLogger("dbg").warn("ambiguous symbol lookup: "+symbol+" matches "+results.size()+" rows; falling through");
+        }
+
+        // 3. legacy fallback: lookup by name. VCV uses generic names like "Single allele" for some
+        //    records, which collide with thousands of existing rows -- treat as a non-match in that case
         sql = """
             SELECT v.*,ge.*,r.species_type_key,r.object_status,r.object_key
             FROM clinvar v,genomic_elements ge, rgd_ids r
             WHERE ge.name=? AND ge.rgd_id=r.rgd_id AND r.object_key=? AND v.rgd_id=ge.rgd_id
             """;
-        VariantQuery q = new VariantQuery(variantInfoDAO.getDataSource(), sql);
-        results = variantInfoDAO.execute(q, new Object[]{name, 7});
+        VariantQuery q3 = new VariantQuery(variantInfoDAO.getDataSource(), sql);
+        results = variantInfoDAO.execute(q3, new Object[]{name, 7});
         if( results.size()==1 ) {
             return results.get(0);
         }
-
-        if( results.isEmpty() )
-            return null;
         if( results.size()>1 ) {
-            throw new Exception("Unexpected: multiple elements with OBJECT_KEY=7 and name="+name);
+            LogManager.getLogger("dbg").warn("ambiguous name lookup: '"+name+"' matches "+results.size()+" rows; treating as new variant");
         }
+
         return null;
     }
 

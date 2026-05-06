@@ -28,8 +28,10 @@ public class QC {
 
     public void run(Record rec) throws Exception {
 
-        //VariantInfo var = dao.getVariantBySymbol(rec.getVarIncoming().getSymbol());
-        VariantInfo var = dao.getVariantByRCVandName(rec.getVarIncoming().getName(), rec.getXdbIds().getClinVarId());
+        VariantInfo var = dao.getVariantByRCVandName(
+                rec.getVarIncoming().getName(),
+                rec.getXdbIds().getClinVarId(),
+                rec.getVarIncoming().getSymbol());
 
         rec.setVarInRgd(var);
 

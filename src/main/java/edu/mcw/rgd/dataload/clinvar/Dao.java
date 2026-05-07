@@ -143,6 +143,7 @@ public class Dao {
         notesFixup(var);
         var.setRefNuc( truncateUpTo4000(var.getRefNuc()) );
         var.setVarNuc( truncateUpTo4000(var.getVarNuc()) );
+        clinvarMergedFieldsFixup(var);
 
         RgdId rgdId = rgdIdDAO.createRgdId(RgdId.OBJECT_KEY_VARIANTS, "ACTIVE", Manager.SOURCE, SpeciesType.HUMAN);
         var.setRgdId(rgdId.getRgdId());
@@ -175,6 +176,38 @@ public class Dao {
         return newValue;
     }
 
+    /** trim CLINVAR-table columns that are pipe-merged accumulators (one row carries one
+     *  entry per ClinicalAssertion). VCV multiplied the per-submission count, so legacy-era
+     *  4000-byte columns can overflow on highly-curated variants. column widths come from
+     *  CLINVAR table schema; trimming is UTF-8-byte aware. */
+    void clinvarMergedFieldsFixup(VariantInfo var) {
+        var.setSubmitter(           trimToBytes(var.getSubmitter(),           4000));
+        var.setClinicalSignificance(trimToBytes(var.getClinicalSignificance(),1000));
+        var.setReviewStatus(        trimToBytes(var.getReviewStatus(),        1000));
+        var.setMethodType(          trimToBytes(var.getMethodType(),           200));
+        var.setMolecularConsequence(trimToBytes(var.getMolecularConsequence(), 200));
+    }
+
+    String trimToBytes(String value, int maxBytes) {
+        if( value == null ) return null;
+        try {
+            byte[] bytes = value.getBytes("UTF-8");
+            if( bytes.length <= maxBytes ) return value;
+            int budget = maxBytes - 4; // reserve 4 bytes for " ..." suffix
+            int len = Math.min(value.length(), maxBytes);
+            String trimmed;
+            do {
+                trimmed = value.substring(0, len);
+                len--;
+            } while( trimmed.getBytes("UTF-8").length > budget && len > 0 );
+            String result = trimmed + " ...";
+            LogManager.getLogger("dbg").warn("trimmed to "+maxBytes+" bytes: ["+value+"] ==> ["+result+"]");
+            return result;
+        } catch( java.io.UnsupportedEncodingException e ) {
+            return value; // UTF-8 is always available
+        }
+    }
+
     /**
      * Update variant in tables GENOMIC_ELEMENTS,CLINVAR given rgdID
      *
@@ -192,6 +225,7 @@ public class Dao {
         notesFixup(varNew);
         varNew.setRefNuc( truncateUpTo4000(varNew.getRefNuc()) );
         varNew.setVarNuc( truncateUpTo4000(varNew.getVarNuc()) );
+        clinvarMergedFieldsFixup(varNew);
 
         String varOldDump = varOld.dump("|");
         String varNewDump = varNew.dump("|");

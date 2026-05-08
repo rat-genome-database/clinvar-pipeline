@@ -1,5 +1,5 @@
 May 08, 2026
-  parseGroup: prefix each chunk-processing log line with progress index (n/total)
+  parseGroup: prefix each chunk-processing log line with progress index (n/total) and time-to-finish estimate
 
 May 07, 2026
   dao: trim pipe-merged clinvar columns (submitter/clinical_significance/review_status/method_type/molecular_consequence) to column width before SQL to avoid ORA-12899

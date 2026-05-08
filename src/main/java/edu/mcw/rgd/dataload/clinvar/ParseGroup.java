@@ -55,6 +55,11 @@ public class ParseGroup {
         log.info(" CHUNKS TO BE PROCESSED: "+chunks.size());
     }
 
+    static String formatHrMinSec(long ms) {
+        long s = ms / 1000;
+        return (s / 3600) + " hr " + ((s % 3600) / 60) + " min " + (s % 60) + " s";
+    }
+
     /** If chunkDir has reuseChunksMinCount+ chunk files modified within the last
      *  reuseChunksMaxAgeHours hours AND newer than the source file (chronology: source
      *  must precede the chunks split from it), populate 'chunks' from them and return
@@ -108,10 +113,15 @@ public class ParseGroup {
         }
         final int totalChunks = chunks.size();
         final java.util.concurrent.atomic.AtomicInteger chunkProgress = new java.util.concurrent.atomic.AtomicInteger();
+        final long startMs = System.currentTimeMillis();
         stream.forEach( chunk -> {
 
             int n = chunkProgress.incrementAndGet();
-            String msg = n+"/"+totalChunks+". processing "+chunk+" active threads: "+Thread.activeCount();
+            long elapsedMs = System.currentTimeMillis() - startMs;
+            long etaMs = n > 0 ? (long)((totalChunks - n) * (double)elapsedMs / n) : 0;
+            String msg = n+"/"+totalChunks+". processing "+chunk
+                    +", threads "+Thread.activeCount()
+                    +", time-to-finish "+formatHrMinSec(etaMs);
             logDebug.info(msg);
             System.out.println(msg);
 

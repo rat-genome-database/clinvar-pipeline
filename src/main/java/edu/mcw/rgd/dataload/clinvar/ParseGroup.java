@@ -106,9 +106,12 @@ public class ParseGroup {
         } else {
             stream = chunks.stream();
         }
+        final int totalChunks = chunks.size();
+        final java.util.concurrent.atomic.AtomicInteger chunkProgress = new java.util.concurrent.atomic.AtomicInteger();
         stream.forEach( chunk -> {
 
-            String msg = "  processing "+chunk+ " active threads: "+Thread.activeCount();
+            int n = chunkProgress.incrementAndGet();
+            String msg = n+"/"+totalChunks+". processing "+chunk+" active threads: "+Thread.activeCount();
             logDebug.info(msg);
             System.out.println(msg);
 

@@ -522,7 +522,8 @@ public class Parser extends XomAnalyzer {
                 }
                 case "dbSNP" -> {
                     if ("rs".equals(type)) {
-                        rec.getXdbIds().addIncomingXdbId(48, "rs" + id, clinVarId); // f.e. "rs587776507"
+                        // store the bare numeric in acc_id; XdbIds.addIncomingXdbId prefixes "rs" in link_text for xdb_key=48
+                        rec.getXdbIds().addIncomingXdbId(48, id, clinVarId);
                     } else {
                         GlobalCounters.getInstance().incrementCounter("UNKNOWN_DBSNP_TYPE_"+type, 1);
                     }

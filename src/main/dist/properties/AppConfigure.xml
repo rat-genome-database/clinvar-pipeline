@@ -2,7 +2,7 @@
 
 <beans>
 	<bean id="manager" class="edu.mcw.rgd.dataload.clinvar.Manager">
-        <property name="version" value="clinvar-pipeline  -- build May 08, 2026" />
+        <property name="version" value="clinvar-pipeline  -- build May 11, 2026" />
         <property name="dao" ref="dao" />
         <property name="qc" ref="qc" />
         <property name="loader" ref="loader" />

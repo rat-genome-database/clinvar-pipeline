@@ -1,3 +1,6 @@
+May 11, 2026
+  parser: dbSNP rs xrefs -- store the bare numeric in acc_id; XdbIds adds the "rs" prefix in link_text
+
 May 08, 2026
   parseGroup: prefix each chunk-processing log line with progress index (n/total) and time-to-finish estimate
 

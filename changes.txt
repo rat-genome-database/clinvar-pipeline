@@ -1,3 +1,6 @@
+May 12, 2026
+  parseGroup: auto-create chunk directory on demand (fixes FileNotFoundException when /tmp/clinvar/ is missing)
+
 May 11, 2026
   parser: dbSNP rs xrefs -- store the bare numeric in acc_id; XdbIds adds the "rs" prefix in link_text
 

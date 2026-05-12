@@ -225,8 +225,10 @@ public class ParseGroup {
 
     BufferedWriter startNewChunk() throws IOException {
         String chunkName = getChunkDir() + "chunk" + chunks.size() + ".xml.gz";
-        //BufferedWriter out = new BufferedWriter(new FileWriter(chunkName));
-        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(chunkName)), "UTF8"));
+        File f = new File(chunkName);
+        File parent = f.getParentFile();
+        if( parent != null ) parent.mkdirs();
+        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(f)), "UTF8"));
         chunks.add(chunkName);
         return out;
     }

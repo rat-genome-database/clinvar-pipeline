@@ -116,14 +116,9 @@ public class ParseGroup {
         final long startMs = System.currentTimeMillis();
         stream.forEach( chunk -> {
 
-            int n = chunkProgress.incrementAndGet();
-            long elapsedMs = System.currentTimeMillis() - startMs;
-            long etaMs = n > 0 ? (long)((totalChunks - n) * (double)elapsedMs / n) : 0;
-            String msg = n+"/"+totalChunks+". processing "+chunk
-                    +", threads "+Thread.activeCount()
-                    +", time-to-finish "+formatHrMinSec(etaMs);
-            logDebug.info(msg);
-            System.out.println(msg);
+            String startMsg = "processing "+chunk+", threads "+Thread.activeCount();
+            logDebug.info(startMsg);
+            System.out.println(startMsg);
 
             File file = new File(chunk);
             Parser parser = new Parser();
@@ -139,7 +134,15 @@ public class ParseGroup {
                 parser.requestTermination();
                 throw new RuntimeException(e);
             }
-            logDebug.info("  done with "+chunk+ " active threads: "+Thread.activeCount());
+
+            int n = chunkProgress.incrementAndGet();
+            long elapsedMs = System.currentTimeMillis() - startMs;
+            long etaMs = n > 0 ? (long)((totalChunks - n) * (double)elapsedMs / n) : 0;
+            String doneMsg = "   "+n+"/"+totalChunks+". done with "+chunk
+                    +", threads "+Thread.activeCount()
+                    +", time-to-finish "+formatHrMinSec(etaMs);
+            logDebug.info(doneMsg);
+            System.out.println(doneMsg);
         });
     }
 

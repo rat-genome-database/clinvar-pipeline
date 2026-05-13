@@ -113,10 +113,12 @@ public class ParseGroup {
         }
         final int totalChunks = chunks.size();
         final java.util.concurrent.atomic.AtomicInteger chunkProgress = new java.util.concurrent.atomic.AtomicInteger();
+        final java.util.concurrent.atomic.AtomicInteger chunksInFlight = new java.util.concurrent.atomic.AtomicInteger();
         final long startMs = System.currentTimeMillis();
         stream.forEach( chunk -> {
 
-            String startMsg = "processing "+chunk+", threads "+Thread.activeCount();
+            int inFlightAtStart = chunksInFlight.incrementAndGet();
+            String startMsg = "processing "+chunk+", in-flight "+inFlightAtStart;
             logDebug.info(startMsg);
             System.out.println(startMsg);
 
@@ -136,10 +138,15 @@ public class ParseGroup {
             }
 
             int n = chunkProgress.incrementAndGet();
+            int stillInFlight = chunksInFlight.decrementAndGet();
             long elapsedMs = System.currentTimeMillis() - startMs;
-            long etaMs = n > 0 ? (long)((totalChunks - n) * (double)elapsedMs / n) : 0;
+            // credit in-flight chunks as 50% done so ETA accounts for parallel work already in progress
+            double effectiveCompleted = n + 0.5 * stillInFlight;
+            long etaMs = effectiveCompleted > 0
+                    ? (long)((totalChunks - effectiveCompleted) * elapsedMs / effectiveCompleted)
+                    : 0;
             String doneMsg = "   "+n+"/"+totalChunks+". done with "+chunk
-                    +", threads "+Thread.activeCount()
+                    +", in-flight "+stillInFlight
                     +", time-to-finish "+formatHrMinSec(etaMs);
             logDebug.info(doneMsg);
             System.out.println(doneMsg);

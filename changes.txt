@@ -1,5 +1,5 @@
 May 13, 2026
-  parseGroup: progress now reported after each chunk completes (accurate ETA); reuseChunksMaxAgeHours raised to 120 (5 days)
+  parseGroup: improved progress and ETA reporting; raised reuseChunksMaxAgeHours to 120 (5 days)
 
 May 12, 2026
   parseGroup: auto-create chunk directory on demand (fixes FileNotFoundException when /tmp/clinvar/ is missing)

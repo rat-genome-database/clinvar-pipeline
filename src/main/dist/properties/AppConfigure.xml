@@ -2,7 +2,7 @@
 
 <beans>
 	<bean id="manager" class="edu.mcw.rgd.dataload.clinvar.Manager">
-        <property name="version" value="clinvar-pipeline  -- build May 13, 2026" />
+        <property name="version" value="clinvar-pipeline  -- build May 14, 2026" />
         <property name="dao" ref="dao" />
         <property name="qc" ref="qc" />
         <property name="loader" ref="loader" />
@@ -19,18 +19,9 @@
     <bean id="loader" class="edu.mcw.rgd.dataload.clinvar.Loader" />
 
     <bean id="downloader" class="edu.mcw.rgd.dataload.clinvar.Downloader" >
-        <!-- https://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/RCV_xml_old_format/ClinVarFullRelease_00-latest.xml.gz" -->
         <property name="variantDataFile" value="https://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarVCVRelease_00-latest.xml.gz" />
     </bean>
-<!-- old
-    <bean id="parseGroup" class="edu.mcw.rgd.dataload.clinvar.ParseGroup" >
-        <property name="chunkDir" value="/tmp/"/>
-        <property name="chunkSize" value="260000000"/>
-        <property name="recordEnd" value="&lt;/ClinVarSet>"/>
-        <property name="chunkHeader" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;yes&quot;?>&#10;&lt;ReleaseSet>&#10;"/>
-        <property name="chunkTrailer" value="&lt;/ReleaseSet>"/>
-    </bean>
--->
+
     <bean id="parseGroup" class="edu.mcw.rgd.dataload.clinvar.ParseGroup" >
         <property name="chunkDir" value="/tmp/clinvar/"/>
         <property name="chunkSize" value="35000000"/>
@@ -45,12 +36,12 @@
     </bean>
 
     <bean id="annotator" class="edu.mcw.rgd.dataload.clinvar.VariantAnnotator">
-        <property name="version" value="clinvar-annotator  -- build Nov 25, 2025" />
+        <property name="version" value="clinvar-annotator  -- build May 14, 2026" />
         <property name="createdBy" value="68" /><!-- ClinVar Annotation pipeline -->
         <property name="evidence" value="IAGP" />
         <property name="dataSrc" value="ClinVar" />
         <property name="refRgdId" value="8554872" />
-        <property name="conceptToOmimFile" value="ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/gene_condition_source_id" />
+        <property name="conceptToOmimFile" value="https://ftp.ncbi.nlm.nih.gov/pub/clinvar/gene_condition_source_id" />
         <property name="skipDrugResponseUnmatchableConditions" value="true" />
         <property name="staleAnnotDeleteThreshold" value="5%" />
 

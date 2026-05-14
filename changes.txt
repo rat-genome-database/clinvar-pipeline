@@ -1,3 +1,6 @@
+May 14, 2026
+  config cleanup: removed obsolete commented-out blocks; switched conceptToOmimFile to https; updated dependencies
+
 May 13, 2026
   parseGroup: improved progress and ETA reporting; raised reuseChunksMaxAgeHours to 120 (5 days)
 

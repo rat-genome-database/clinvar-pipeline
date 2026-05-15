@@ -173,12 +173,17 @@ public class QC {
                         case "conflicting interpretations of pathogenicity": return 60;
                         case "somatic clinical impact: tier i - strong": return 61;
                         case "somatic clinical impact: tier ii - potential": return 62;
+                        case "somatic clinical impact: tier iii - unknown": return 63;
+                        case "somatic clinical impact: tier iv - benign": return 64;
                         case "drug response": return 70;
                         case "protective": return 80;
                         case "evidence_only": return 81;
                         case "confers sensitivity": return 85;
                         case "uncertain risk allele": return 87;
+                        case "vus-high": return 88;
+                        case "vus-mid": return 89;
                         case "uncertain significance": return 90;
+                        case "vus-low": return 91;
                         case "low penetrance": return 95;
                         case "conflicting data from submitters": return 100;
                         case "association not found": return 110;

@@ -1,11 +1,11 @@
 package edu.mcw.rgd.dataload.clinvar;
 
-import edu.mcw.rgd.process.FileDownloader;
+import edu.mcw.rgd.process.FileDownloader2;
 
 /**
  * @author mtutaj
  * @since 2/13/14
- * download a xml.gz file from ClinVar ftp site, and validate it;
+ * download a xml.gz file from the ClinVar site, and validate it;
  * keep daily copies of this file, to reuse it to conserve network resources
  */
 public class Downloader {
@@ -14,7 +14,7 @@ public class Downloader {
 
     public String run() throws Exception {
 
-        FileDownloader downloader = new FileDownloader();
+        FileDownloader2 downloader = new FileDownloader2();
         downloader.setExternalFile(getVariantDataFile());
         downloader.setLocalFile("data/ClinVarFullRelease.xml.gz");
         downloader.setPrependDateStamp(true);

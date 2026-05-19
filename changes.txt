@@ -1,3 +1,6 @@
+May 19, 2026
+  migrated from FileDownloader to FileDownloader2 (JDK HttpClient); dropped commons-net and httpclient dependencies
+
 May 15, 2026
   QC: handle 5 new clinical-significance values (tier iii, tier iv, vus-high, vus-mid, vus-low); updated dependencies
 

@@ -2,7 +2,7 @@ package edu.mcw.rgd.dataload.clinvar;
 
 import edu.mcw.rgd.dao.DataSourceFactory;
 import edu.mcw.rgd.process.CounterPool;
-import edu.mcw.rgd.process.FileDownloader;
+import edu.mcw.rgd.process.FileDownloader2;
 import edu.mcw.rgd.process.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -264,7 +264,7 @@ public class Clinvar2Vcf {
 
     public String getBases( String chr, int pos1, int pos2 ) throws Exception {
         String url = "https://dev.rgd.mcw.edu/rgdweb/seqretrieve/retrieve.html?mapKey=38&chr="+chr+"&startPos="+pos1+"&stopPos="+pos2+"&format=text";
-        FileDownloader fd = new FileDownloader();
+        FileDownloader2 fd = new FileDownloader2();
         fd.setExternalFile(url);
         String response = fd.download();
         return response;

@@ -24,37 +24,33 @@ public class VariantRsId {
         log.info(getVersion());
         long pipeStart = System.currentTimeMillis();
         log.info("Pipeline started at "+sdt.format(new Date(pipeStart))+"\n");
-        try {
-            List<VariantInfo> clinVars = dao.getActiveVariants();
-            List<VariantMapData> updatedRs = new ArrayList<>();
-            List<Integer> rgdIds = new ArrayList<>();
-            for (VariantInfo var : clinVars) {
-                List<XdbId> xdbs = dao.getXdbIds(var.getRgdId(), 48); // 48 has the rsIds
-                // loop through xdbs, use rgdId to find Variant and add rsID if variant exists
-                for (XdbId xdb : xdbs) {
-                    if (xdb.getLinkText().startsWith("rs")) {
-                        List<VariantMapData> cnVars = dao.getVariantByRgdId(xdb.getRgdId());
-                        // compare rs id and update accordingly
-                        for (VariantMapData cnVar : cnVars) {
-                            if (!Utils.stringsAreEqual(cnVar.getRsId(), xdb.getLinkText()) && !rgdIds.contains(var.getRgdId())) {
-                                log.info("\t\trsID for variant "+cnVar.getId()+" being changed, old |"+cnVar.getRsId()+"|, new |"+xdb.getLinkText()+"|");
-                                cnVar.setRsId(xdb.getLinkText());
-                                updatedRs.add(cnVar);
-                                rgdIds.add(var.getRgdId());
-                            }
+        List<VariantInfo> clinVars = dao.getActiveVariants();
+        List<VariantMapData> updatedRs = new ArrayList<>();
+        List<Integer> rgdIds = new ArrayList<>();
+        for (VariantInfo var : clinVars) {
+            List<XdbId> xdbs = dao.getXdbIds(var.getRgdId(), 48); // 48 has the rsIds
+            // loop through xdbs, use rgdId to find Variant and add rsID if variant exists
+            for (XdbId xdb : xdbs) {
+                if (xdb.getLinkText().startsWith("rs")) {
+                    List<VariantMapData> cnVars = dao.getVariantByRgdId(xdb.getRgdId());
+                    // compare rs id and update accordingly
+                    for (VariantMapData cnVar : cnVars) {
+                        if (!Utils.stringsAreEqual(cnVar.getRsId(), xdb.getLinkText()) && !rgdIds.contains(var.getRgdId())) {
+                            log.info("\t\trsID for variant "+cnVar.getId()+" being changed, old |"+cnVar.getRsId()+"|, new |"+xdb.getLinkText()+"|");
+                            cnVar.setRsId(xdb.getLinkText());
+                            updatedRs.add(cnVar);
+                            rgdIds.add(var.getRgdId());
                         }
                     }
                 }
             }
+        }
 
-            if (!updatedRs.isEmpty()) {
-                log.info("\tUpdating rsIds: "+updatedRs.size());
-                dao.updateVariantRsID(updatedRs);
-            }
+        if (!updatedRs.isEmpty()) {
+            log.info("\tUpdating rsIds: "+updatedRs.size());
+            dao.updateVariantRsID(updatedRs);
         }
-        catch (Exception e){
-            log.info(e);
-        }
+
         log.info("Clinvar rsID assignment runtime -- elapsed time: "+
                 Utils.formatElapsedTime(pipeStart,System.currentTimeMillis()));
     }

@@ -1,7 +1,8 @@
 package edu.mcw.rgd.dataload.clinvar;
 
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * @author mtutaj
@@ -11,6 +12,8 @@ import java.util.logging.Logger;
 public class Loader {
 
     private Dao dao;
+
+    private static final Logger dbgLog = LogManager.getLogger("dbg");
 
     public Dao getDao() {
         return dao;
@@ -79,9 +82,8 @@ public class Loader {
 
         int processedVariants = processed.incrementAndGet();
         if( processedVariants % 10000 == 0 ) {
-            Logger log2 = Logger.getLogger("dbg2");
-            log2.info("==== "+processedVariants);
-            log2.info( GlobalCounters.getInstance().dump() );
+            dbgLog.info("==== "+processedVariants);
+            dbgLog.info( GlobalCounters.getInstance().dump() );
         }
 
     }

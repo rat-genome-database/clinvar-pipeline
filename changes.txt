@@ -1,3 +1,6 @@
+May 28, 2026
+  moved per-variant SKIPPED messages and loader progress heartbeat to dbg.log; rsId assignment no longer swallows errors; qc duplicate-terms scripts fixed to email only on actual duplicates
+
 May 19, 2026
   migrated from FileDownloader to FileDownloader2 (JDK HttpClient); dropped commons-net and httpclient dependencies
 

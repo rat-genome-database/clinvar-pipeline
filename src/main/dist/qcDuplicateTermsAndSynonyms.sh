@@ -8,8 +8,8 @@ fi
 
 $APPDIR/run.sh --qcDuplicateTermsAndSynonyms | tee $APPDIR/qcDuplicateTermsAndSynonyms.log
 
-NO_DUPLICATES=`grep "^0 DUPLICATE SYNONYMS" $APPDIR/qcDuplicateTermsAndSynonyms.log | wc -l`
-if [ NO_DUPLICATES = 1 ]; then
+NO_DUPLICATES=`grep -c "^0 DUPLICATE SYNONYMS" $APPDIR/qcDuplicateTermsAndSynonyms.log`
+if [ "$NO_DUPLICATES" = 1 ]; then
   echo "NO DUPLICATE SYNONYMS"
 else
   mailx -s "[$SERVER] RDO DUPLICATE SYNONYMS" $EMAIL_LIST < $APPDIR/qcDuplicateTermsAndSynonyms.log

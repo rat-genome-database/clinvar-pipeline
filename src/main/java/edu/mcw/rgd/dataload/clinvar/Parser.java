@@ -77,7 +77,7 @@ public class Parser extends XomAnalyzer {
                         Element genotype = element.getFirstChildElement("Genotype");
                         int simpleAlleleCount = genotype.getChildElements("SimpleAllele").size();
                         String variationId = genotype.getAttributeValue("VariationID");
-                        log.info("GENOTYPE_VARIANTS_SKIPPED for VariationID="+variationId+", allele_count="+simpleAlleleCount);
+                        logDebug.info("GENOTYPE_VARIANTS_SKIPPED for VariationID="+variationId+", allele_count="+simpleAlleleCount);
                         GlobalCounters.getInstance().incrementCounter("GENOTYPE_VARIANTS_SKIPPED", 1);
                         this.rec = null;
                         return null;
@@ -87,7 +87,7 @@ public class Parser extends XomAnalyzer {
                         Element haplotype = element.getFirstChildElement("Haplotype");
                         int simpleAlleleCount = haplotype.getChildElements("SimpleAllele").size();
                         String variationId = haplotype.getAttributeValue("VariationID");
-                        log.info("HAPLOTYPE_VARIANTS_SKIPPED for VariationID="+variationId+", allele_count="+simpleAlleleCount);
+                        logDebug.info("HAPLOTYPE_VARIANTS_SKIPPED for VariationID="+variationId+", allele_count="+simpleAlleleCount);
                         GlobalCounters.getInstance().incrementCounter("HAPLOTYPE_VARIANTS_SKIPPED", 1);
                         this.rec = null;
                         return null;

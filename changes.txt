@@ -1,3 +1,6 @@
+Jun 9, 2026
+  removed slaulederkind@mcw.edu from notification scripts; updated rgdcore (MAPS_DATA.NOTES no longer overflows on repeated map-position updates); updated dependencies
+
 May 28, 2026
   moved per-variant SKIPPED messages and loader progress heartbeat to dbg.log; rsId assignment no longer swallows errors; qc duplicate-terms scripts fixed to email only on actual duplicates
 

@@ -1,4 +1,6 @@
 Aug 3, 2026
+  xdb id modification dates are refreshed in batches of 50,000 instead of once per variant: same rows updated,
+    but ~4.5 million update statements per run collapse into ~950
   added memory usage monitoring: peak/average heap is reported at the end of every module, into that module's own log
 
 Jun 9, 2026

@@ -443,13 +443,54 @@ public class Dao {
         return rowsAffected;
     }
 
+    // acc_xdb_keys whose modification date has to be refreshed, so that deleteStaleXdbIds() does not
+    // mistake a row seen during this run for an obsolete one
+    private final List<Integer> xdbIdKeysToRefresh = new ArrayList<>();
+    private static final int XDB_ID_REFRESH_BATCH_SIZE = 50000;
+
+    /**
+     * Queues the given xdb ids for a modification-date refresh, issuing the update only once a
+     * batch has built up.
+     * <p>
+     * This used to update immediately. Since it is called once per variant, and a variant carries
+     * about ten xdb ids, that turned ~47 million row updates into ~4.5 million round trips --
+     * rgdcore chunks an update at 1000 keys, so those statements were running at 1% of capacity.
+     * Buffering leaves the set of updated rows identical while cutting the statement count by
+     * roughly two orders of magnitude.
+     */
     public int updateXdbIds(List<XdbId> xdbIds) throws Exception {
 
-        List<Integer> accXdbKeys = new ArrayList<>(xdbIds.size());
-        for( XdbId id: xdbIds ) {
-            accXdbKeys.add(id.getKey());
+        List<Integer> batch = null;
+        synchronized( xdbIdKeysToRefresh ) {
+            for( XdbId id: xdbIds ) {
+                xdbIdKeysToRefresh.add(id.getKey());
+            }
+            if( xdbIdKeysToRefresh.size() >= XDB_ID_REFRESH_BATCH_SIZE ) {
+                batch = new ArrayList<>(xdbIdKeysToRefresh);
+                xdbIdKeysToRefresh.clear();
+            }
         }
-        return xdbIdDAO.updateModificationDate(accXdbKeys);
+        // the update runs outside the lock, so the parallel parsers are not held up by it
+        return batch==null ? 0 : xdbIdDAO.updateModificationDate(batch);
+    }
+
+    /**
+     * Writes out whatever updateXdbIds() has buffered.
+     * <p>
+     * MUST be called after parsing and before deleteStaleXdbIds(), otherwise xdb ids matched late
+     * in the run would still carry an old modification date and be deleted as stale.
+     */
+    public int flushXdbIdUpdates() throws Exception {
+
+        List<Integer> batch;
+        synchronized( xdbIdKeysToRefresh ) {
+            if( xdbIdKeysToRefresh.isEmpty() ) {
+                return 0;
+            }
+            batch = new ArrayList<>(xdbIdKeysToRefresh);
+            xdbIdKeysToRefresh.clear();
+        }
+        return xdbIdDAO.updateModificationDate(batch);
     }
 
     // =========== MAP DATA ===================

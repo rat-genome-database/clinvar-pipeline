@@ -151,6 +151,10 @@ public class Manager implements ClinVarModule {
         parser.loader = loader;
         parser.parse(variantFileName);
 
+        // xdb ids matched during parsing are refreshed in batches; the last batch must reach the
+        // database before stale rows are computed, or rows seen this run would be deleted
+        getDao().flushXdbIdUpdates();
+
         Date staleXdbIdsCutoffDate = Utils.addDaysToDate(new Date(time0), -1);
         getDao().deleteStaleXdbIds(originalXdbIdCount, staleXdbIdsCutoffDate, log);
 

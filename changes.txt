@@ -1,3 +1,6 @@
+Aug 3, 2026
+  added memory usage monitoring: peak/average heap is reported at the end of every module, into that module's own log
+
 Jun 9, 2026
   removed slaulederkind@mcw.edu from notification scripts; updated rgdcore (MAPS_DATA.NOTES no longer overflows on repeated map-position updates); updated dependencies
 

@@ -13,9 +13,14 @@ import java.util.*;
  * @author mtutaj
  * @since 10/16/14
  */
-public class TermNameMatcher {
+public class TermNameMatcher implements ClinVarModule {
 
     Logger log = LogManager.getLogger("duplicates");
+
+    @Override
+    public Logger getDefaultLogger() {
+        return log;
+    }
 
     Map<String, Set<String>> map = new HashMap<>();
 

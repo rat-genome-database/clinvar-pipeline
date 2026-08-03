@@ -2,7 +2,7 @@
 
 <beans>
 	<bean id="manager" class="edu.mcw.rgd.dataload.clinvar.Manager">
-        <property name="version" value="clinvar-pipeline  -- build Jun 9, 2026" />
+        <property name="version" value="clinvar-pipeline  -- build Aug 3, 2026" />
         <property name="dao" ref="dao" />
         <property name="qc" ref="qc" />
         <property name="loader" ref="loader" />
@@ -36,7 +36,7 @@
     </bean>
 
     <bean id="annotator" class="edu.mcw.rgd.dataload.clinvar.VariantAnnotator">
-        <property name="version" value="clinvar-annotator  -- build May 19, 2026" />
+        <property name="version" value="clinvar-annotator  -- build Aug 3, 2026" />
         <property name="createdBy" value="68" /><!-- ClinVar Annotation pipeline -->
         <property name="evidence" value="IAGP" />
         <property name="dataSrc" value="ClinVar" />

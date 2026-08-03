@@ -28,11 +28,16 @@ import java.util.Map;
  * - IAGP human gene annotations, have WITH_INFO set to variant rgd id
  * - ISO rat/mouse annotations, have WITH_INFO set to orthologous human gene rgd id
  */
-public class VariantAnnotator {
+public class VariantAnnotator implements ClinVarModule {
 
     Dao dao;
     Logger logDebug = LogManager.getLogger("dbg");
     Logger log = LogManager.getLogger("annotator");
+
+    @Override
+    public Logger getDefaultLogger() {
+        return log;
+    }
 
     private String version;
     private int createdBy;

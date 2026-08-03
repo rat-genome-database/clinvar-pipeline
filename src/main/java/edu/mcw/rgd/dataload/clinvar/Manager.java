@@ -1,5 +1,6 @@
 package edu.mcw.rgd.dataload.clinvar;
 
+import edu.mcw.rgd.process.MemoryMonitor;
 import edu.mcw.rgd.process.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,11 +18,16 @@ import java.util.*;
  * @author mtutaj
  * @since 2/11/14
  */
-public class Manager {
+public class Manager implements ClinVarModule {
 
     public static final String SOURCE = "CLINVAR";
 
     Logger log = LogManager.getLogger("loader");
+
+    @Override
+    public Logger getDefaultLogger() {
+        return log;
+    }
 
     private String version;
     private Dao dao;
@@ -38,6 +44,8 @@ public class Manager {
 
         // parse cmd line parameters
         VariantAnnotator annotator = null;
+        VariantRsId rsId = null;
+        Clinvar2Vcf clinvar2Vcf = null;
         boolean runLoader = false;
         boolean qcDuplicateTerms = false;
         boolean qcDuplicateTermsAndSynonyms = false;
@@ -57,33 +65,51 @@ public class Manager {
                     qcDuplicateTermsAndSynonyms = true;
                     break;
                 case "--addRsIds":
-                    VariantRsId rsId = (VariantRsId) (bf.getBean("variantRsId"));
-                    rsId.run();
-                    return;
+                    rsId = (VariantRsId) (bf.getBean("variantRsId"));
+                    break;
                 case "--clinvar2vcf":
-                    Clinvar2Vcf clinvar2Vcf = (Clinvar2Vcf) (bf.getBean("clinvar2vcf"));
-                    clinvar2Vcf.run();
-                    return;
+                    clinvar2Vcf = (Clinvar2Vcf) (bf.getBean("clinvar2vcf"));
+                    break;
             }
         }
+
+        // memory is sampled for the whole run; the summary goes to the log of every module that ran,
+        // and it is reported from a finally block so it survives a failure -- that is when it matters most
+        List<ClinVarModule> modulesRun = new ArrayList<>();
+        MemoryMonitor memoryMonitor = new MemoryMonitor();
+        memoryMonitor.start();
 
         try {
             if( qcDuplicateTerms ) {
                 TermNameMatcher matcher = new TermNameMatcher("RDO");
+                modulesRun.add(matcher);
                 matcher.indexTerms(manager.getDao());
             }
 
             if( qcDuplicateTermsAndSynonyms ) {
                 TermNameMatcher matcher = new TermNameMatcher("RDO");
+                modulesRun.add(matcher);
                 matcher.indexTermsAndSynonyms(manager.getDao());
             }
 
             if( runLoader ) {
+                modulesRun.add(manager);
                 manager.run();
             }
 
             if( annotator!=null ) {
+                modulesRun.add(annotator);
                 annotator.run(manager.getDao());
+            }
+
+            if( rsId!=null ) {
+                modulesRun.add(rsId);
+                rsId.run();
+            }
+
+            if( clinvar2Vcf!=null ) {
+                modulesRun.add(clinvar2Vcf);
+                clinvar2Vcf.run();
             }
         }catch (Exception e) {
             if( runLoader ) {
@@ -94,6 +120,12 @@ public class Manager {
             }
             e.printStackTrace();
             throw e;
+        } finally {
+            memoryMonitor.stop();
+            String memorySummary = memoryMonitor.getSummary();
+            for( ClinVarModule module: modulesRun ) {
+                module.getDefaultLogger().info(memorySummary);
+            }
         }
     }
 

@@ -12,11 +12,16 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class VariantRsId {
+public class VariantRsId implements ClinVarModule {
 
     String version;
     Dao dao = new Dao();
     Logger log = LogManager.getLogger("rsStatus");
+
+    @Override
+    public Logger getDefaultLogger() {
+        return log;
+    }
 
     public void run() throws Exception {
         // get clinvar xdbs

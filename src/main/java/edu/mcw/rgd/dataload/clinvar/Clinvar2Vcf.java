@@ -16,9 +16,14 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class Clinvar2Vcf {
+public class Clinvar2Vcf implements ClinVarModule {
 
     Logger log = LogManager.getLogger("clinvar2vcf");
+
+    @Override
+    public Logger getDefaultLogger() {
+        return log;
+    }
 
     final String SERIAL_DATA_FILE_NAME = "/tmp/clinvar.ser";
 

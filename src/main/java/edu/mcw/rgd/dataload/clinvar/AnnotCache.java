@@ -8,11 +8,25 @@ import org.apache.logging.log4j.Logger;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
 public class AnnotCache {
 
     Logger log = LogManager.getLogger("annotator");
     Logger logUpdated = LogManager.getLogger("annotationsUpdated");
+
+    // compiled once: String.split() has no fast path for these, so calling it inline recompiled the
+    // pattern on every merge -- tens of millions of times per run
+    private static final Pattern FIELD_SEPARATOR = Pattern.compile("[\\|\\,\\;]");
+    private static final Pattern NOTES_SEPARATOR = Pattern.compile(" \\| ");
+
+    /** the pieces of a pipe/comma/semicolon separated field, sorted and deduplicated */
+    private static Set<String> splitToSet( String value, Pattern separator ) {
+        if( value==null ) {
+            return new TreeSet<>();
+        }
+        return new TreeSet<>(Arrays.asList(separator.split(value)));
+    }
 
     private AtomicInteger insertedAnnots = new AtomicInteger(0);
     // we store them in a map to avoid multiple updates
@@ -94,6 +108,11 @@ public class AnnotCache {
         log.info("   incoming annot count1 = "+Utils.formatThousands(incomingAnnots.size()));
 
         Map<String, Annotation> mergedAnnots = new HashMap<>();
+        // pieces gathered per merge key; an entry appears only once a key has been seen twice, so a
+        // key seen once keeps its original XREF_SOURCE and NOTES untouched, exactly as before
+        Map<String, Set<String>> xrefsByKey = new HashMap<>();
+        Map<String, Set<String>> notesByKey = new HashMap<>();
+
         for( Annotation a: incomingAnnots ) {
             String key = getMergeKey(a);
             Annotation mergedA = mergedAnnots.get(key);
@@ -101,32 +120,35 @@ public class AnnotCache {
                 mergedAnnots.put(key, a);
             } else {
                 // merge XREF_SOURCE field
-                Set<String> xrefs;
-                if( a.getXrefSource()!=null ) {
-                    xrefs = new TreeSet<>(Arrays.asList(a.getXrefSource().split("[\\|\\,\\;]")));
-                } else {
-                    xrefs = new TreeSet<>();
+                Set<String> xrefs = xrefsByKey.get(key);
+                if( xrefs==null ) {
+                    xrefs = splitToSet(mergedA.getXrefSource(), FIELD_SEPARATOR);
+                    xrefsByKey.put(key, xrefs);
                 }
-                if( mergedA.getXrefSource()!=null ) {
-                    xrefs.addAll(Arrays.asList(mergedA.getXrefSource().split("[\\|\\,\\;]")));
-                }
-                mergedA.setXrefSource(Utils.concatenate(xrefs,"|"));
+                xrefs.addAll(splitToSet(a.getXrefSource(), FIELD_SEPARATOR));
 
-
-                Set<String> notes;
-                if( a.getNotes()!=null ) {
-                    notes = new TreeSet<>(Arrays.asList(a.getNotes().split(" \\| ")));
-                } else {
-                    notes = new TreeSet<>();
+                Set<String> notes = notesByKey.get(key);
+                if( notes==null ) {
+                    notes = splitToSet(mergedA.getNotes(), NOTES_SEPARATOR);
+                    notesByKey.put(key, notes);
                 }
-                if( mergedA.getNotes()!=null ) {
-                    notes.addAll(Arrays.asList(mergedA.getNotes().split(" \\| ")));
-                }
-                mergedA.setNotes(Utils.concatenate(notes," | "));
+                notes.addAll(splitToSet(a.getNotes(), NOTES_SEPARATOR));
             }
         }
 
+        // the merged fields are built once per key rather than rebuilt on every merge
+        for( Map.Entry<String, Set<String>> entry: xrefsByKey.entrySet() ) {
+            mergedAnnots.get(entry.getKey()).setXrefSource(Utils.concatenate(entry.getValue(), "|"));
+        }
+        for( Map.Entry<String, Set<String>> entry: notesByKey.entrySet() ) {
+            mergedAnnots.get(entry.getKey()).setNotes(Utils.concatenate(entry.getValue(), " | "));
+        }
+
         List<Annotation> mergedAnnotList = new ArrayList<>(mergedAnnots.values());
+
+        // the annotations that lost the merge are dead now; releasing them here keeps them from
+        // being held for the whole of merge-2 and the database sync
+        incomingAnnots.clear();
 
         splitAnnots(mergedAnnotList);
         log.info("   merged annot count (XREF_SOURCE) = "+Utils.formatThousands(mergedAnnotList.size()));
@@ -171,6 +193,9 @@ public class AnnotCache {
         log.info("   incoming annot count2 = "+Utils.formatThousands(annots.size()));
 
         Map<String, Annotation> mergedAnnots = new HashMap<>();
+        Map<String, Set<String>> withInfosByKey = new HashMap<>();
+        Map<String, Set<String>> notesByKey = new HashMap<>();
+
         for( Annotation a: annots ) {
             String key = getMergeKey2(a);
             Annotation mergedA = mergedAnnots.get(key);
@@ -178,29 +203,27 @@ public class AnnotCache {
                 mergedAnnots.put(key, a);
             } else {
                 // merge WITH_INFO field
-                Set<String> withInfos;
-                if( a.getWithInfo()!=null ) {
-                    withInfos = new TreeSet<>(Arrays.asList(a.getWithInfo().split("[\\|\\,\\;]")));
-                } else {
-                    withInfos = new TreeSet<>();
+                Set<String> withInfos = withInfosByKey.get(key);
+                if( withInfos==null ) {
+                    withInfos = splitToSet(mergedA.getWithInfo(), FIELD_SEPARATOR);
+                    withInfosByKey.put(key, withInfos);
                 }
-                if( mergedA.getWithInfo()!=null ) {
-                    withInfos.addAll(Arrays.asList(mergedA.getWithInfo().split("[\\|\\,\\;]")));
-                }
-                mergedA.setWithInfo(Utils.concatenate(withInfos,"|"));
+                withInfos.addAll(splitToSet(a.getWithInfo(), FIELD_SEPARATOR));
 
-
-                Set<String> notes;
-                if( a.getNotes()!=null ) {
-                    notes = new TreeSet<>(Arrays.asList(a.getNotes().split(" \\| ")));
-                } else {
-                    notes = new TreeSet<>();
+                Set<String> notes = notesByKey.get(key);
+                if( notes==null ) {
+                    notes = splitToSet(mergedA.getNotes(), NOTES_SEPARATOR);
+                    notesByKey.put(key, notes);
                 }
-                if( mergedA.getNotes()!=null ) {
-                    notes.addAll(Arrays.asList(mergedA.getNotes().split(" \\| ")));
-                }
-                mergedA.setNotes(Utils.concatenate(notes," | "));
+                notes.addAll(splitToSet(a.getNotes(), NOTES_SEPARATOR));
             }
+        }
+
+        for( Map.Entry<String, Set<String>> entry: withInfosByKey.entrySet() ) {
+            mergedAnnots.get(entry.getKey()).setWithInfo(Utils.concatenate(entry.getValue(), "|"));
+        }
+        for( Map.Entry<String, Set<String>> entry: notesByKey.entrySet() ) {
+            mergedAnnots.get(entry.getKey()).setNotes(Utils.concatenate(entry.getValue(), " | "));
         }
 
         List<Annotation> mergedAnnotList = new ArrayList<>(mergedAnnots.values());

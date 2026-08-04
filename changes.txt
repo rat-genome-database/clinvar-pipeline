@@ -1,4 +1,6 @@
 Aug 3, 2026
+  variant lookup now rejects and reports a match that is not human, instead of relying on the join to the
+    CLINVAR table to keep it human-only
   fixed OMIM allele xrefs being added once per occurrence instead of once per variant: the duplicate check ran
     before the acc id was rewritten from '.' to '#', so it never matched; this was reporting ~105,000 inserts
     a run that the database silently refused

@@ -29,6 +29,7 @@ public class Dao {
 
     public static final String ASSOC_TYPE = "variant_to_gene";
 
+    Logger logStatus = LogManager.getLogger("loader");
     Logger logInsertedVariants = LogManager.getLogger("insertedVariants");
     Logger logUpdatedVariants = LogManager.getLogger("updatedVariants");
     Logger logGeneAssociations = LogManager.getLogger("geneAssociations");
@@ -89,7 +90,7 @@ public class Dao {
         VariantQuery q1 = new VariantQuery(variantInfoDAO.getDataSource(), sql);
         List<VariantInfo> results = variantInfoDAO.execute(q1, new Object[]{7, clinvarRCV});
         if( results.size()==1 ) {
-            return results.get(0);
+            return acceptOnlyHuman(results.get(0), "ClinVar RCV "+clinvarRCV);
         }
 
         // 2. lookup by symbol (CV<AlleleID>)
@@ -101,7 +102,7 @@ public class Dao {
         VariantQuery q2 = new VariantQuery(variantInfoDAO.getDataSource(), sql);
         results = variantInfoDAO.execute(q2, new Object[]{symbol, 7});
         if( results.size()==1 ) {
-            return results.get(0);
+            return acceptOnlyHuman(results.get(0), "symbol "+symbol);
         }
         if( results.size()>1 ) {
             LogManager.getLogger("dbg").warn("ambiguous symbol lookup: "+symbol+" matches "+results.size()+" rows; falling through");
@@ -117,12 +118,35 @@ public class Dao {
         VariantQuery q3 = new VariantQuery(variantInfoDAO.getDataSource(), sql);
         results = variantInfoDAO.execute(q3, new Object[]{name, 7});
         if( results.size()==1 ) {
-            return results.get(0);
+            return acceptOnlyHuman(results.get(0), "name '"+name+"'");
         }
         if( results.size()>1 ) {
             LogManager.getLogger("dbg").warn("ambiguous name lookup: '"+name+"' matches "+results.size()+" rows; treating as new variant");
         }
 
+        return null;
+    }
+
+    /**
+     * Every ClinVar variant is human. The three lookups above are constrained to OBJECT_KEY 7 but
+     * not to a species: they stay human-only because they all join through the CLINVAR table, which
+     * has only ever held human rows. That is an assumption, not something the queries enforce, and
+     * OBJECT_KEY 7 holds hundreds of millions of non-human variants -- so if the assumption is ever
+     * broken, adopting one of those rows would be far worse than treating the variant as new.
+     * <p>
+     * The match is therefore rejected and reported rather than filtered out silently, which would
+     * make such a variant quietly reappear as a new insert with no explanation.
+     */
+    VariantInfo acceptOnlyHuman(VariantInfo var, String matchedBy) {
+
+        if( var==null || var.getSpeciesTypeKey()==SpeciesType.HUMAN ) {
+            return var;
+        }
+
+        logStatus.error("SPECIES MISMATCH: RGD:"+var.getRgdId()+" matched by "+matchedBy
+                +" is "+SpeciesType.getCommonName(var.getSpeciesTypeKey())
+                +" (species_type_key="+var.getSpeciesTypeKey()+"), not human -- match rejected");
+        GlobalCounters.getInstance().incrementCounter("VARIANTS_MATCH_REJECTED_NOT_HUMAN", 1);
         return null;
     }
 

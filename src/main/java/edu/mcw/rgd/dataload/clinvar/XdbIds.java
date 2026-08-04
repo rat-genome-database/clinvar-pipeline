@@ -22,10 +22,21 @@ public class XdbIds {
         if( Utils.isStringEmpty(accId) )
             return false;
 
-        // fixup for acc ids
+        // Fixups run before the duplicate check below, because that check compares the incoming acc
+        // id against the acc ids already stored -- which are the fixed up ones. Rewriting the acc id
+        // afterwards, as this used to do for OMIM alleles, made the check compare '606272.0005'
+        // against the stored '606272#0005' and never match, so the same allele was added once per
+        // occurrence. Those extra copies then had nothing left to match in RGD and were reported as
+        // inserts that the database quietly refused, ~105,000 of them per run.
+        String linkText = null;
         if( xdbKey==XdbId.XDB_KEY_PUBMED ) {
             // validate PMID accession id: strip non-digit characters
             accId = accId.replaceAll("\\D", "");
+        } else if( xdbKey==48 ) {
+            linkText = "rs"+accId;
+        } else if( xdbKey==53 ) { // omim allele: replace '.' with '#' to have a working link to Omim allele
+            linkText = accId;
+            accId = accId.replace('.','#');
         }
 
         for( XdbId xdbId: this.incomingXdbIds ) {
@@ -38,13 +49,8 @@ public class XdbIds {
         xdbId.setXdbKey(xdbKey);
         xdbId.setSrcPipeline(Manager.SOURCE);
         xdbId.setNotes(clinVarId);
-
-        // fixup for some xdb keys
-        if( xdbKey==48 ) {
-            xdbId.setLinkText("rs"+accId);
-        } else if( xdbKey==53 ) { // omim allele: replace '.' with '#' to have a working link to Omim allele
-            xdbId.setAccId(accId.replace('.','#'));
-            xdbId.setLinkText(accId);
+        if( linkText!=null ) {
+            xdbId.setLinkText(linkText);
         }
 
         this.incomingXdbIds.add(xdbId);
@@ -99,9 +105,7 @@ public class XdbIds {
                 insXdbIds.add(id);
         }
 
-        if( !insXdbIds.isEmpty() ) {
-            GlobalCounters.getInstance().incrementCounter("XDB_IDS_INSERTED", insXdbIds.size());
-        }
+        // note: XDB_IDS_INSERTED is counted in sync(), from rows the database actually accepted
         GlobalCounters.getInstance().incrementCounter("XDB_IDS_UPDATED_LAST_MODIFIED_DATE", updXdbIds.size());
     }
 
@@ -132,7 +136,16 @@ public class XdbIds {
                 xdbId.setRgdId(variantRgdId);
             }
 
-            dao.insertXdbIds(insXdbIds);
+            // the insert is a no-op for a row that is already in RGD, so count what was really
+            // written; anything refused is reported separately rather than inflating the insert
+            // count, which is how ~105,000 phantom inserts a run went unnoticed
+            int inserted = dao.insertXdbIds(insXdbIds);
+            GlobalCounters.getInstance().incrementCounter("XDB_IDS_INSERTED", inserted);
+
+            int refused = insXdbIds.size() - inserted;
+            if( refused > 0 ) {
+                GlobalCounters.getInstance().incrementCounter("XDB_IDS_INSERT_REFUSED_ALREADY_IN_RGD", refused);
+            }
 
             changes++;
         }

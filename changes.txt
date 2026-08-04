@@ -1,4 +1,9 @@
 Aug 3, 2026
+  fixed OMIM allele xrefs being added once per occurrence instead of once per variant: the duplicate check ran
+    before the acc id was rewritten from '.' to '#', so it never matched; this was reporting ~105,000 inserts
+    a run that the database silently refused
+  XDB_IDS_INSERTED now counts rows the database actually accepted; anything refused as already present is
+    reported as XDB_IDS_INSERT_REFUSED_ALREADY_IN_RGD
   annotation merge no longer rebuilds the merged XREF_SOURCE/WITH_INFO/NOTES on every merge, and the field
     separators are compiled once instead of on each split; measured 28x faster on a 1M-annotation workload
   xdb id modification dates are refreshed in batches of 50,000 instead of once per variant: same rows updated,

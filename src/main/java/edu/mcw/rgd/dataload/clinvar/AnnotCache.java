@@ -287,19 +287,21 @@ public class AnnotCache {
         incomingAnnots.clear();
     }
 
-    public void syncWithDb( Dao dao, String category ) throws Exception {
+    public int getInsertedCount() {
+        return insertedAnnots.get();
+    }
+
+    public int getUpdatedCount() {
+        return updatedFullAnnotKeys.size();
+    }
+
+    public int getMatchingCount() {
+        return upToDateFullAnnotKeys.size();
+    }
+
+    public void syncWithDb( Dao dao ) throws Exception {
         // qc incoming annots to determine annots for insertion / deletion
         qcAndLoadAnnots(dao);
-
-        int count = insertedAnnots.get();
-        if (count != 0) {
-            log.info(category + " annotations inserted: " + Utils.formatThousands(count));
-        }
-
-        count = updatedFullAnnotKeys.size();
-        if (count != 0) {
-            log.info(category + " annotations updated: " + Utils.formatThousands(count));
-        }
 
         // update last modified date for matching annots in batches
         updateLastModified(dao);

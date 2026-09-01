@@ -762,9 +762,11 @@ public class Dao {
 
         List<Annotation> staleAnnots = annotationDAO.getAnnotationsModifiedBeforeTimestamp(createdBy, dt, aspect);
 
-        logAnnotator.info(aspect+" total annotation count: "+Utils.formatThousands(annotCount));
-        logAnnotator.info(aspect+" stale annotation delete limit ("+staleAnnotDeleteThresholdStr+"): "+Utils.formatThousands(staleAnnotDeleteLimit));
-        logAnnotator.info(aspect+" stale annotations to be deleted: "+Utils.formatThousands(staleAnnots.size()));
+        String ont = aspect.equals("D") ? "RDO" : aspect.equals("H") ? "HPO" : aspect;
+
+        logAnnotator.info(ont+" total annotation count: "+Utils.formatThousands(annotCount));
+        logAnnotator.info(ont+" stale annotation delete limit ("+staleAnnotDeleteThresholdStr+"): "+Utils.formatThousands(staleAnnotDeleteLimit));
+        logAnnotator.info(ont+" stale annotations to be deleted: "+Utils.formatThousands(staleAnnots.size()));
 
         int newAnnotCount = annotCount - staleAnnots.size();
         int annotDiffCount = newAnnotCount - origAnnotCount;
@@ -779,15 +781,14 @@ public class Dao {
             staleAnnotKeys.add(ann.getKey());
 
             if( ann.getRgdObjectKey()==1 ) {
-                counters.increment(aspect+" annotations - gene - ALL SPECIES - deleted");
-                switch(ann.getSpeciesTypeKey()) {
-                    case 1: counters.increment(aspect+" annotations - gene - rat - deleted"); break;
-                    case 2: counters.increment(aspect+" annotations - gene - mouse - deleted"); break;
-                    case 3: counters.increment(aspect+" annotations - gene - human - deleted"); break;
-                    default: counters.increment(aspect+" annotations - gene - other - deleted"); break;
+                // ISO evidence marks ortholog gene annotations; everything else is a human gene annotation
+                if( Utils.stringsAreEqual(ann.getEvidence(), "ISO") ) {
+                    counters.increment(ont+" gene ortholog deleted");
+                } else {
+                    counters.increment(ont+" gene human deleted");
                 }
             } else {
-                counters.increment(aspect+" annotations - variant - deleted");
+                counters.increment(ont+" variant deleted");
             }
         }
         return annotationDAO.deleteAnnotations(staleAnnotKeys);

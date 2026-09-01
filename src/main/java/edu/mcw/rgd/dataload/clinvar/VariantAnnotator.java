@@ -120,14 +120,20 @@ public class VariantAnnotator implements ClinVarModule {
         });
 
 
-        // qc ISO annots
-        annotCache.syncWithDb(dao, "ISO ortholog");
+        // qc ISO ortholog annots (RDO only)
+        annotCache.syncWithDb(dao);
+        int rdoGeneOrthologInserted = annotCache.getInsertedCount();
+        int rdoGeneOrthologUpdated = annotCache.getUpdatedCount();
+        int rdoGeneOrthologMatching = annotCache.getMatchingCount();
         annotCache.clear();
         annotCache = null;
 
 
-        // qc human gene annots
-        annotCacheHumanGenes.syncWithDb(dao, "human gene");
+        // qc human gene annots (RDO only)
+        annotCacheHumanGenes.syncWithDb(dao);
+        int rdoGeneHumanInserted = annotCacheHumanGenes.getInsertedCount();
+        int rdoGeneHumanUpdated = annotCacheHumanGenes.getUpdatedCount();
+        int rdoGeneHumanMatching = annotCacheHumanGenes.getMatchingCount();
         annotCacheHumanGenes.clear();
         annotCacheHumanGenes = null;
 
@@ -141,14 +147,101 @@ public class VariantAnnotator implements ClinVarModule {
         // delete stale annotations
         int annotsDeletedD = dao.deleteObsoleteAnnotations(getCreatedBy(), pipelineStartTime, getStaleAnnotDeleteThreshold(),
                 getRefRgdId(), getDataSrc(), origAnnotCountD, counters, "D");
-        counters.add("D annotations - deleted", annotsDeletedD);
         int annotsDeletedH = dao.deleteObsoleteAnnotations(getCreatedBy(), pipelineStartTime, getStaleAnnotDeleteThreshold(),
                 getRefRgdId(), getDataSrc(), origAnnotCountH, counters, "H");
-        counters.add("H annotations - deleted", annotsDeletedH);
 
-        log.info(counters.dumpAlphabetically());
+        int finalAnnotCountD = dao.getCountOfAnnotationsByReference(getRefRgdId(), getDataSrc(), "D");
+        int finalAnnotCountH = dao.getCountOfAnnotationsByReference(getRefRgdId(), getDataSrc(), "H");
+
+        log.info(buildSummary(origAnnotCountD, finalAnnotCountD, origAnnotCountH, finalAnnotCountH,
+                annotsDeletedD, annotsDeletedH,
+                rdoGeneHumanInserted, rdoGeneHumanUpdated, rdoGeneHumanMatching,
+                rdoGeneOrthologInserted, rdoGeneOrthologUpdated, rdoGeneOrthologMatching));
 
         log.info("STOP annot pipeline;   elapsed "+Utils.formatElapsedTime(System.currentTimeMillis(), time0));
+    }
+
+    String buildSummary(int initialCountD, int finalCountD, int initialCountH, int finalCountH,
+                        int deletedD, int deletedH,
+                        int rdoGeneHumanInserted, int rdoGeneHumanUpdated, int rdoGeneHumanMatching,
+                        int rdoGeneOrthologInserted, int rdoGeneOrthologUpdated, int rdoGeneOrthologMatching) {
+
+        int incomingVariants = counters.get("INCOMING VARIANTS");
+        int skippedVariants = counters.get("NOT CARPE-COMPLIANT VARIANTS");
+
+        int rdoVariantInserted = counters.get("RDO variant inserted");
+        int rdoVariantMatching = counters.get("RDO variant matching");
+        int rdoVariantDeleted = counters.get("RDO variant deleted");
+        int rdoGeneHumanDeleted = counters.get("RDO gene human deleted");
+        int rdoGeneOrthologDeleted = counters.get("RDO gene ortholog deleted");
+
+        int hpoVariantInserted = counters.get("HPO variant inserted");
+        int hpoVariantMatching = counters.get("HPO variant matching");
+        int hpoVariantDeleted = counters.get("HPO variant deleted");
+        int hpoGeneHumanInserted = counters.get("HPO gene human inserted");
+        int hpoGeneHumanMatching = counters.get("HPO gene human matching");
+        int hpoGeneHumanDeleted = counters.get("HPO gene human deleted");
+        int hpoGeneOrthologDeleted = counters.get("HPO gene ortholog deleted");
+
+        StringBuilder buf = new StringBuilder();
+        buf.append("\n==== CLINVAR ANNOTATOR SUMMARY ==================================\n\n");
+
+        buf.append(String.format("%-40s %12s%n", "variants incoming:", fmt(incomingVariants)));
+        buf.append(String.format("%-40s %12s%n", "variants skipped (not carpe-compliant):", fmt(skippedVariants)));
+        buf.append(String.format("%-40s %12s%n", "variants processed:", fmt(incomingVariants-skippedVariants)));
+        buf.append("\n");
+
+        buf.append(String.format("%-26s %12s %12s %12s%n", "ANNOTATIONS IN RGD", "initial", "final", "change"));
+        appendTotalsRow(buf, "RDO (aspect D)", initialCountD, finalCountD);
+        appendTotalsRow(buf, "HPO (aspect H)", initialCountH, finalCountH);
+        appendTotalsRow(buf, "TOTAL", initialCountD+initialCountH, finalCountD+finalCountH);
+        buf.append("\n");
+
+        buf.append(String.format("%-26s %12s %12s %12s %12s%n", "RDO ANNOTATIONS", "inserted", "updated", "matching", "deleted"));
+        appendCountRow(buf, "variants (IAGP)", rdoVariantInserted, null, rdoVariantMatching, rdoVariantDeleted);
+        appendCountRow(buf, "genes: human (IAGP)", rdoGeneHumanInserted, rdoGeneHumanUpdated, rdoGeneHumanMatching, rdoGeneHumanDeleted);
+        appendCountRow(buf, "genes: ortholog (ISO)", rdoGeneOrthologInserted, rdoGeneOrthologUpdated, rdoGeneOrthologMatching, rdoGeneOrthologDeleted);
+        appendCountRow(buf, "genes: total",
+                rdoGeneHumanInserted+rdoGeneOrthologInserted,
+                rdoGeneHumanUpdated+rdoGeneOrthologUpdated,
+                rdoGeneHumanMatching+rdoGeneOrthologMatching,
+                rdoGeneHumanDeleted+rdoGeneOrthologDeleted);
+        appendCountRow(buf, "RDO total",
+                rdoVariantInserted+rdoGeneHumanInserted+rdoGeneOrthologInserted,
+                rdoGeneHumanUpdated+rdoGeneOrthologUpdated,
+                rdoVariantMatching+rdoGeneHumanMatching+rdoGeneOrthologMatching,
+                deletedD);
+        buf.append("\n");
+
+        buf.append(String.format("%-26s %12s %12s %12s %12s%n", "HPO ANNOTATIONS", "inserted", "updated", "matching", "deleted"));
+        appendCountRow(buf, "variants (IAGP)", hpoVariantInserted, null, hpoVariantMatching, hpoVariantDeleted);
+        appendCountRow(buf, "genes: human (IAGP)", hpoGeneHumanInserted, null, hpoGeneHumanMatching, hpoGeneHumanDeleted);
+        if( hpoGeneOrthologDeleted!=0 ) {
+            appendCountRow(buf, "genes: ortholog (ISO)", 0, null, 0, hpoGeneOrthologDeleted);
+        }
+        appendCountRow(buf, "HPO total",
+                hpoVariantInserted+hpoGeneHumanInserted, null,
+                hpoVariantMatching+hpoGeneHumanMatching,
+                deletedH);
+
+        buf.append("=================================================================");
+        return buf.toString();
+    }
+
+    void appendTotalsRow(StringBuilder buf, String label, int initialCount, int finalCount) {
+        int change = finalCount - initialCount;
+        String changeStr = change>0 ? "+"+Utils.formatThousands(change) : Utils.formatThousands(change);
+        buf.append(String.format("  %-24s %12s %12s %12s%n", label,
+                Utils.formatThousands(initialCount), Utils.formatThousands(finalCount), changeStr));
+    }
+
+    void appendCountRow(StringBuilder buf, String label, Integer inserted, Integer updated, Integer matching, Integer deleted) {
+        buf.append(String.format("  %-24s %12s %12s %12s %12s%n", label,
+                fmt(inserted), fmt(updated), fmt(matching), fmt(deleted)));
+    }
+
+    String fmt(Integer count) {
+        return count==null ? "-" : Utils.formatThousands(count);
     }
 
     void generateDiseaseAnnotations(VariantInfo ge, List<Integer> associatedGenes, String pubMedIds, Dao dao) throws Exception {
@@ -185,10 +278,10 @@ public class VariantAnnotator implements ClinVarModule {
             int inRgdAnnotKey = dao.getAnnotationKey(annot);
             if (inRgdAnnotKey != 0) {
                 dao.updateLastModifiedDateForAnnotation(inRgdAnnotKey, getCreatedBy());
-                counters.increment("RDO annotations - variant - matching");
+                counters.increment("RDO variant matching");
             } else {
                 dao.insertAnnotation(annot);
-                counters.increment("RDO annotations - variant - inserted");
+                counters.increment("RDO variant inserted");
             }
         }
 
@@ -233,10 +326,10 @@ public class VariantAnnotator implements ClinVarModule {
             int inRgdAnnotKey = dao.getAnnotationKey(annot);
             if (inRgdAnnotKey != 0) {
                 dao.updateLastModifiedDateForAnnotation(inRgdAnnotKey, getCreatedBy());
-                counters.increment("HPO annotations - variant - matching");
+                counters.increment("HPO variant matching");
             } else {
                 dao.insertAnnotation(annot);
-                counters.increment("HPO annotations - variant - inserted");
+                counters.increment("HPO variant inserted");
             }
         }
 
@@ -295,8 +388,6 @@ public class VariantAnnotator implements ClinVarModule {
                     continue;
                 }
 
-                String species = getSpeciesName(gene.getSpeciesTypeKey());
-
                 Annotation humanGeneAnnot = (Annotation) annot.clone();
                 humanGeneAnnot.setAnnotatedObjectRgdId(geneRgdId);
                 humanGeneAnnot.setRgdObjectKey(RgdId.OBJECT_KEY_GENES);
@@ -307,21 +398,7 @@ public class VariantAnnotator implements ClinVarModule {
                 humanGeneAnnot.setTerm(term.getTerm());
                 humanGeneAnnot.setNotes("ClinVar Annotator: match by "+term.getComment());
 
-                if(false) {
-                    // does incoming annotation match rgd?
-                    int inRgdAnnotKey = dao.getAnnotationKey(humanGeneAnnot);
-                    if (inRgdAnnotKey != 0) {
-                        dao.updateLastModifiedDateForAnnotation(inRgdAnnotKey, getCreatedBy());
-                        counters.increment("RDO annotations - gene - " + species + " - matching");
-                        counters.increment("RDO annotations - gene - ALL SPECIES - matching");
-                    } else {
-                        dao.insertAnnotation(humanGeneAnnot);
-                        counters.increment("RDO annotations - gene - " + species + " - inserted");
-                        counters.increment("RDO annotations - gene - ALL SPECIES - inserted");
-                    }
-                } else {
-                    annotCacheHumanGenes.addIncomingAnnot(humanGeneAnnot);
-                }
+                annotCacheHumanGenes.addIncomingAnnot(humanGeneAnnot);
 
                 for (Gene homolog : dao.getHomologs(gene.getRgdId())) {
                     if( !SpeciesType.isSearchable(homolog.getSpeciesTypeKey()) ) {
@@ -366,7 +443,6 @@ public class VariantAnnotator implements ClinVarModule {
                 if( gene==null ) {
                     continue;
                 }
-                String species = getSpeciesName(gene.getSpeciesTypeKey());
 
                 Annotation humanGeneAnnot = (Annotation) annot.clone();
                 humanGeneAnnot.setAnnotatedObjectRgdId(geneRgdId);
@@ -382,12 +458,10 @@ public class VariantAnnotator implements ClinVarModule {
                 int inRgdAnnotKey = dao.getAnnotationKey(humanGeneAnnot);
                 if( inRgdAnnotKey!=0 ) {
                     dao.updateLastModifiedDateForAnnotation(inRgdAnnotKey, getCreatedBy());
-                    counters.increment("HPO annotations - gene - "+species+" - matching");
-                    counters.increment("HPO annotations - gene - ALL SPECIES - matching");
+                    counters.increment("HPO gene human matching");
                 } else {
                     dao.insertAnnotation(humanGeneAnnot);
-                    counters.increment("HPO annotations - gene - "+species+" - inserted");
-                    counters.increment("HPO annotations - gene - ALL SPECIES - inserted");
+                    counters.increment("HPO gene human inserted");
                 }
             }
         }
@@ -804,10 +878,6 @@ public class VariantAnnotator implements ClinVarModule {
             }
         }
         return termNameMatcher.getTermAccIds(termName);
-    }
-
-    synchronized String getSpeciesName(int speciesTypeKey) {
-        return SpeciesType.getCommonName(speciesTypeKey).toLowerCase();
     }
 
     public void setVersion(String version) {

@@ -1,3 +1,7 @@
+Sep 1, 2026
+  annotator: reorganized summary of annotation counts: totals with net change, and inserted/updated/matching/deleted
+    broken down per ontology (RDO, HPO) and object type (variants, genes: human/ortholog); updated dependencies
+
 Aug 3, 2026
   variant lookup now rejects and reports a match that is not human, instead of relying on the join to the
     CLINVAR table to keep it human-only

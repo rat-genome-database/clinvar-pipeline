@@ -1,3 +1,6 @@
+Oct 23, 2026
+  migrated to postgres; updated dependencies
+
 Sep 1, 2026
   annotator: reorganized summary of annotation counts: totals with net change, and inserted/updated/matching/deleted
     broken down per ontology (RDO, HPO) and object type (variants, genes: human/ortholog); updated dependencies

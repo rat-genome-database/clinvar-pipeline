@@ -1,3 +1,7 @@
+Nov 2, 2026
+  annotator: condition-to-term name matching no longer fails for names like "Lipomatosis, Familial Multiple"
+    (comma followed by space produced an empty word token)
+
 Oct 23, 2026
   migrated to postgres; updated dependencies
 

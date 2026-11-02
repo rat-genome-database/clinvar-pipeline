@@ -149,7 +149,7 @@ public class TermNameMatcher implements ClinVarModule {
         }
 
         String[] words = term.replace('-',' ').replace(',',' ').replace('(',' ').replace(')',' ').replace('/',' ')
-                .toLowerCase().split("[\\s]");
+                .toLowerCase().trim().split("\\s+");
         Arrays.sort(words);
         return Utils.concatenate(Arrays.asList(words), ".");
     }

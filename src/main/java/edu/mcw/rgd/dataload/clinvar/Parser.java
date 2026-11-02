@@ -166,8 +166,18 @@ public class Parser extends XomAnalyzer {
                         String assembly = el.getAttributeValue("Assembly");
                         String accession = el.getAttributeValue("Accession");
                         String chr = el.getAttributeValue("Chr");
+                        // structural variants (CNVs, large indels) have no exact 'start'/'stop':
+                        //   fall back to inner boundaries, then to outer boundaries
                         String startPos = el.getAttributeValue("start");
+                        if( startPos==null )
+                            startPos = el.getAttributeValue("innerStart");
+                        if( startPos==null )
+                            startPos = el.getAttributeValue("outerStart");
                         String stopPos = el.getAttributeValue("stop");
+                        if( stopPos==null )
+                            stopPos = el.getAttributeValue("innerStop");
+                        if( stopPos==null )
+                            stopPos = el.getAttributeValue("outerStop");
                         String strand = null;
                         rec.getMapPositions().addPos(assembly, chr, accession, startPos, stopPos, strand);
 

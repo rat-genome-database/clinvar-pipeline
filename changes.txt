@@ -1,3 +1,9 @@
+Nov 2, 2026
+  annotator: condition-to-term name matching no longer fails for names like "Lipomatosis, Familial Multiple"
+    (comma followed by space produced an empty word token)
+  parser: positions of structural variants (CNVs) are loaded again: when exact start/stop are absent,
+    inner and then outer boundaries are used (lost in the RCV to VCV migration)
+
 Sep 1, 2026
   annotator: reorganized summary of annotation counts: totals with net change, and inserted/updated/matching/deleted
     broken down per ontology (RDO, HPO) and object type (variants, genes: human/ortholog); updated dependencies

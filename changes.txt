@@ -1,3 +1,7 @@
+Nov 3, 2026
+  annotator: when a condition name matches two terms on the same ontology branch, only one term is annotated:
+    the term with matching name, or else the more specific term (previously both terms were annotated)
+
 Nov 2, 2026
   annotator: condition-to-term name matching no longer fails for names like "Lipomatosis, Familial Multiple"
     (comma followed by space produced an empty word token)

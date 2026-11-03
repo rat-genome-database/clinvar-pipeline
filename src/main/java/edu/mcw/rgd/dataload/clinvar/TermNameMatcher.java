@@ -54,17 +54,16 @@ public class TermNameMatcher implements ClinVarModule {
                 continue;
             }
 
-            if( accIds.size()>1 ) {
-                accIds = new ArrayList<>(accIds);
-            }
+            // iterate over a copy: the set is modified in the loop
+            accIds = new ArrayList<>(accIds);
 
             for( String accId: accIds ) {
                 if( accId.equals(t.getAccId()) )
                     continue;
 
                 // DUPLICATE: one term name appears for two terms
-                String higherRankedTerm = pickHigherRankedTerm(accId, t.getAccId(), dao);
-                addTermAccId(normalizedName, higherRankedTerm);
+                String pickedTerm = pickMoreSpecificTerm(accId, t.getAccId(), dao);
+                keepOnlyPickedTerm(normalizedName, accId, t.getAccId(), pickedTerm);
 
                 addDuplicate(t.getTerm(), accId, t.getAccId(), duplicates, dao, "");
             }
@@ -89,9 +88,8 @@ public class TermNameMatcher implements ClinVarModule {
                 continue;
             }
 
-            if( accIds.size()>1 ) {
-                accIds = new ArrayList<>(accIds);
-            }
+            // iterate over a copy: the set is modified in the loop
+            accIds = new ArrayList<>(accIds);
 
             for( String accId: accIds ) {
                 if( accId.equals(s.getTermAcc()) )
@@ -114,9 +112,12 @@ public class TermNameMatcher implements ClinVarModule {
                     extraInfo = "g2 "; // separate ontology branches
                 } else {
 
-                    // synonym is not narrow/broad, terms are on same ontology branch: pick higher ranked term
-                    String pickedTerm = pickHigherRankedTerm(accId, s.getTermAcc(), dao);
-                    addTermAccId(normalizedName, pickedTerm);
+                    // synonym is not narrow/broad, terms are on same ontology branch:
+                    // a term whose name matches wins over a term whose synonym matches;
+                    // otherwise pick the more specific term (annotations to the more general term are inherited from it anyway)
+                    String pickedTerm = normalizeTerm(dao.getTermByAccId(accId).getTerm()).equals(normalizedName)
+                            ? accId : pickMoreSpecificTerm(accId, s.getTermAcc(), dao);
+                    keepOnlyPickedTerm(normalizedName, accId, s.getTermAcc(), pickedTerm);
                     extraInfo = "g1 "; // same ontology branch
                 }
 
@@ -181,13 +182,30 @@ public class TermNameMatcher implements ClinVarModule {
 
         // display additional info what g1/g2 means
         if( duplicates2.size()>10 ) {
-            log.info("  g1 - conflicting terms on same ontology branch, one better annotated/more general term will be annotated");
+            log.info("  g1 - conflicting terms on same ontology branch, only one term will be annotated: the term with matching name, or else the more specific term");
             log.info("  g2 - conflicting terms on separate ontology branches, both terms will be annotated");
         }
 
         for( Map.Entry<String, String> entry: duplicates2.entrySet() ) {
             log.info("  ["+entry.getKey()+"]: "+entry.getValue());
         }
+    }
+
+    /**
+     * if one term is a descendant of the other, pick the descendant (more specific term);
+     * for terms on separate ontology branches, pick the higher ranked term
+     * @param acc1 accession id for first term
+     * @param acc2 accession id for second term
+     * @return picked term
+     */
+    String pickMoreSpecificTerm(String acc1, String acc2, Dao dao) throws Exception {
+        if( dao.isDescendantOf(acc1, acc2) ) {
+            return acc1;
+        }
+        if( dao.isDescendantOf(acc2, acc1) ) {
+            return acc2;
+        }
+        return pickHigherRankedTerm(acc1, acc2, dao);
     }
 
     /**
@@ -228,5 +246,12 @@ public class TermNameMatcher implements ClinVarModule {
             map.put(normalizedTermName, set);
         }
         return set.add(value);
+    }
+
+    // conflicting terms on the same ontology branch: keep only the picked term for the name, drop the other one
+    void keepOnlyPickedTerm(String normalizedTermName, String acc1, String acc2, String pickedAcc) {
+        Set<String> set = map.get(normalizedTermName);
+        set.remove(pickedAcc.equals(acc1) ? acc2 : acc1);
+        set.add(pickedAcc);
     }
 }
